@@ -63,6 +63,24 @@ This is a PHP-focused project that will likely require:
 - Use relative terms like "initial phase", "later phase", "after prototype validation"
 - Focus on dependencies and logical sequencing rather than calendar commitments
 
+## CRITICAL FORMATTING REQUIREMENTS
+
+**NO UNICODE CHARACTERS EVER:**
+
+- **NEVER** use Unicode icons, symbols, or special characters in any files
+- **NEVER** use checkmarks (✓, ✅), crosses (✗, ❌), arrows (→), or any emoji
+- **NEVER** use special Unicode bullets (•, ◦, ▪) or decorative characters
+- Use only standard ASCII characters: letters, numbers, basic punctuation
+- Use text alternatives: "COMPLETED", "DONE", "FAILED", "TODO", "[x]", "[ ]"
+- This applies to ALL files: code, documentation, comments, commit messages
+
+**Acceptable Alternatives:**
+- Instead of ✅: "COMPLETED", "DONE", "[x]"
+- Instead of ❌: "FAILED", "ERROR", "[ ]" 
+- Instead of →: "->" or "to"
+- Instead of •: "-" or "*"
+- Instead of any emoji: descriptive text
+
 ## Architecture Notes
 
 - Primary focus on PHP debugging integration

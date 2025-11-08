@@ -7,7 +7,7 @@
 
 ## Description
 
-Create human-readable variable output formatting with color coding for terminal display and JSON output options.
+Create human-readable variable output formatting with ~~color coding~~ **text-based formatting** for terminal display and JSON output options.
 
 ## Tasks
 
@@ -15,7 +15,7 @@ Create human-readable variable output formatting with color coding for terminal 
   - [ ] Create variable display templates
   - [ ] Design hierarchy for nested structures
   - [ ] Add type indicators and formatting
-  - [ ] Plan color coding scheme
+  - [ ] ~~Plan color coding scheme~~ **Removed** - using text prefixes and formatting instead
 - [ ] Implement formatting for PHP data types
   - [ ] String formatting with quotes and escaping
   - [ ] Integer and float number formatting
@@ -26,11 +26,11 @@ Create human-readable variable output formatting with color coding for terminal 
   - [ ] Object formatting with properties and methods
   - [ ] Nested structure indentation
   - [ ] Large structure truncation and pagination
-- [ ] Create colored terminal output
-  - [ ] Add color coding for different types
-  - [ ] Use colors for structure hierarchy
-  - [ ] Support color disable for non-terminal output
-  - [ ] Test color compatibility across terminals
+- [ ] ~~Create colored terminal output~~ **Removed** - using text-based formatting instead
+  - [ ] ~~Add color coding for different types~~ **Removed**
+  - [ ] ~~Use colors for structure hierarchy~~ **Removed**
+  - [ ] ~~Support color disable for non-terminal output~~ **Removed**
+  - [ ] ~~Test color compatibility across terminals~~ **Removed**
 - [ ] Add output format options
   - [ ] Implement JSON output format
   - [ ] Add compact vs expanded display modes
@@ -40,7 +40,7 @@ Create human-readable variable output formatting with color coding for terminal 
 ## Success Criteria
 
 - [ ] Variables display in readable, hierarchical format
-- [ ] Color coding enhances readability without overwhelming
+- [ ] ~~Color coding enhances readability without overwhelming~~ **Removed** - text formatting provides clarity
 - [ ] JSON output format works for programmatic use
 - [ ] Large/complex variables are handled gracefully
 - [ ] Formatting works consistently across different terminals

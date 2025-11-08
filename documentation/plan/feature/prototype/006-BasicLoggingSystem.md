@@ -20,7 +20,7 @@ Set up a comprehensive logging framework with multiple output targets and implem
   - [ ] Set up log formatting and timestamps
   - [ ] Add structured logging for debugging data
 - [ ] Implement log outputs
-  - [ ] Configure console output with colors
+  - [ ] ~~Configure console output with colors~~ **Removed** - using text prefixes instead for compatibility
   - [ ] Set up file logging with rotation
   - [ ] Add configurable log levels per output
 - [ ] Create logs command

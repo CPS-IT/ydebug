@@ -27,6 +27,11 @@ Traditional debugging requires human developers to manually set breakpoints, ste
 
 ## Documentation
 
+### User Guide
+
+- [Configuration Management](documentation/user-guide/configuration.md) – Complete configuration guide
+- [Connect Command](documentation/user-guide/connect-command.md) – Xdebug connection testing and troubleshooting
+
 ### Project Planning
 
 - [Project Goal](documentation/plan/goal.md) – Original vision and concept
@@ -71,12 +76,106 @@ Developer → CLI → YDebug Service (Node.js) → DBGp → Xdebug → PHP
 
 ## Development Status
 
-**Current Phase:** Architectural Planning Complete  
-**Next Phase:** Prototype Development
+**Current Phase:** Prototype Development (In Progress)  
+**Completed Features:**
+- ✅ Project architecture and planning
+- ✅ Basic CLI framework with Commander.js
+- ✅ Xdebug connection testing and validation
+- ✅ Comprehensive configuration management
+- ✅ Environment variable and multi-source configuration support
+- 🔄 Variable inspection and debugging core (next)
+
+## Installation
+
+### Requirements
+
+- Node.js 18+ 
+- PHP 7.4+ with Xdebug 3.0+
+- npm or yarn
+
+### Install Dependencies
+
+```bash
+npm install
+```
+
+### Verify Installation
+
+Test the CLI and configuration:
+
+```bash
+# Show help
+node src/cli/index.js --help
+
+# Initialize configuration
+node src/cli/index.js config --init
+
+# Test Xdebug connection (requires Xdebug running)
+node src/cli/index.js connect
+```
 
 ## Getting Started
 
-Documentation for setup and usage will be available once the prototype is complete.
+### 1. Configure YDebug
+
+Initialize your configuration:
+
+```bash
+node src/cli/index.js config --init
+```
+
+### 2. Configure Xdebug
+
+Ensure Xdebug is configured in your PHP environment:
+
+```ini
+; php.ini or xdebug.ini
+zend_extension=xdebug
+xdebug.mode=debug
+xdebug.start_with_request=yes
+xdebug.client_host=localhost
+xdebug.client_port=9003
+```
+
+### 3. Test Connection
+
+Verify YDebug can connect to Xdebug:
+
+```bash
+node src/cli/index.js connect
+```
+
+### 4. Customize Configuration
+
+Set configuration values as needed:
+
+```bash
+# Set custom Xdebug port
+node src/cli/index.js config-set xdebug.port 9004
+
+# Enable debug logging
+node src/cli/index.js config-set logging.level debug
+
+# View current configuration
+node src/cli/index.js config --show
+```
+
+## Available Commands
+
+### Configuration Management
+- `config --init` - Create sample configuration file
+- `config --show` - Display current configuration
+- `config-set <key> <value>` - Set configuration value
+- `config-get <key>` - Get configuration value  
+- `config --reset --confirm` - Reset to defaults
+
+See the [Configuration Guide](documentation/user-guide/configuration.md) for complete details.
+
+### Connection Testing
+- `connect` - Test connection to Xdebug
+- `connect --host <host> --port <port>` - Test with custom settings
+
+See the [Connect Command Guide](documentation/user-guide/connect-command.md) for complete details.
 
 ## Project Structure
 
@@ -84,12 +183,40 @@ Documentation for setup and usage will be available once the prototype is comple
 ydebug/
 ├── documentation/
 │   ├── plan/                 # Project planning documents
-│   └── architecture/         # Architecture decisions and overview
-├── src/                      # Source code (coming in prototype phase)
-├── tests/                    # Test suite (coming in prototype phase)
-└── README.md                 # This file
+│   ├── architecture/         # Architecture decisions and overview
+│   └── user-guide/          # User documentation
+├── src/
+│   ├── cli/                 # Command-line interface
+│   │   └── commands/        # CLI command implementations
+│   ├── config/              # Configuration management
+│   ├── debugger/            # DBGp client and debugging core
+│   └── index.js             # Main entry point
+├── tests/                   # Comprehensive test suite (313 tests)
+│   ├── config/              # Configuration management tests
+│   ├── integration/         # Integration tests
+│   └── *.test.js            # Unit tests
+├── package.json             # Node.js project configuration
+└── README.md                # This file
+```
+
+## Testing
+
+Run the comprehensive test suite:
+
+```bash
+npm test
+```
+
+The project maintains high test coverage with 313 tests covering:
+- Configuration management (143 tests)
+- CLI functionality and integration 
+- Xdebug connection testing
+- Error handling and edge cases
+
+## Contributing
+
+This project is in active prototype development. See the [Implementation Plan](documentation/plan/Implementation.md) for development phases and [Feature Documentation](documentation/plan/feature/prototype/) for detailed feature requirements.
 
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
-```

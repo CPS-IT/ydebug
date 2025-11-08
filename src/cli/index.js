@@ -62,10 +62,31 @@ function registerCommands() {
     .description('Manage YDebug configuration')
     .option('--init', 'create a sample configuration file')
     .option('--show', 'show current configuration')
+    .option('--reset', 'reset configuration to defaults')
+    .option('--confirm', 'confirm reset operation')
     .option('-f, --file <path>', 'configuration file path')
-    .action(async options => {
+    .action(async (options) => {
       const cmd = new ConfigCommand();
       await cmd.execute(options);
+    });
+
+  // Config set subcommand
+  program
+    .command('config-set <key> <value>')
+    .description('Set configuration value')
+    .option('-f, --file <path>', 'configuration file path')
+    .action(async (key, value, options) => {
+      const cmd = new ConfigCommand();
+      await cmd.execute({ set: true, key, value, file: options.file });
+    });
+
+  // Config get subcommand
+  program
+    .command('config-get <key>')
+    .description('Get configuration value')
+    .action(async (key) => {
+      const cmd = new ConfigCommand();
+      await cmd.execute({ get: true, key });
     });
 
   // Connect command

@@ -145,9 +145,11 @@ describe('CLI Entry Point (src/cli/index.js)', () => {
         `node ${cliPath} config --show`
       );
       expect(stderr).toBe('');
-      // Should output JSON configuration
+      // Should output formatted configuration
       const output = stdout.trim();
-      expect(() => JSON.parse(output)).not.toThrow();
+      expect(output).toContain('YDebug Configuration');
+      expect(output).toContain('Configuration Sources');
+      expect(output).toContain('Current Configuration');
     });
   });
 

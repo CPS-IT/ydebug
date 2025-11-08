@@ -20,6 +20,7 @@
 
 const BaseCommand = require('./base');
 const { createSampleConfig } = require('../../config');
+const ConfigManager = require('../../config/ConfigManager');
 
 /**
  * Configuration command implementation
@@ -31,17 +32,39 @@ class ConfigCommand extends BaseCommand {
    */
   async execute(options) {
     try {
+      const configManager = new ConfigManager();
+
       if (options.init) {
         const configPath = options.file || 'ydebug.config.json';
-        createSampleConfig(configPath);
+        configManager.createSample(configPath);
         this.success(`Configuration file created at: ${configPath}`);
         this.info('Edit the file to customize your YDebug settings');
       } else if (options.show) {
-        const config = this.loadConfig();
-        console.log(JSON.stringify(config, null, 2));
+        const output = configManager.show();
+        console.log(output);
+      } else if (options.set && options.key && options.value !== undefined) {
+        configManager.set(options.key, options.value, options.file);
+        this.success(`Configuration updated: ${options.key} = ${options.value}`);
+      } else if (options.get && options.key) {
+        const value = configManager.get(options.key);
+        if (value !== undefined) {
+          console.log(JSON.stringify(value, null, 2));
+        } else {
+          this.warn(`Configuration key '${options.key}' not found`);
+        }
+      } else if (options.reset) {
+        configManager.reset(options.confirm);
+        this.success('Configuration reset to defaults');
       } else {
-        this.info('Use --init to create a sample configuration file');
-        this.info('Use --show to display current configuration');
+        this.info('YDebug Configuration Management');
+        this.info('');
+        this.info('Options:');
+        this.info('  --init              Create a sample configuration file');
+        this.info('  --show              Display current configuration');
+        this.info('  --set <key> <value> Set configuration value');
+        this.info('  --get <key>         Get configuration value');
+        this.info('  --reset [--confirm] Reset configuration to defaults');
+        this.info('  --file <path>       Specify config file (for init/set)');
       }
     } catch (error) {
       this.handleError(error);
