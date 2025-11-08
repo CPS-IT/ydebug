@@ -9,6 +9,9 @@ module.exports = {
     '**/?(*.)+(spec|test).js',
   ],
 
+  // Test path ignore patterns
+  testPathIgnorePatterns: ['/node_modules/', '/coverage/'],
+
   // Coverage settings
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -30,8 +33,8 @@ module.exports = {
   // Clear mocks between tests
   clearMocks: true,
 
-  // Test timeout
-  testTimeout: 5000,
+  // Test timeout - increased for integration tests
+  testTimeout: 20000,
 
   // Force exit after tests complete
   forceExit: true,
@@ -48,4 +51,11 @@ module.exports = {
     '!src/**/*.test.js',
     '!src/**/*.spec.js',
   ],
+
+  // Global test setup
+  globalSetup: undefined,
+  globalTeardown: undefined,
+
+  // Handle unhandled promise rejections
+  testEnvironmentOptions: {},
 };

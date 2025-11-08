@@ -65,6 +65,12 @@ class DBGpClient extends EventEmitter {
         // Create TCP socket connection
         this.socket = new net.Socket();
         
+        // Set socket timeout to ensure faster failures
+        this.socket.setTimeout(this.config.timeout);
+        this.socket.on('timeout', () => {
+          this.socket.destroy();
+        });
+        
         // Handle connection events
         this.socket.on('connect', () => {
           clearTimeout(this.connectionTimeout);
@@ -81,7 +87,6 @@ class DBGpClient extends EventEmitter {
         this.socket.on('error', (error) => {
           clearTimeout(this.connectionTimeout);
           this.isConnected = false;
-          this.emit('error', error);
           this.cleanup();
           reject(error);
         });
@@ -141,7 +146,8 @@ class DBGpClient extends EventEmitter {
         // Response to a command
         const transactionId = parsed.response.transaction_id;
         if (this.pendingCommands.has(transactionId)) {
-          const { resolve } = this.pendingCommands.get(transactionId);
+          const { resolve, timeoutId } = this.pendingCommands.get(transactionId);
+          clearTimeout(timeoutId); // Clear the timeout
           this.pendingCommands.delete(transactionId);
           resolve(parsed.response);
         }
@@ -255,8 +261,11 @@ class DBGpClient extends EventEmitter {
     this.isConnected = false;
     this.buffer = '';
     
-    // Reject all pending commands
-    for (const [, { reject }] of this.pendingCommands) {
+    // Reject all pending commands and clear their timeouts
+    for (const [, { reject, timeoutId }] of this.pendingCommands) {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       reject(new Error('Connection closed'));
     }
     this.pendingCommands.clear();
@@ -278,21 +287,26 @@ class DBGpClient extends EventEmitter {
       const transactionId = ++this.commandCounter;
       const xmlCommand = this.buildCommand(command, transactionId, options);
       
-      // Store promise resolvers
-      this.pendingCommands.set(transactionId.toString(), { resolve, reject });
-      
       // Set command timeout
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         if (this.pendingCommands.has(transactionId.toString())) {
           this.pendingCommands.delete(transactionId.toString());
           reject(new Error(`Command timeout: ${command}`));
         }
       }, this.config.timeout);
+      
+      // Store promise resolvers with timeout ID
+      this.pendingCommands.set(transactionId.toString(), { resolve, reject, timeoutId });
 
       try {
         this.socket.write(xmlCommand + '\0');
       } catch (error) {
-        this.pendingCommands.delete(transactionId.toString());
+        // Clean up timeout and pending command on error
+        const pending = this.pendingCommands.get(transactionId.toString());
+        if (pending) {
+          clearTimeout(pending.timeoutId);
+          this.pendingCommands.delete(transactionId.toString());
+        }
         reject(error);
       }
     });

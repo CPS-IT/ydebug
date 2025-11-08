@@ -22,7 +22,7 @@
 
 const { Command } = require('commander');
 const packageJson = require('../../package.json');
-const { ConfigCommand } = require('./commands');
+const { ConfigCommand, ConnectCommand } = require('./commands');
 
 const program = new Command();
 
@@ -65,6 +65,18 @@ function registerCommands() {
     .option('-f, --file <path>', 'configuration file path')
     .action(async options => {
       const cmd = new ConfigCommand();
+      await cmd.execute(options);
+    });
+
+  // Connect command
+  program
+    .command('connect')
+    .description('Test connection to Xdebug debugger')
+    .option('-h, --host <host>', 'debugger host (default: localhost)')
+    .option('-p, --port <port>', 'debugger port (default: 9003)')
+    .option('-t, --timeout <ms>', 'connection timeout in milliseconds (default: 10000)')
+    .action(async options => {
+      const cmd = new ConnectCommand();
       await cmd.execute(options);
     });
 }

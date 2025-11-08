@@ -19,7 +19,9 @@
  */
 
 const ConfigCommand = require('./config');
+const ConnectCommand = require('./connect');
 
 module.exports = {
   ConfigCommand,
+  ConnectCommand,
 };
