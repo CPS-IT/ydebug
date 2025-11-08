@@ -29,7 +29,8 @@ Traditional debugging requires human developers to manually set breakpoints, ste
 - [Project Goal](documentation/plan/goal.md) – Original vision and concept
 - [Prototype Scope](documentation/plan/prototype.md) – Initial proof of concept requirements
 - [MVP Requirements](documentation/plan/mvp.md) – Complete feature set and user stories
-- [Implementation Plan](documentation/plan/Implementation.md) - Development phases and milestones
+- [Implementation Plan](documentation/plan/Implementation.md) – Development phases and milestones
+- [Prototype Features](documentation/plan/feature/prototype/) – Granular feature breakdown (001-020)
 
 ### Architecture
 - [Architectural Overview](documentation/architecture/ArchitecturalOverview.md) – Complete system architecture
