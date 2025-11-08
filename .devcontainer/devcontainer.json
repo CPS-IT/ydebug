@@ -1,0 +1,66 @@
+{
+  "name": "YDebug Development Container",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "ydebug",
+  "workspaceFolder": "/app",
+
+  // Configure VS Code settings and extensions
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": true
+        },
+        "eslint.workingDirectories": ["/app"]
+      },
+      "extensions": [
+        "ms-vscode.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.remote-containers"
+      ]
+    }
+  },
+
+  // Ports to forward from container to host
+  "forwardPorts": [3000, 9003],
+  "portsAttributes": {
+    "3000": {
+      "label": "YDebug Dev Server",
+      "onAutoForward": "notify"
+    },
+    "9003": {
+      "label": "Xdebug Port",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // Commands to run after container is created
+  "postCreateCommand": "npm install",
+
+  // Run as non-root user
+  "remoteUser": "ydebug",
+
+  // Mount the source with consistent line endings
+  "mounts": [
+    "source=${localWorkspaceFolder}/src,target=/app/src,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/tests,target=/app/tests,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/config,target=/app/config,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/docs,target=/app/docs,type=bind,consistency=cached"
+  ],
+
+  // Environment variables
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "DEBUG": "ydebug:*"
+  },
+
+  // Security features
+  "capAdd": [],
+  "securityOpt": [
+    "no-new-privileges"
+  ]
+}

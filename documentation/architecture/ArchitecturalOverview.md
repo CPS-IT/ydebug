@@ -172,7 +172,7 @@ graph TB
 ### Core Technologies
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
-| **Runtime** | Node.js 18+ | Team expertise, rapid prototyping, DBGp library availability |
+| **Runtime** | Node.js 24 LTS | Team expertise, rapid prototyping, DBGp library availability |
 | **Debugging Protocol** | Xdebug with DBGp | Industry standard, mature ecosystem, comprehensive features |
 | **AI Platform** | Anthropic Claude Code | Team expertise, proven code analysis capabilities |
 | **Interface** | CLI (Command Line) | Rapid development, scriptable, IDE-agnostic |

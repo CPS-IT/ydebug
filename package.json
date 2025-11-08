@@ -1,0 +1,40 @@
+{
+  "name": "ydebug",
+  "version": "0.1.0",
+  "description": "YDebug enables AI agents to step through PHP applications in real-time, providing insight into code execution and application behavior.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docker:build": "docker build -f Dockerfile.dev -t ydebug:dev .",
+    "docker:dev": "docker-compose up --build",
+    "docker:stop": "docker-compose down",
+    "validate": "npm run lint && npm run format:check && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CPS-IT/ydebug.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GPL-3.0",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/CPS-IT/ydebug/issues"
+  },
+  "homepage": "https://github.com/CPS-IT/ydebug#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  }
+}

@@ -81,4 +81,8 @@ ydebug/
 ├── src/                      # Source code (coming in prototype phase)
 ├── tests/                    # Test suite (coming in prototype phase)
 └── README.md                 # This file
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
 ```

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  ydebug:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ydebug-dev
+    ports:
+      - "9003:9003"  # Xdebug port for PHP debugging
+      - "3000:3000"  # Development server port
+    volumes:
+      # Mount source code for development
+      - ./src:/app/src:cached
+      - ./tests:/app/tests:cached
+      - ./config:/app/config:cached
+      - ./docs:/app/docs:cached
+      # Mount package.json for dependency changes
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+      # Exclude node_modules from host
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DEBUG=ydebug:*
+    networks:
+      - ydebug-network
+    # Prevent external network access for security
+    cap_drop:
+      - NET_ADMIN
+      - NET_RAW
+    # Restart policy for development
+    restart: unless-stopped
+
+networks:
+  ydebug-network:
+    driver: bridge
+    # Internal network with limited external access
+    internal: false  # Allow Xdebug connections to host
