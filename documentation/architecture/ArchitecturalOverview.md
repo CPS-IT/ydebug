@@ -25,52 +25,81 @@ YDebug is an AI Agent PHP Debugging Solution that enables AI agents to participa
 
 ## Complete Architecture Diagram
 
+```mermaid
+graph TB
+    %% External Services
+    Claude[Claude Code API<br/>Anthropic]
+    
+    %% Local Developer Machine
+    subgraph Local["🖥️ Local Developer Machine"]
+        %% IDE Plugins
+        subgraph IDEs["IDE Plugins"]
+            VSCode[VS Code<br/>Extension]
+            PhpStorm[PhpStorm<br/>Plugin]
+            OtherIDE[Other<br/>IDEs]
+        end
+        
+        %% YDebug Core Service
+        subgraph YDebug["YDebug Core Service (Node.js)"]
+            CLI[CLI Interface<br/>ydebug commands]
+            Gateway[API Gateway<br/>REST/WebSocket]
+            Session[Session<br/>Manager]
+            DBGpClient[DBGp<br/>Client]
+            Config[Config<br/>Manager]
+            Storage[Local<br/>Storage]
+            AIEngine[AI Analysis<br/>Engine]
+        end
+        
+        %% PHP Application & Xdebug
+        subgraph PHPApp["PHP Application"]
+            Script[Target<br/>Script]
+        end
+        
+        subgraph Xdebug["Xdebug Extension"]
+            DebugEngine[Debugging<br/>Engine]
+            Breakpoints[Breakpoint<br/>Management]
+        end
+    end
+    
+    %% IDE Plugin Connections
+    VSCode -.->|Plugin Interface| Gateway
+    PhpStorm -.->|Plugin Interface| Gateway
+    OtherIDE -.->|Plugin Interface| Gateway
+    
+    %% Core Service Internal Flow
+    CLI --> Gateway
+    Gateway --> Session
+    Session --> DBGpClient
+    Gateway --> AIEngine
+    Config --> Gateway
+    Storage --> Session
+    
+    %% DBGp Protocol Communication
+    DBGpClient <-->|DBGp Protocol<br/>Port 9003| DebugEngine
+    Script --> DebugEngine
+    DebugEngine --> Breakpoints
+    
+    %% AI Integration
+    AIEngine <-->|HTTPS API<br/>Analysis Requests| Claude
+    
+    %% Styling
+    classDef external fill:#ffcccc,stroke:#ff6666,stroke-width:2px
+    classDef core fill:#ccffcc,stroke:#66cc66,stroke-width:2px
+    classDef plugin fill:#ccccff,stroke:#6666cc,stroke-width:2px
+    classDef php fill:#ffffcc,stroke:#cccc66,stroke-width:2px
+    
+    class Claude external
+    class CLI,Gateway,Session,DBGpClient,Config,Storage,AIEngine core
+    class VSCode,PhpStorm,OtherIDE plugin
+    class Script,DebugEngine,Breakpoints php
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                YDebug Architecture                                      │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                         │
-│  ┌──────────────────┐    Plugin Interface     ┌─────────────────────────────────────┐  │
-│  │   IDE Plugins    │◄──────────────────────────┤        YDebug Core Service        │  │
-│  │                  │                           │                                     │  │
-│  │ ┌─────────────┐  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │  VS Code    │  │    HTTP/WebSocket API     │ │ CLI Interface│  │ API Gateway │  │  │
-│  │ │  Extension  │  │                           │ │             │  │             │  │  │
-│  │ └─────────────┘  │                           │ └─────────────┘  └─────────────┘  │  │
-│  │ ┌─────────────┐  │                           │                                     │  │
-│  │ │ PhpStorm    │  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │   Plugin    │  │                           │ │   Session   │  │    DBGp     │  │  │
-│  │ └─────────────┘  │                           │ │  Manager    │  │   Client    │  │  │
-│  │ ┌─────────────┐  │                           │ └─────────────┘  └─────────────┘  │  │
-│  │ │   Other     │  │                           │                                     │  │
-│  │ │   IDEs      │  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ └─────────────┘  │                           │ │    Config   │  │    Local    │  │  │
-│  └──────────────────┘                           │ │  Manager    │  │   Storage   │  │  │
-│                                                  │ └─────────────┘  └─────────────┘  │  │
-│                                                  └─────────────────────────────────────┘  │
-│                                                                                         │
-│  ┌──────────────────┐    DBGp Protocol          ┌─────────────────────────────────────┐  │
-│  │ PHP Application  │◄──────────────────────────┤             Xdebug              │  │
-│  │                  │         (Port 9003)        │                                     │  │
-│  │ ┌─────────────┐  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │   Target    │  │                           │ │  Debugging  │  │ Breakpoint  │  │  │
-│  │ │   Script    │  │                           │ │   Engine    │  │  Management │  │  │
-│  │ └─────────────┘  │                           │ └─────────────┘  └─────────────┘  │  │
-│  └──────────────────┘                           └─────────────────────────────────────┘  │
-│                                                                                         │
-│  ┌──────────────────┐    HTTPS API               ┌─────────────────────────────────────┐  │
-│  │   Claude Code    │◄──────────────────────────┤         AI Integration           │  │
-│  │                  │                           │                                     │  │
-│  │ ┌─────────────┐  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │   Anthropic  │  │                           │ │   Claude    │  │   Analysis  │  │  │
-│  │ │     API      │  │                           │ │  Analyzer   │  │   Engine    │  │  │
-│  │ └─────────────┘  │                           │ └─────────────┘  └─────────────┘  │  │
-│  └──────────────────┘                           └─────────────────────────────────────┘  │
-│                                                                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
 
-Local Developer Machine (All components except Claude Code API)
-```
+**Architecture Flow:**
+1. **Developer** → CLI commands or IDE plugins
+2. **YDebug Core** → Processes requests via API Gateway
+3. **DBGp Client** → Communicates with Xdebug over TCP (port 9003)
+4. **AI Engine** → Sends analysis requests to Claude Code API
+5. **Local Storage** → All debugging data remains on developer machine
 
 ## Core Components
 
