@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile.dev
     container_name: ydebug-dev
     ports:
-      - "9003:9003"  # Xdebug port for PHP debugging
-      - "3000:3000"  # Development server port
+      - '9003:9003' # Xdebug port for PHP debugging
+      - '3000:3000' # Development server port
     volumes:
       # Mount source code for development
       - ./src:/app/src:cached
@@ -36,4 +36,4 @@ networks:
   ydebug-network:
     driver: bridge
     # Internal network with limited external access
-    internal: false  # Allow Xdebug connections to host
+    internal: false # Allow Xdebug connections to host

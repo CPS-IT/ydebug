@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Vision
 
 This project creates a debugging solution that allows AI agents to:
+
 - Understand actual execution flow of PHP applications
 - Observe data transformations throughout the application lifecycle
 - Inspect variable states and values at any point during execution
@@ -17,11 +18,13 @@ This project creates a debugging solution that allows AI agents to:
 ## Development Phases
 
 ### Prototype (Proof of Concept)
+
 - AI agent inspects variable values at one specific breakpoint in a simple PHP script
 - Minimal implementation with hardcoded breakpoint location
 - Focus on demonstrating technical feasibility
 
 ### MVP (Minimal Viable Product)
+
 - Step-by-step code execution control
 - Variable value inspection at any execution point
 - Basic breakpoint management
@@ -39,6 +42,7 @@ This project creates a debugging solution that allows AI agents to:
 ## Development Setup
 
 This is a PHP-focused project that will likely require:
+
 - PHP development environment with debugging capabilities (Xdebug)
 - Debugging protocol integration
 - AI agent communication interface
@@ -47,12 +51,14 @@ This is a PHP-focused project that will likely require:
 ## Communication Guidelines
 
 **Tone and Language:**
+
 - Maintain modest, factual tone without boasting or business hyperbole
 - Use precise technical language without exaggeration
 - Avoid superlatives and marketing-style claims
 - Focus on concrete capabilities rather than promotional language
 
 **Timeline References:**
+
 - Avoid specific "Week X" statements in planning documents
 - Use relative terms like "initial phase", "later phase", "after prototype validation"
 - Focus on dependencies and logical sequencing rather than calendar commitments

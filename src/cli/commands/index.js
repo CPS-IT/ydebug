@@ -1,6 +1,6 @@
 /**
- * Jest setup file for YDebug tests
- * Runs before all tests to configure testing environment
+ * Commands Index
+ * Exports all available CLI commands
  *
  * Copyright (C) 2024 YDebug Contributors
  *
@@ -18,13 +18,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Set test environment variables
-process.env.NODE_ENV = 'test';
+const ConfigCommand = require('./config');
 
-// Configure test timeout
-jest.setTimeout(10000);
-
-// Global test utilities
-global.testHelpers = {
-  // Add test helper functions here as needed
+module.exports = {
+  ConfigCommand,
 };

@@ -15,12 +15,14 @@ YDebug uses a containerized development environment for security isolation and c
 ### Quick Start with Docker
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/CPS-IT/ydebug.git
    cd ydebug
    ```
 
 2. Start the development environment:
+
    ```bash
    npm run docker:dev
    ```
@@ -41,6 +43,7 @@ For the best development experience with VS Code:
 4. VS Code will build and start the development container automatically
 
 The development container includes:
+
 - Node.js v24 LTS
 - All project dependencies
 - Development tools (eslint, prettier, jest)
@@ -84,16 +87,10 @@ npm run test:coverage
 # Lint code
 npm run lint
 
-# Auto-fix lint issues
+# Auto-fix lint issues (includes formatting)
 npm run lint:fix
 
-# Format code
-npm run format
-
-# Check formatting
-npm run format:check
-
-# Run all validation (lint + format + tests)
+# Run all validation (lint + tests)
 npm run validate
 ```
 
@@ -101,9 +98,8 @@ npm run validate
 
 We maintain high code quality standards:
 
-- **ESLint**: Enforces JavaScript best practices and coding standards
-- **Prettier**: Ensures consistent code formatting
-- **Jest**: Comprehensive test coverage required for all features
+- **ESLint**: Enforces JavaScript best practices, coding standards, and consistent formatting
+- **Jest**: Comprehensive test coverage required for all features  
 - **Pre-commit validation**: All code must pass linting and tests
 
 Run `npm run validate` before committing to ensure your changes meet our standards.
@@ -147,6 +143,7 @@ For PHP debugging integration:
 3. YDebug will listen on port 9003 for debugging connections
 
 Example Xdebug configuration:
+
 ```ini
 xdebug.mode=debug
 xdebug.client_host=host.docker.internal
@@ -159,20 +156,24 @@ xdebug.start_with_request=yes
 ### Common Development Issues
 
 **Container won't start:**
+
 - Ensure Docker is running
 - Check if ports 3000 or 9003 are already in use
 - Try `npm run docker:stop` then `npm run docker:dev`
 
 **Dependency issues:**
+
 - Delete `node_modules/` and restart container
 - Rebuild container: `npm run docker:build`
 
 **Xdebug not connecting:**
+
 - Verify Xdebug configuration in your PHP application
 - Check that port 9003 is properly exposed
 - Ensure firewall isn't blocking the connection
 
 **VS Code development container issues:**
+
 - Ensure "Dev Containers" extension is installed
 - Try "Dev Containers: Rebuild Container" from command palette
 - Check Docker Desktop is running and accessible
