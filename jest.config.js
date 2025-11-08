@@ -30,6 +30,18 @@ module.exports = {
   // Clear mocks between tests
   clearMocks: true,
 
+  // Test timeout
+  testTimeout: 5000,
+
+  // Force exit after tests complete
+  forceExit: true,
+
+  // Detect open handles
+  detectOpenHandles: true,
+
+  // Run tests in band to avoid race conditions
+  maxWorkers: 1,
+
   // Collect coverage from source files
   collectCoverageFrom: [
     'src/**/*.js',

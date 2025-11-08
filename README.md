@@ -49,6 +49,7 @@ Traditional debugging requires human developers to manually set breakpoints, ste
 - [ADR-005: Choose Claude Code Integration](documentation/architecture/005-choose-claude-code-integration.md)
 - [ADR-006: Choose Local Deployment Model](documentation/architecture/006-choose-local-deployment-model.md)
 - [ADR-007: Choose IDE-Agnostic Plugin Architecture](documentation/architecture/007-choose-ide-agnostic-plugin-architecture.md)
+- [ADR-008: Choose Direct DBGp Protocol Implementation](documentation/architecture/008-choose-direct-dbgp-implementation.md)
 
 ## Architecture Summary
 
