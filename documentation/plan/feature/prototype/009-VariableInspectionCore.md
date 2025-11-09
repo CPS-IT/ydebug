@@ -1,7 +1,7 @@
 # Feature 009: Variable Inspection Core
 
-**Status:** Not Started  
-**Estimated Time:** 4-6 hours  
+**Status:** Work In Progress  
+**Estimated Time:** 4–6 hours  
 **Layer:** Core Debugging  
 **Dependencies:** 008-BreakpointManagement
 
@@ -33,7 +33,7 @@ Implement core variable inspection using DBGp context_get command to extract and
   - [ ] Add depth limiting for nested structures
 - [ ] Create variable formatting
   - [ ] Format variables for terminal display
-  - [ ] Add type information to output
+  - [ ] Add type information to the output
   - [ ] Handle large variable values (truncation)
   - [ ] Create JSON output option
 

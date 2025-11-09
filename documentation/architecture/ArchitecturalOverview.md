@@ -192,15 +192,17 @@ graph TB
 
 ### Architecture Decision Records Status
 
-| ADR | Decision | Status | Rationale |
-|-----|----------|---------|-----------|
-| **ADR-001** | Xdebug with DBGp Protocol | **Accepted** | Industry standard, proven reliability, extensive features |
-| **ADR-002** | Node.js for Prototype | **Provisional** | Team expertise, rapid development, reconsider after prototype |
-| **ADR-003** | API Gateway Architecture | **Accepted** | Clean separation, scalable, platform-agnostic AI integration |
-| **ADR-004** | CLI Interface for Prototype | **Provisional** | Rapid development, plugin architecture foundation |
-| **ADR-005** | Claude Code Integration | **Accepted** | Team expertise, proven code analysis capabilities |
-| **ADR-006** | Local Development Tool | **Accepted** | Security, privacy, performance, developer trust |
-| **ADR-007** | IDE-Agnostic Plugin Architecture | **Accepted** | Flexibility, extensibility, community contributions |
+| ADR         | Decision                         | Status          | Rationale                                                         |
+|-------------|----------------------------------|-----------------|-------------------------------------------------------------------|
+| **ADR-001** | Xdebug with DBGp Protocol        | **Accepted**    | Industry standard, proven reliability, extensive features         |
+| **ADR-002** | Node.js for Prototype            | **Provisional** | Team expertise, rapid development, reconsider after prototype     |
+| **ADR-003** | API Gateway Architecture         | **Accepted**    | Clean separation, scalable, platform-agnostic AI integration      |
+| **ADR-004** | CLI Interface for Prototype      | **Provisional** | Rapid development, plugin architecture foundation                 |
+| **ADR-005** | Claude Code Integration          | **Accepted**    | Team expertise, proven code analysis capabilities                 |
+| **ADR-006** | Local Development Tool           | **Accepted**    | Security, privacy, performance, developer trust                   |
+| **ADR-007** | IDE-Agnostic Plugin Architecture | **Accepted**    | Flexibility, extensibility, community contributions               |
+| **ADR-008** | Direct DBGp Implementation       | **Accepted**    | Security, performance, full protocol control                      |
+| **ADR-009** | DBGp Server Mode Architecture    | **Accepted**    | IDE compatibility, reliable operation, complete debugging control |
 
 ### Key Decision Themes
 
@@ -214,6 +216,8 @@ graph TB
 - **Local Deployment:** Security and privacy priority
 - **Claude Code Integration:** Team expertise leverage
 - **Plugin Architecture:** Community extensibility strategy
+- **Direct DBGp Implementation:** Security and performance benefits
+- **DBGp Server Mode:** Reliable IDE-independent debugging operation
 
 #### Risk Mitigation Strategies
 - **Modular architecture** enables technology migration without complete rewrites
@@ -398,6 +402,8 @@ class AIManager {
 - [ADR-005: Choose Claude Code Integration](/Users/d.wenzel/projekt/ydebug/documentation/architecture/005-choose-claude-code-integration.md) - AI platform selection
 - [ADR-006: Choose Local Development Tool Deployment](/Users/d.wenzel/projekt/ydebug/documentation/architecture/006-choose-local-deployment-model.md) - Security and deployment model
 - [ADR-007: Choose IDE-Agnostic Plugin Architecture](/Users/d.wenzel/projekt/ydebug/documentation/architecture/007-choose-ide-agnostic-plugin-architecture.md) - Extensibility strategy
+- [ADR-008: Choose Direct DBGp Implementation](/Users/d.wenzel/projekt/ydebug/documentation/architecture/008-choose-direct-dbgp-implementation.md) - Security and performance approach
+- [ADR-009: Choose DBGp Server Mode Architecture](/Users/d.wenzel/projekt/ydebug/documentation/architecture/009-choose-dbgp-server-mode.md) - IDE compatibility solution
 
 ### Project Planning Documents
 - [Project Goal](/Users/d.wenzel/projekt/ydebug/documentation/plan/goal.md) - Vision and core concept
