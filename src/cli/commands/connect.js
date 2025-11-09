@@ -20,6 +20,7 @@
 
 const BaseCommand = require('./base');
 const { DBGpClient } = require('../../debugger');
+const { logger } = require('../../utils/Logger');
 
 /**
  * Connect command implementation
@@ -35,6 +36,7 @@ class ConnectCommand extends BaseCommand {
       const config = this.loadConfig();
       const connectionConfig = this.buildConnectionConfig(config, options);
 
+      logger.debug('Starting connection test with config:', connectionConfig);
       this.info(`Testing connection to Xdebug at ${connectionConfig.host}:${connectionConfig.port}...`);
       
       // Start timing
@@ -61,6 +63,7 @@ class ConnectCommand extends BaseCommand {
         
       } catch (error) {
         const connectionTime = Date.now() - startTime;
+        logger.debug('Connection test failed:', error.message);
         this.displayConnectionFailure(error, connectionConfig, connectionTime);
         throw error;
       }

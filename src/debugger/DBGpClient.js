@@ -20,6 +20,7 @@
 
 const net = require('net');
 const { EventEmitter } = require('events');
+const { logger } = require('../utils/Logger');
 
 /**
  * DBGp Client for Xdebug communication
@@ -58,6 +59,7 @@ class DBGpClient extends EventEmitter {
       // Set connection timeout
       this.connectionTimeout = setTimeout(() => {
         this.cleanup();
+        logger.error(`Connection timeout after ${this.config.timeout}ms to ${this.config.host}:${this.config.port}`);
         reject(new Error(`Connection timeout after ${this.config.timeout}ms`));
       }, this.config.timeout);
 
@@ -75,17 +77,20 @@ class DBGpClient extends EventEmitter {
         this.socket.on('connect', () => {
           clearTimeout(this.connectionTimeout);
           this.isConnected = true;
+          logger.info(`Connected to Xdebug server at ${this.config.host}:${this.config.port}`);
           this.emit('connect');
         });
 
         this.socket.on('close', () => {
           this.isConnected = false;
+          logger.info('Disconnected from Xdebug server');
           this.emit('disconnect');
           this.cleanup();
         });
 
         this.socket.on('error', (error) => {
           clearTimeout(this.connectionTimeout);
+          logger.error('DBGp connection error:', error.message);
           this.isConnected = false;
           this.cleanup();
           reject(error);
