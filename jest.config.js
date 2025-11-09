@@ -37,7 +37,7 @@ module.exports = {
   testTimeout: 20000,
 
   // Force exit after tests complete
-  forceExit: true,
+  forceExit: false,
 
   // Detect open handles
   detectOpenHandles: true,

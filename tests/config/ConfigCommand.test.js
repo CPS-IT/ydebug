@@ -413,7 +413,7 @@ Current Configuration:
       
       expect(consoleSpy).toHaveBeenCalledWith(
         '[WARNING]',
-        "Configuration key 'nonexistent.key' not found"
+        'Configuration key \'nonexistent.key\' not found'
       );
     });
 

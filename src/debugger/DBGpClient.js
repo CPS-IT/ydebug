@@ -21,6 +21,12 @@
 const net = require('net');
 const { EventEmitter } = require('events');
 const { logger } = require('../utils/Logger');
+const { transactionManager } = require('./TransactionManager');
+const { xmlParser } = require('./DBGpXmlParser');
+const DBGpConnectionError = require('./errors/DBGpConnectionError');
+const DBGpTimeoutError = require('./errors/DBGpTimeoutError');
+const DBGpProtocol = require('./protocol/DBGpProtocol');
+const { dbgpConfig } = require('./DBGpConfig');
 
 /**
  * DBGp Client for Xdebug communication
@@ -30,19 +36,24 @@ class DBGpClient extends EventEmitter {
   constructor(config = {}) {
     super();
 
+    // Get base configuration from DBGpConfig and merge with constructor overrides
+    const baseConfig = dbgpConfig.getComponentConfig('connection');
     this.config = {
-      host: config.host || 'localhost',
-      port: config.port || 9003,
-      timeout: config.timeout || 30000,
-      ...config,
+      ...baseConfig,
+      ...config  // Constructor overrides take precedence for backward compatibility
     };
 
     this.socket = null;
     this.isConnected = false;
     this.connectionTimeout = null;
-    this.commandCounter = 0;
     this.pendingCommands = new Map();
     this.buffer = '';
+
+    // Initialize protocol layer
+    this.protocol = new DBGpProtocol({
+      version: dbgpConfig.get('protocolVersion', '1.0'),
+      config: dbgpConfig.getComponentConfig('protocol')
+    });
   }
 
   /**
@@ -60,7 +71,18 @@ class DBGpClient extends EventEmitter {
       this.connectionTimeout = setTimeout(() => {
         this.cleanup();
         logger.error(`Connection timeout after ${this.config.timeout}ms to ${this.config.host}:${this.config.port}`);
-        reject(new Error(`Connection timeout after ${this.config.timeout}ms`));
+        reject(new DBGpConnectionError(
+          `Connection timeout after ${this.config.timeout}ms`,
+          {
+            code: 'CONNECTION_TIMEOUT',
+            context: {
+              host: this.config.host,
+              port: this.config.port,
+              timeout: this.config.timeout
+            },
+            recoverable: true
+          }
+        ));
       }, this.config.timeout);
 
       try {
@@ -140,79 +162,30 @@ class DBGpClient extends EventEmitter {
    * Process a complete DBGp message
    * @param {string} message - Complete XML message
    */
-  processMessage(message) {
+  async processMessage(message) {
     try {
-      const parsed = this.parseXml(message);
+      const parsed = await xmlParser.parseDBGpResponse(message);
       
       if (parsed.init) {
         // Initial connection message
         this.emit('init', parsed.init);
-      } else if (parsed.response) {
+      } else if (parsed.response || parsed.transactionId) {
         // Response to a command
-        const transactionId = parsed.response.transaction_id;
-        if (this.pendingCommands.has(transactionId)) {
-          const { resolve, timeoutId } = this.pendingCommands.get(transactionId);
-          clearTimeout(timeoutId); // Clear the timeout
-          this.pendingCommands.delete(transactionId);
-          resolve(parsed.response);
+        const transactionId = parsed.transactionId;
+        if (transactionId && this.pendingCommands.has(transactionId.toString())) {
+          const { resolve, timeoutId } = this.pendingCommands.get(transactionId.toString());
+          clearTimeout(timeoutId);
+          this.pendingCommands.delete(transactionId.toString());
+          transactionManager.completePending(transactionId);
+          resolve(message); // Return raw XML for further processing by commands
         }
-        this.emit('response', parsed.response);
+        this.emit('response', parsed.response || parsed.raw);
       }
     } catch (error) {
       this.emit('error', new Error(`Failed to parse message: ${error.message}`));
     }
   }
 
-  /**
-   * Simple XML parser for DBGp messages
-   * @param {string} xml - XML string to parse
-   * @returns {Object} Parsed object
-   */
-  parseXml(xml) {
-    const result = {};
-    
-    // Parse init message
-    const initMatch = xml.match(/<init[^>]*>/);
-    if (initMatch) {
-      const attrs = this.parseAttributes(initMatch[0]);
-      result.init = attrs;
-      return result;
-    }
-    
-    // Parse response message
-    const responseMatch = xml.match(/<response[^>]*>/);
-    if (responseMatch) {
-      const attrs = this.parseAttributes(responseMatch[0]);
-      result.response = attrs;
-      
-      // Extract content between response tags
-      const contentMatch = xml.match(/<response[^>]*>(.*?)<\/response>/s);
-      if (contentMatch && contentMatch[1].trim()) {
-        result.response.content = contentMatch[1];
-      }
-      
-      return result;
-    }
-    
-    throw new Error(`Unknown message format: ${xml}`);
-  }
-
-  /**
-   * Parse XML attributes from a tag
-   * @param {string} tag - XML tag string
-   * @returns {Object} Attributes object
-   */
-  parseAttributes(tag) {
-    const attrs = {};
-    const regex = /(\w+)="([^"]*)"/g;
-    let match;
-    
-    while ((match = regex.exec(tag)) !== null) {
-      attrs[match[1]] = match[2];
-    }
-    
-    return attrs;
-  }
 
   /**
    * Disconnect from Xdebug server
@@ -271,7 +244,14 @@ class DBGpClient extends EventEmitter {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      reject(new Error('Connection closed'));
+      reject(new DBGpConnectionError(
+        'Connection closed',
+        {
+          code: 'CONNECTION_CLOSED',
+          recoverable: false,
+          category: 'connection'
+        }
+      ));
     }
     this.pendingCommands.clear();
   }
@@ -285,18 +265,43 @@ class DBGpClient extends EventEmitter {
   sendCommand(command, options = {}) {
     return new Promise((resolve, reject) => {
       if (!this.isConnected || !this.socket) {
-        reject(new Error('Not connected to debugger'));
+        reject(new DBGpConnectionError(
+          'Not connected to debugger',
+          {
+            code: 'NOT_CONNECTED',
+            context: {
+              command: command,
+              isConnected: this.isConnected
+            },
+            recoverable: true
+          }
+        ));
         return;
       }
 
-      const transactionId = ++this.commandCounter;
+      const transactionId = transactionManager.getNext();
       const xmlCommand = this.buildCommand(command, transactionId, options);
+      
+      // Register pending transaction
+      transactionManager.registerPending(transactionId, { command, timestamp: Date.now() });
       
       // Set command timeout
       const timeoutId = setTimeout(() => {
         if (this.pendingCommands.has(transactionId.toString())) {
           this.pendingCommands.delete(transactionId.toString());
-          reject(new Error(`Command timeout: ${command}`));
+          transactionManager.completePending(transactionId);
+          reject(new DBGpTimeoutError(
+            `Command timeout: ${command}`,
+            {
+              code: 'COMMAND_TIMEOUT',
+              context: {
+                command: command,
+                transactionId: transactionId,
+                timeout: this.config.timeout
+              },
+              recoverable: true
+            }
+          ));
         }
       }, this.config.timeout);
       
@@ -312,82 +317,39 @@ class DBGpClient extends EventEmitter {
           clearTimeout(pending.timeoutId);
           this.pendingCommands.delete(transactionId.toString());
         }
+        transactionManager.completePending(transactionId);
         reject(error);
       }
     });
   }
 
   /**
-   * Build XML command string
+   * Build XML command string using protocol layer
    * @param {string} command - Command name
    * @param {number} transactionId - Transaction ID
    * @param {Object} options - Command options
    * @returns {string} XML command string
    */
   buildCommand(command, transactionId, options = {}) {
-    let cmd = `${command} -i ${transactionId}`;
-    
-    // Add command-specific options
-    for (const [key, value] of Object.entries(options)) {
-      if (value !== undefined && value !== null) {
-        cmd += ` -${key} ${value}`;
-      }
-    }
-    
-    return cmd;
-  }
-
-  /**
-   * Set a breakpoint
-   * @param {string} filename - File to set breakpoint in
-   * @param {number} line - Line number
-   * @returns {Promise<Object>} Breakpoint response
-   */
-  setBreakpoint(filename, line) {
-    return this.sendCommand('breakpoint_set', {
-      t: 'line',
-      f: filename,
-      n: line
-    });
-  }
-
-  /**
-   * Remove a breakpoint
-   * @param {string} breakpointId - Breakpoint ID to remove
-   * @returns {Promise<Object>} Response
-   */
-  removeBreakpoint(breakpointId) {
-    return this.sendCommand('breakpoint_remove', {
-      d: breakpointId
-    });
-  }
-
-  /**
-   * Get variable value
-   * @param {string} variableName - Variable name to get
-   * @returns {Promise<Object>} Variable data
-   */
-  getVariable(variableName) {
-    return this.sendCommand('property_get', {
-      n: variableName
-    });
-  }
-
-  /**
-   * Get current execution context
-   * @returns {Promise<Object>} Context information
-   */
-  async getContext() {
     try {
-      const [stack, context] = await Promise.all([
-        this.sendCommand('stack_get'),
-        this.sendCommand('context_get')
-      ]);
-      return { stack, context };
+      // Use protocol layer for command building with validation
+      return this.protocol.buildCommand(command, transactionId, options);
     } catch (error) {
-      throw new Error(`Failed to get context: ${error.message}`);
+      // Fallback to simple command building for backward compatibility
+      logger.debug(`Protocol command building failed, using fallback: ${error.message}`);
+      let cmd = `${command} -i ${transactionId}`;
+      
+      // Add command-specific options
+      for (const [key, value] of Object.entries(options)) {
+        if (value !== undefined && value !== null) {
+          cmd += ` -${key} ${value}`;
+        }
+      }
+      
+      return cmd;
     }
   }
+
 
   /**
    * Check if client is connected

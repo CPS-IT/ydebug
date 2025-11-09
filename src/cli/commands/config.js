@@ -19,7 +19,6 @@
  */
 
 const BaseCommand = require('./base');
-const { createSampleConfig } = require('../../config');
 const ConfigManager = require('../../config/ConfigManager');
 
 /**

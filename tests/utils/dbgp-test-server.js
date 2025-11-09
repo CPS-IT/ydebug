@@ -160,24 +160,24 @@ class DBGpTestServer extends EventEmitter {
       // Send appropriate response
       let response;
       switch (command) {
-        case 'stop':
-          response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="stop" transaction_id="${transactionId}" status="stopped" reason="ok"></response>`;
-          break;
+      case 'stop':
+        response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="stop" transaction_id="${transactionId}" status="stopped" reason="ok"></response>`;
+        break;
           
-        case 'breakpoint_set':
-          response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="breakpoint_set" transaction_id="${transactionId}" id="1"></response>`;
-          break;
+      case 'breakpoint_set':
+        response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="breakpoint_set" transaction_id="${transactionId}" id="1"></response>`;
+        break;
           
-        case 'stack_get':
-          response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="stack_get" transaction_id="${transactionId}"><stack where="test" level="0" type="file" filename="file:///test.php" lineno="1"></stack></response>`;
-          break;
+      case 'stack_get':
+        response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="stack_get" transaction_id="${transactionId}"><stack where="test" level="0" type="file" filename="file:///test.php" lineno="1"></stack></response>`;
+        break;
           
-        case 'context_get':
-          response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get" transaction_id="${transactionId}"></response>`;
-          break;
+      case 'context_get':
+        response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="context_get" transaction_id="${transactionId}"></response>`;
+        break;
           
-        default:
-          response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="${command}" transaction_id="${transactionId}" status="running" reason="ok"></response>`;
+      default:
+        response = `<?xml version="1.0" encoding="iso-8859-1"?>\n<response xmlns="urn:debugger_protocol_v1" xmlns:xdebug="https://xdebug.org/dbgp/xdebug" command="${command}" transaction_id="${transactionId}" status="running" reason="ok"></response>`;
       }
       
       this.emit('command', { command, transactionId, socket });
@@ -240,7 +240,7 @@ class DBGpTestServer extends EventEmitter {
       for (const socket of this.connections) {
         try {
           socket.destroy();
-        } catch (error) {
+        } catch {
           // Ignore errors during cleanup
         }
       }

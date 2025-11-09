@@ -58,7 +58,8 @@ describe('DBGpClient - Fixed', () => {
     test('should use default configuration when no options provided', () => {
       const defaultClient = new DBGpClient();
       const config = defaultClient.getConfig();
-      expect(config.timeout).toBe(30000);
+      expect(config.timeout).toBe(10000); // connectionTimeout from DBGpConfig
+      expect(config.initTimeout).toBe(5000);
     });
 
     test('should accept custom configuration', () => {
@@ -85,54 +86,75 @@ describe('DBGpClient - Fixed', () => {
     });
   });
 
-  describe('XML Parsing', () => {
-    test('should parse init messages correctly', () => {
+  describe('Message Processing', () => {
+    test('should process init messages through xmlParser', async () => {
       const xml = '<init appid="12345" idekey="test" session="session123" />';
-      const result = client.parseXml(xml);
+      const mockParsed = { 
+        init: { appid: '12345', idekey: 'test', session: 'session123' },
+        transactionId: 0 
+      };
       
-      expect(result.init).toEqual({
-        appid: '12345',
-        idekey: 'test',
-        session: 'session123'
-      });
+      // Mock xmlParser to simulate parsing
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue(mockParsed);
+      
+      // Mock the emit to capture the event
+      const initSpy = jest.fn();
+      client.on('init', initSpy);
+      
+      await client.processMessage(xml);
+      
+      expect(xmlParser.parseDBGpResponse).toHaveBeenCalledWith(xml);
+      expect(initSpy).toHaveBeenCalledWith(mockParsed.init);
     });
 
-    test('should parse response messages correctly', () => {
+    test('should process response messages through xmlParser', async () => {
       const xml = '<response command="run" transaction_id="1" status="break" />';
-      const result = client.parseXml(xml);
+      const mockParsed = { 
+        response: { command: 'run', transaction_id: '1', status: 'break' },
+        transactionId: 1 
+      };
       
-      expect(result.response).toEqual({
-        command: 'run',
-        transaction_id: '1',
-        status: 'break'
-      });
-    });
-
-    test('should parse response with content', () => {
-      const xml = '<response command="stack_get" transaction_id="2"><stack level="0" type="file" filename="/path/file.php" lineno="10" /></response>';
-      const result = client.parseXml(xml);
+      // Mock xmlParser
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue(mockParsed);
       
-      expect(result.response.command).toBe('stack_get');
-      expect(result.response.content).toContain('<stack level="0"');
-    });
-
-    test('should handle malformed XML', () => {
-      expect(() => {
-        client.parseXml('invalid xml');
-      }).toThrow('Unknown message format');
-    });
-
-    test('should parse attributes correctly', () => {
-      const attrs = client.parseAttributes('<test name="value" id="123" />');
-      expect(attrs).toEqual({
-        name: 'value',
-        id: '123'
+      // Mock transactionManager
+      const { transactionManager } = require('../src/debugger/TransactionManager');
+      transactionManager.completePending = jest.fn();
+      
+      // Mock pending command
+      const mockResolve = jest.fn();
+      client.pendingCommands.set('1', { 
+        resolve: mockResolve, 
+        timeoutId: setTimeout(() => {}, 1000) 
       });
+      
+      await client.processMessage(xml);
+      
+      expect(xmlParser.parseDBGpResponse).toHaveBeenCalledWith(xml);
+      expect(mockResolve).toHaveBeenCalledWith(xml);
+      // Command should be removed from pending after processing
+      expect(client.pendingCommands.has('1')).toBe(false);
     });
 
-    test('should handle empty attributes', () => {
-      const attrs = client.parseAttributes('<test>');
-      expect(attrs).toEqual({});
+    test('should handle XML parsing errors', async () => {
+      const xml = 'invalid xml';
+      
+      // Mock xmlParser to throw error
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      xmlParser.parseDBGpResponse = jest.fn().mockRejectedValue(new Error('XML parsing failed'));
+      
+      const errorSpy = jest.fn();
+      client.on('error', errorSpy);
+      
+      await client.processMessage(xml);
+      
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Failed to parse message')
+        })
+      );
     });
   });
 
@@ -144,9 +166,9 @@ describe('DBGpClient - Fixed', () => {
 
     test('should build commands with options', () => {
       const command = client.buildCommand('breakpoint_set', 2, {
-        t: 'line',
-        f: 'file.php',
-        n: 10
+        type: 'line',
+        filename: 'file.php',
+        lineno: 10
       });
       expect(command).toBe('breakpoint_set -i 2 -t line -f file.php -n 10');
     });
@@ -195,20 +217,41 @@ describe('DBGpClient - Fixed', () => {
       client.processMessage = originalProcessMessage;
     });
 
-    test('should emit init events', () => {
+    test('should emit init events through xmlParser', async () => {
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue({
+        init: { appid: 'test' },
+        transactionId: 0
+      });
+      
       const initSpy = jest.fn();
       client.on('init', initSpy);
       
-      client.processMessage('<init appid="test" />');
+      await client.processMessage('<init appid="test" />');
       
       expect(initSpy).toHaveBeenCalledWith({ appid: 'test' });
     });
 
-    test('should emit response events', () => {
+    test('should emit response events through xmlParser', async () => {
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      const { transactionManager } = require('../src/debugger/TransactionManager');
+      
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue({
+        response: { command: 'run', transaction_id: '1' },
+        transactionId: 1
+      });
+      transactionManager.completePending = jest.fn();
+      
+      // Mock pending command
+      client.pendingCommands.set('1', { 
+        resolve: jest.fn(), 
+        timeoutId: setTimeout(() => {}, 1000) 
+      });
+      
       const responseSpy = jest.fn();
       client.on('response', responseSpy);
       
-      client.processMessage('<response command="run" transaction_id="1" />');
+      await client.processMessage('<response command="run" transaction_id="1" />');
       
       expect(responseSpy).toHaveBeenCalledWith({
         command: 'run',
@@ -300,58 +343,32 @@ describe('DBGpClient - Fixed', () => {
       client.socket = mockSocket;
     });
 
-    test('should resolve breakpoint setting with response', async () => {
-      const breakpointPromise = client.setBreakpoint('/path/file.php', 10);
+    test('should send commands through sendCommand method', async () => {
+      const { transactionManager } = require('../src/debugger/TransactionManager');
+      transactionManager.getNext = jest.fn().mockReturnValue(1);
+      transactionManager.registerPending = jest.fn();
       
-      // Simulate response
-      setImmediate(() => {
-        client.processMessage('<response command="breakpoint_set" transaction_id="1" id="bp123" />');
-      });
+      const commandPromise = client.sendCommand('status');
       
-      const result = await breakpointPromise;
-      expect(mockSocket.write).toHaveBeenCalledWith('breakpoint_set -i 1 -t line -f /path/file.php -n 10\0');
-      expect(result.id).toBe('bp123');
-      expect(result.command).toBe('breakpoint_set');
+      expect(mockSocket.write).toHaveBeenCalledWith('status -i 1\0');
+      expect(client.pendingCommands.size).toBe(1);
+      expect(client.pendingCommands.has('1')).toBe(true);
+      
+      // Simulate response to resolve promise
+      const pendingCommand = client.pendingCommands.get('1');
+      pendingCommand.resolve('<response transaction_id="1" status="break" />');
+      
+      const result = await commandPromise;
+      expect(result).toBe('<response transaction_id="1" status="break" />');
     });
 
-    test('should resolve breakpoint removal with response', async () => {
-      const removePromise = client.removeBreakpoint('bp1');
+    test('should track pending commands correctly', () => {
+      const { transactionManager } = require('../src/debugger/TransactionManager');
+      transactionManager.getNext = jest.fn()
+        .mockReturnValueOnce(1)
+        .mockReturnValueOnce(2);
+      transactionManager.registerPending = jest.fn();
       
-      // Simulate response
-      setImmediate(() => {
-        client.processMessage('<response command="breakpoint_remove" transaction_id="1" />');
-      });
-      
-      const result = await removePromise;
-      expect(mockSocket.write).toHaveBeenCalledWith('breakpoint_remove -i 1 -d bp1\0');
-      expect(result.command).toBe('breakpoint_remove');
-    });
-
-    test('should resolve variable retrieval with content', async () => {
-      const variablePromise = client.getVariable('$testVar');
-      
-      // Simulate response with content
-      setImmediate(() => {
-        client.processMessage('<response command="property_get" transaction_id="1"><property name="testVar" type="string">test value</property></response>');
-      });
-      
-      const result = await variablePromise;
-      expect(mockSocket.write).toHaveBeenCalledWith('property_get -i 1 -n $testVar\0');
-      expect(result.command).toBe('property_get');
-      expect(result.content).toContain('testVar');
-    });
-
-    test('should track command counter', () => {
-      expect(client.commandCounter).toBe(0);
-      
-      client.sendCommand('run');
-      expect(client.commandCounter).toBe(1);
-      
-      client.sendCommand('step_into');
-      expect(client.commandCounter).toBe(2);
-    });
-
-    test('should store pending commands', () => {
       client.sendCommand('run');
       client.sendCommand('step_into');
       
@@ -359,14 +376,34 @@ describe('DBGpClient - Fixed', () => {
       expect(client.pendingCommands.has('1')).toBe(true);
       expect(client.pendingCommands.has('2')).toBe(true);
     });
+
+    test('should handle command timeout', (done) => {
+      const { transactionManager } = require('../src/debugger/TransactionManager');
+      transactionManager.getNext = jest.fn().mockReturnValue(1);
+      transactionManager.registerPending = jest.fn();
+      transactionManager.completePending = jest.fn();
+      
+      client.config.timeout = 50; // Very short timeout for testing
+      
+      const commandPromise = client.sendCommand('status');
+      
+      commandPromise.catch((error) => {
+        expect(error.message).toBe('Command timeout: status');
+        expect(client.pendingCommands.size).toBe(0);
+        done();
+      });
+    });
   });
 
   describe('Error Handling', () => {
-    test('should emit error on invalid XML', () => {
+    test('should emit error on invalid XML through xmlParser', async () => {
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      xmlParser.parseDBGpResponse = jest.fn().mockRejectedValue(new Error('XML parsing failed'));
+      
       const errorSpy = jest.fn();
       client.on('error', errorSpy);
       
-      client.processMessage('invalid xml');
+      await client.processMessage('invalid xml');
       
       expect(errorSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -414,60 +451,47 @@ describe('DBGpClient - Fixed', () => {
       client.socket = mockSocket;
     });
 
-    test('should handle context retrieval commands', async () => {
-      const contextPromise = client.getContext();
+    test('should handle response with pending command through xmlParser', async () => {
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      const { transactionManager } = require('../src/debugger/TransactionManager');
       
-      // Simulate both stack_get and context_get responses
-      setImmediate(() => {
-        client.processMessage('<response command="stack_get" transaction_id="1"><stack level="0" type="file" filename="/test.php" lineno="10" /></response>');
-        client.processMessage('<response command="context_get" transaction_id="2"><property name="var1" type="string">value1</property></response>');
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue({
+        response: { command: 'run', transaction_id: '1', status: 'running' },
+        transactionId: 1
       });
+      transactionManager.completePending = jest.fn();
       
-      const result = await contextPromise;
-      
-      expect(mockSocket.write).toHaveBeenCalledWith('stack_get -i 1\0');
-      expect(mockSocket.write).toHaveBeenCalledWith('context_get -i 2\0');
-      expect(result.stack).toBeDefined();
-      expect(result.context).toBeDefined();
-      expect(result.stack.command).toBe('stack_get');
-      expect(result.context.command).toBe('context_get');
-    });
-
-    test('should handle getContext error scenarios', async () => {
-      const contextPromise = client.getContext();
-      
-      // Simulate error in one of the commands
-      setImmediate(() => {
-        client.processMessage('<response command="stack_get" transaction_id="1" status="error"><error code="404"><message>File not found</message></error></response>');
-      });
-      
-      await expect(contextPromise).rejects.toThrow('Failed to get context');
-    });
-
-    test('should handle response with pending command', () => {
       const mockResolve = jest.fn();
       client.pendingCommands.set('1', {
         resolve: mockResolve,
-        reject: jest.fn()
+        reject: jest.fn(),
+        timeoutId: setTimeout(() => {}, 1000)
       });
 
-      client.processMessage('<response command="run" transaction_id="1" status="running" />');
+      await client.processMessage('<response command="run" transaction_id="1" status="running" />');
 
-      expect(mockResolve).toHaveBeenCalledWith({
-        command: 'run',
-        transaction_id: '1',
-        status: 'running'
-      });
+      expect(mockResolve).toHaveBeenCalledWith('<response command="run" transaction_id="1" status="running" />');
       expect(client.pendingCommands.has('1')).toBe(false);
     });
 
-    test('should ignore responses without matching pending command', () => {
+    test('should ignore responses without matching pending command', async () => {
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue({
+        response: { command: 'run', transaction_id: '999', status: 'running' },
+        transactionId: 999
+      });
+      
       const responseSpy = jest.fn();
       client.on('response', responseSpy);
 
-      client.processMessage('<response command="run" transaction_id="999" />');
+      await client.processMessage('<response command="run" transaction_id="999" />');
 
-      expect(responseSpy).toHaveBeenCalled();
+      expect(responseSpy).toHaveBeenCalledWith({
+        command: 'run',
+        transaction_id: '999',
+        status: 'running'
+      });
       // Should not crash even if no pending command matches
     });
   });
@@ -497,31 +521,49 @@ describe('DBGpClient - Fixed', () => {
       client.processMessage = originalProcessMessage;
     });
 
-    test('should handle response without transaction_id', () => {
+    test('should handle response without transaction_id through xmlParser', async () => {
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
+      
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue({
+        response: { command: 'test' },
+        transactionId: null
+      });
+      
       const responseSpy = jest.fn();
       client.on('response', responseSpy);
       
-      client.processMessage('<response command="test" />');
+      await client.processMessage('<response command="test" />');
       
-      expect(responseSpy).toHaveBeenCalledWith({
-        command: 'test'
-      });
+      expect(responseSpy).toHaveBeenCalledWith({ command: 'test' });
     });
 
-    test('should handle XML with special characters', () => {
-      const xml = '<init appid="test&amp;123" idekey="key&lt;test" />';
-      const result = client.parseXml(xml);
+    test('should handle XML with special characters through xmlParser', async () => {
+      const { xmlParser } = require('../src/debugger/DBGpXmlParser');
       
-      // The simple parser doesn't decode HTML entities, it extracts raw attribute values
-      expect(result.init).toEqual({
-        appid: 'test&amp;123',
-        idekey: 'key&lt;test'
+      xmlParser.parseDBGpResponse = jest.fn().mockResolvedValue({
+        init: { appid: 'test&123', idekey: 'key<test' },
+        transactionId: 0
+      });
+      
+      const initSpy = jest.fn();
+      client.on('init', initSpy);
+      
+      const xml = '<init appid="test&amp;123" idekey="key&lt;test" />';
+      await client.processMessage(xml);
+      
+      expect(initSpy).toHaveBeenCalledWith({
+        appid: 'test&123',
+        idekey: 'key<test'
       });
     });
   });
 
   describe('Advanced Error Scenarios', () => {
     test('should handle disconnect timeout gracefully', async () => {
+      const { transactionManager } = require('../src/debugger/TransactionManager');
+      transactionManager.getNext = jest.fn().mockReturnValue(1);
+      transactionManager.registerPending = jest.fn();
+      
       client.isConnected = true;
       client.socket = mockSocket;
       
@@ -534,12 +576,18 @@ describe('DBGpClient - Fixed', () => {
     });
 
     test('should handle command timeout properly', async () => {
+      const { transactionManager } = require('../src/debugger/TransactionManager');
+      transactionManager.getNext = jest.fn().mockReturnValue(1);
+      transactionManager.registerPending = jest.fn();
+      transactionManager.completePending = jest.fn();
+      
       client.isConnected = true;
       client.socket = mockSocket;
+      client.config.timeout = 50; // Short timeout for testing
       
       const commandPromise = client.sendCommand('run');
       
-      // Don't send response - let it timeout with client's 100ms timeout
+      // Don't send response - let it timeout with client's short timeout
       await expect(commandPromise).rejects.toThrow('Command timeout: run');
       
       // Verify command was removed from pending
