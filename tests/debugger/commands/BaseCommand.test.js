@@ -3,7 +3,6 @@
  */
 
 const BaseCommand = require('../../../src/debugger/commands/BaseCommand');
-// const { DBGpError } = require('../../../src/debugger/errors/DBGpError');
 
 describe('BaseCommand', () => {
   let mockClient;
@@ -12,6 +11,7 @@ describe('BaseCommand', () => {
   beforeEach(() => {
     mockClient = {
       sendCommand: jest.fn(),
+      isConnectedToDebugger: jest.fn().mockReturnValue(true),
       transactionManager: {
         getNext: jest.fn().mockReturnValue(123)
       },

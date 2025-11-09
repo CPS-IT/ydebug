@@ -19,8 +19,6 @@
  */
 
 const { logger } = require('../utils/Logger');
-// const { transactionManager } = require('./TransactionManager');
-// const { xmlParser } = require('./DBGpXmlParser');
 const { commandRegistry } = require('./CommandRegistry');
 const DBGpTimeoutError = require('./errors/DBGpTimeoutError');
 const DBGpProtocolError = require('./errors/DBGpProtocolError');
@@ -46,25 +44,25 @@ class DBGpCommands {
      */
   async executeCommand(commandName, args = {}, options = {}) {
     const timeout = options.timeout || this.commandTimeout;
-    
+
     logger.debug(`Executing DBGp command: ${commandName}`, args);
     const startTime = Date.now();
-        
+
     try {
       // Use command registry for execution
       const result = await commandRegistry.execute(commandName, this.client, args, { timeout });
       const duration = Date.now() - startTime;
-      
+
       logger.debug(`Command completed in ${duration}ms: ${commandName}`);
       return result;
-            
+
     } catch (error) {
       const duration = Date.now() - startTime;
       logger.error(`Command failed after ${duration}ms: ${commandName} - ${error.message}`);
-      
+
       // Convert to appropriate error types if not already a DBGp error
-      if (error instanceof DBGpTimeoutError || 
-          error instanceof DBGpConnectionError || 
+      if (error instanceof DBGpTimeoutError ||
+          error instanceof DBGpConnectionError ||
           error instanceof DBGpProtocolError) {
         // Already a specific DBGp error, re-throw as is
         throw error;
@@ -76,9 +74,9 @@ class DBGpCommands {
           `Command ${commandName} timed out after ${timeout}ms`,
           {
             code: 'COMMAND_TIMEOUT',
-            context: { 
-              command: commandName, 
-              timeout, 
+            context: {
+              command: commandName,
+              timeout,
               duration,
               originalError: error.message
             },
@@ -168,7 +166,7 @@ class DBGpCommands {
      */
   async status() {
     logger.info('Getting debugger status');
-    
+
     try {
       const result = await this.executeCommand('status');
       logger.info(`Debugger status: ${result.status} ${result.reason ? `(${result.reason})` : ''}`);
@@ -186,7 +184,7 @@ class DBGpCommands {
      */
   async featureGet(featureName) {
     logger.debug(`Getting feature: ${featureName}`);
-    
+
     try {
       const result = await this.executeCommand('feature_get', { featureName });
       logger.debug(`Feature ${featureName}: supported=${result.supported}, value="${result.value}"`);
@@ -205,7 +203,7 @@ class DBGpCommands {
      */
   async featureSet(featureName, value) {
     logger.debug(`Setting feature ${featureName} to: ${value}`);
-    
+
     try {
       const result = await this.executeCommand('feature_set', { featureName, value });
       logger.debug(`Feature set ${featureName}: success=${result.success}`);
@@ -222,13 +220,63 @@ class DBGpCommands {
      */
   async stepOver() {
     logger.info('Executing step over');
-    
+
     try {
       const result = await this.executeCommand('step_over');
       logger.info(`Step over completed: ${result.status} ${result.reason ? `(${result.reason})` : ''}`);
       return result;
     } catch (error) {
       logger.error('Failed to execute step over:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+     * Set a breakpoint at the specified location
+     * @param {string} filename - File path for the breakpoint
+     * @param {number} lineno - Line number for the breakpoint
+     * @param {Object} options - Additional breakpoint options
+     * @param {string} options.type - Breakpoint type (default: 'line')
+     * @param {string} options.state - Breakpoint state (default: 'enabled')
+     * @param {boolean} options.temporary - Whether breakpoint is temporary (default: false)
+     * @param {string} options.expression - Expression for conditional breakpoints
+     * @returns {Promise<Object>} Breakpoint set response
+     */
+  async setBreakpoint(filename, lineno, options = {}) {
+    logger.info(`Setting breakpoint at ${filename}:${lineno}`);
+
+    try {
+      const args = {
+        type: options.type || 'line',
+        filename,
+        lineno,
+        state: options.state || 'enabled',
+        temporary: options.temporary || false,
+        ...options
+      };
+
+      const result = await this.executeCommand('breakpoint_set', args);
+      logger.info(`Breakpoint set successfully: ID ${result.breakpointId}, State: ${result.state}`);
+      return result;
+    } catch (error) {
+      logger.error(`Failed to set breakpoint at ${filename}:${lineno}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+     * List all currently set breakpoints
+     * @returns {Promise<Object>} Breakpoints list response
+     */
+  async listBreakpoints() {
+    logger.info('Listing all breakpoints');
+
+    try {
+      const result = await this.executeCommand('breakpoint_list');
+      logger.info(`Found ${result.count} breakpoints`);
+      return result;
+    } catch (error) {
+      logger.error('Failed to list breakpoints:', error.message);
       throw error;
     }
   }

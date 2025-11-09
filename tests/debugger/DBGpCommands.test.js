@@ -13,6 +13,7 @@ describe('DBGpCommands (Refactored Architecture)', () => {
     // Mock DBGp client with transaction manager and xml parser
     mockClient = {
       sendCommand: jest.fn(),
+      isConnectedToDebugger: jest.fn().mockReturnValue(true),
       transactionManager: {
         getNext: jest.fn().mockReturnValue(1)
       },

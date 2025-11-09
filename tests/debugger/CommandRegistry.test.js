@@ -36,6 +36,7 @@ describe('CommandRegistry', () => {
 
     mockClient = {
       sendCommand: jest.fn().mockResolvedValue('<response>success</response>'),
+      isConnectedToDebugger: jest.fn().mockReturnValue(true),
       transactionManager: {
         getNext: jest.fn().mockReturnValue(123)
       },

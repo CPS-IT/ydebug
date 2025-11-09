@@ -12,6 +12,7 @@ describe('StatusCommand', () => {
     statusCommand = new StatusCommand();
     mockClient = {
       sendCommand: jest.fn(),
+      isConnectedToDebugger: jest.fn().mockReturnValue(true),
       transactionManager: {
         getNext: jest.fn().mockReturnValue(123)
       },

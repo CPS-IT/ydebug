@@ -44,7 +44,7 @@ class BaseCommand {
         }
       );
     }
-    
+
     this.name = name;
     this.description = description;
     // Use DBGpConfig for timeout, fall back to provided value or default
@@ -123,30 +123,35 @@ class BaseCommand {
    */
   async execute(client, args = {}) {
     try {
+      // Check if the client is connected
+      if (!client.isConnectedToDebugger()) {
+        throw new Error('Not connected to debugger');
+      }
+
       // Validate arguments
       this.validateArgs(args);
-      
+
       // Log command execution
       logger.debug(`Executing command: ${this.name}`, args);
-      
+
       // Get transaction ID from client's transaction manager
       const transactionId = client.transactionManager?.getNext() || Math.floor(Math.random() * 1000);
-      
+
       // Build command string
       const commandString = this.buildCommand(transactionId, args);
-      
+
       // Send command through client
       const rawResponse = await client.sendCommand(commandString, this.timeout);
-      
+
       // Parse response using client's XML parser
       const parsedResponse = client.xmlParser?.parseResponse(rawResponse) || { data: rawResponse };
-      
+
       // Process response through command's parser
       const result = this.parseResponse(parsedResponse);
-      
+
       logger.debug(`Command ${this.name} completed successfully`);
       return result;
-      
+
     } catch (error) {
       logger.error(`Command ${this.name} failed:`, error.message);
       throw error;

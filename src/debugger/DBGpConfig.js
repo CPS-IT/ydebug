@@ -19,7 +19,6 @@
  */
 
 const { logger } = require('../utils/Logger');
-// const DBGpProtocolError = require('./errors/DBGpProtocolError');
 
 /**
  * DBGp Configuration Management
