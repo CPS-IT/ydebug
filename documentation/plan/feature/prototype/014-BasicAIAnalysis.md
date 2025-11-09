@@ -3,7 +3,7 @@
 **Status:** Not Started  
 **Estimated Time:** 4-5 hours  
 **Layer:** AI Integration  
-**Dependencies:** 013-ClaudeCodeAPISetup, 012-VariableDisplayFormatting
+**Dependencies:** 013-ClaudeCodeAPISetup, 015-DebuggingContextPreparation
 
 ## Description
 

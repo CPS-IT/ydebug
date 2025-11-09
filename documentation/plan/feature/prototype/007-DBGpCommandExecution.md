@@ -7,7 +7,7 @@
 
 ## Description
 
-Implement basic DBGp command execution with XML parsing, focusing on fundamental commands like status and feature_get.
+Implement basic DBGp command execution with XML parsing, focusing on fundamental commands like status, feature_get, and minimal step execution for enhanced demonstration value.
 
 ## Tasks
 
@@ -20,6 +20,7 @@ Implement basic DBGp command execution with XML parsing, focusing on fundamental
   - [ ] Add `status` command execution
   - [ ] Implement `feature_get` command
   - [ ] Add `feature_set` command support
+  - [ ] Add minimal `step_over` command for demonstration
   - [ ] Create command response validation
 - [ ] Add XML parsing and handling
   - [ ] Parse DBGp XML responses properly
@@ -42,6 +43,7 @@ Implement basic DBGp command execution with XML parsing, focusing on fundamental
 - [ ] Basic DBGp commands execute successfully
 - [ ] XML responses are parsed correctly
 - [ ] Command errors are handled gracefully
+- [ ] Step execution works for demonstration flow
 - [ ] Logging provides useful debugging information
 - [ ] Tests validate command execution properly
 
@@ -50,3 +52,4 @@ Implement basic DBGp command execution with XML parsing, focusing on fundamental
 - Focus on reliability and error recovery
 - Document DBGp protocol quirks discovered
 - Keep command interface extensible for future commands
+- Step execution enhances demonstration value without significant scope increase
