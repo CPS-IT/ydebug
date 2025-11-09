@@ -21,6 +21,8 @@
 const net = require('net');
 const { EventEmitter } = require('events');
 const { logger } = require('../utils/Logger');
+const { transactionManager } = require('./TransactionManager');
+const { xmlParser } = require('./DBGpXmlParser');
 
 /**
  * DBGp Client for Xdebug communication
@@ -40,7 +42,6 @@ class DBGpClient extends EventEmitter {
     this.socket = null;
     this.isConnected = false;
     this.connectionTimeout = null;
-    this.commandCounter = 0;
     this.pendingCommands = new Map();
     this.buffer = '';
   }
@@ -140,79 +141,30 @@ class DBGpClient extends EventEmitter {
    * Process a complete DBGp message
    * @param {string} message - Complete XML message
    */
-  processMessage(message) {
+  async processMessage(message) {
     try {
-      const parsed = this.parseXml(message);
+      const parsed = await xmlParser.parseDBGpResponse(message);
       
       if (parsed.init) {
         // Initial connection message
         this.emit('init', parsed.init);
-      } else if (parsed.response) {
+      } else if (parsed.response || parsed.transactionId) {
         // Response to a command
-        const transactionId = parsed.response.transaction_id;
-        if (this.pendingCommands.has(transactionId)) {
-          const { resolve, timeoutId } = this.pendingCommands.get(transactionId);
-          clearTimeout(timeoutId); // Clear the timeout
-          this.pendingCommands.delete(transactionId);
-          resolve(parsed.response);
+        const transactionId = parsed.transactionId;
+        if (transactionId && this.pendingCommands.has(transactionId.toString())) {
+          const { resolve, timeoutId } = this.pendingCommands.get(transactionId.toString());
+          clearTimeout(timeoutId);
+          this.pendingCommands.delete(transactionId.toString());
+          transactionManager.completePending(transactionId);
+          resolve(message); // Return raw XML for further processing by commands
         }
-        this.emit('response', parsed.response);
+        this.emit('response', parsed.response || parsed.raw);
       }
     } catch (error) {
       this.emit('error', new Error(`Failed to parse message: ${error.message}`));
     }
   }
 
-  /**
-   * Simple XML parser for DBGp messages
-   * @param {string} xml - XML string to parse
-   * @returns {Object} Parsed object
-   */
-  parseXml(xml) {
-    const result = {};
-    
-    // Parse init message
-    const initMatch = xml.match(/<init[^>]*>/);
-    if (initMatch) {
-      const attrs = this.parseAttributes(initMatch[0]);
-      result.init = attrs;
-      return result;
-    }
-    
-    // Parse response message
-    const responseMatch = xml.match(/<response[^>]*>/);
-    if (responseMatch) {
-      const attrs = this.parseAttributes(responseMatch[0]);
-      result.response = attrs;
-      
-      // Extract content between response tags
-      const contentMatch = xml.match(/<response[^>]*>(.*?)<\/response>/s);
-      if (contentMatch && contentMatch[1].trim()) {
-        result.response.content = contentMatch[1];
-      }
-      
-      return result;
-    }
-    
-    throw new Error(`Unknown message format: ${xml}`);
-  }
-
-  /**
-   * Parse XML attributes from a tag
-   * @param {string} tag - XML tag string
-   * @returns {Object} Attributes object
-   */
-  parseAttributes(tag) {
-    const attrs = {};
-    const regex = /(\w+)="([^"]*)"/g;
-    let match;
-    
-    while ((match = regex.exec(tag)) !== null) {
-      attrs[match[1]] = match[2];
-    }
-    
-    return attrs;
-  }
 
   /**
    * Disconnect from Xdebug server
@@ -289,13 +241,17 @@ class DBGpClient extends EventEmitter {
         return;
       }
 
-      const transactionId = ++this.commandCounter;
+      const transactionId = transactionManager.getNext();
       const xmlCommand = this.buildCommand(command, transactionId, options);
+      
+      // Register pending transaction
+      transactionManager.registerPending(transactionId, { command, timestamp: Date.now() });
       
       // Set command timeout
       const timeoutId = setTimeout(() => {
         if (this.pendingCommands.has(transactionId.toString())) {
           this.pendingCommands.delete(transactionId.toString());
+          transactionManager.completePending(transactionId);
           reject(new Error(`Command timeout: ${command}`));
         }
       }, this.config.timeout);
@@ -312,6 +268,7 @@ class DBGpClient extends EventEmitter {
           clearTimeout(pending.timeoutId);
           this.pendingCommands.delete(transactionId.toString());
         }
+        transactionManager.completePending(transactionId);
         reject(error);
       }
     });
@@ -337,57 +294,6 @@ class DBGpClient extends EventEmitter {
     return cmd;
   }
 
-  /**
-   * Set a breakpoint
-   * @param {string} filename - File to set breakpoint in
-   * @param {number} line - Line number
-   * @returns {Promise<Object>} Breakpoint response
-   */
-  setBreakpoint(filename, line) {
-    return this.sendCommand('breakpoint_set', {
-      t: 'line',
-      f: filename,
-      n: line
-    });
-  }
-
-  /**
-   * Remove a breakpoint
-   * @param {string} breakpointId - Breakpoint ID to remove
-   * @returns {Promise<Object>} Response
-   */
-  removeBreakpoint(breakpointId) {
-    return this.sendCommand('breakpoint_remove', {
-      d: breakpointId
-    });
-  }
-
-  /**
-   * Get variable value
-   * @param {string} variableName - Variable name to get
-   * @returns {Promise<Object>} Variable data
-   */
-  getVariable(variableName) {
-    return this.sendCommand('property_get', {
-      n: variableName
-    });
-  }
-
-  /**
-   * Get current execution context
-   * @returns {Promise<Object>} Context information
-   */
-  async getContext() {
-    try {
-      const [stack, context] = await Promise.all([
-        this.sendCommand('stack_get'),
-        this.sendCommand('context_get')
-      ]);
-      return { stack, context };
-    } catch (error) {
-      throw new Error(`Failed to get context: ${error.message}`);
-    }
-  }
 
   /**
    * Check if client is connected

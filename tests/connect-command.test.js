@@ -19,8 +19,6 @@
  */
 
 const ConnectCommand = require('../src/cli/commands/connect');
-const { DBGpClient } = require('../src/debugger');
-const { loadConfig } = require('../src/config');
 
 // Mock dependencies
 jest.mock('../src/debugger', () => ({

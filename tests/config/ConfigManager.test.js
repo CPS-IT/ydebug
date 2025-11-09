@@ -231,7 +231,7 @@ describe('ConfigManager', () => {
       testFiles.push(configPath);
       
       // First load
-      const config1 = configManager.load();
+      configManager.load();
       expect(configManager.cache).not.toBeNull();
       
       // Modify file after caching
@@ -384,9 +384,6 @@ describe('ConfigManager', () => {
 
     test('should fall back to ~/.config if XDG_CONFIG_HOME is not set', () => {
       delete process.env.XDG_CONFIG_HOME;
-      
-      const homeDir = os.homedir();
-      const configDir = path.join(homeDir, '.config', 'ydebug');
       
       // Only test path generation, not actual file loading since we can't write to home
       const sources = configManager.getConfigSources();

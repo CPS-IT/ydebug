@@ -97,7 +97,7 @@ class ConnectCommand extends BaseCommand {
    * @param {number} connectionTime - Time taken to connect in ms
    */
   displayConnectionSuccess(initData, connectionConfig, connectionTime) {
-    this.success(`Connected to Xdebug successfully!`);
+    this.success('Connected to Xdebug successfully!');
     this.info('');
     
     // Connection details
@@ -148,7 +148,7 @@ class ConnectCommand extends BaseCommand {
    * @param {number} connectionTime - Time taken before failure in ms
    */
   displayConnectionFailure(error, connectionConfig, connectionTime) {
-    this.error(`Failed to connect to Xdebug`);
+    this.error('Failed to connect to Xdebug');
     this.info('');
     
     // Connection attempt details
