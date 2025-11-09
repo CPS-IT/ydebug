@@ -19,7 +19,9 @@
  */
 
 const DBGpClient = require('./DBGpClient');
+const { DBGpCommands } = require('./DBGpCommands');
 
 module.exports = {
   DBGpClient,
+  DBGpCommands,
 };

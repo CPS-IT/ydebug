@@ -38,6 +38,7 @@
     "nodemon": "^3.1.10"
   },
   "dependencies": {
-    "commander": "^14.0.2"
+    "commander": "^14.0.2",
+    "xml2js": "^0.6.2"
   }
 }
