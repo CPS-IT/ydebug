@@ -20,6 +20,7 @@
 
 const { parseString } = require('xml2js');
 const { logger } = require('../utils/Logger');
+const DBGpProtocolError = require('./errors/DBGpProtocolError');
 
 /**
  * Unified XML parser for DBGp protocol responses
@@ -247,7 +248,18 @@ class DBGpXmlParser {
     const parsed = await this.parseResponse(xmlString);
         
     if (!parsed.init) {
-      throw new Error('Invalid init message: missing <init> element');
+      throw new DBGpProtocolError(
+        'Invalid init message: missing <init> element',
+        {
+          code: 'INVALID_INIT_MESSAGE',
+          context: {
+            parsedData: parsed,
+            xmlString: xmlString.length > 200 ? xmlString.substring(0, 200) + '...' : xmlString
+          },
+          recoverable: false,
+          category: 'protocol'
+        }
+      );
     }
 
     const init = parsed.init;

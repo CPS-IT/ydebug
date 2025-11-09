@@ -21,6 +21,7 @@
 const BaseCommand = require('./base');
 const { DBGpClient } = require('../../debugger');
 const { logger } = require('../../utils/Logger');
+const { dbgpConfig } = require('../../debugger/DBGpConfig');
 
 /**
  * Connect command implementation
@@ -83,10 +84,13 @@ class ConnectCommand extends BaseCommand {
     const xdebugConfig = config.xdebug || {};
     const safeOptions = options || {};
     
+    // Get base configuration from DBGpConfig
+    const baseConfig = dbgpConfig.getComponentConfig('connection');
+    
     return {
-      host: safeOptions.host || xdebugConfig.host || 'localhost',
-      port: parseInt(safeOptions.port || xdebugConfig.port || 9003),
-      timeout: parseInt(safeOptions.timeout || xdebugConfig.timeout || 10000),
+      host: safeOptions.host || xdebugConfig.host || baseConfig.host,
+      port: parseInt(safeOptions.port || xdebugConfig.port || baseConfig.port),
+      timeout: parseInt(safeOptions.timeout || xdebugConfig.timeout || baseConfig.timeout),
     };
   }
 

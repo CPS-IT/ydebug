@@ -19,8 +19,12 @@
  */
 
 const { logger } = require('../utils/Logger');
-const { transactionManager } = require('./TransactionManager');
-const { xmlParser } = require('./DBGpXmlParser');
+// const { transactionManager } = require('./TransactionManager');
+// const { xmlParser } = require('./DBGpXmlParser');
+const { commandRegistry } = require('./CommandRegistry');
+const DBGpTimeoutError = require('./errors/DBGpTimeoutError');
+const DBGpProtocolError = require('./errors/DBGpProtocolError');
+const DBGpConnectionError = require('./errors/DBGpConnectionError');
 
 /**
  * DBGp Commands handler
@@ -33,62 +37,127 @@ class DBGpCommands {
   }
 
   /**
-     * Execute a DBGp command with timeout and response parsing
-     * @param {string} command - DBGp command to execute
-     * @param {Object} options - Command options
+     * Execute a DBGp command using the command registry
+     * @param {string} commandName - Name of the command to execute
+     * @param {Object} args - Command arguments
+     * @param {Object} options - Execution options
      * @param {number} options.timeout - Command timeout in milliseconds
      * @returns {Promise<Object>} Parsed command response
      */
-  async executeCommand(command, options = {}) {
+  async executeCommand(commandName, args = {}, options = {}) {
     const timeout = options.timeout || this.commandTimeout;
-    const transactionId = transactionManager.getNext();
-    const commandWithId = `${command} -i ${transactionId}`;
-        
-    logger.debug(`Executing DBGp command: ${commandWithId}`);
+    
+    logger.debug(`Executing DBGp command: ${commandName}`, args);
     const startTime = Date.now();
         
     try {
-      // Send command and get XML response
-      const xmlResponse = await this.client.sendCommand(commandWithId, { timeout });
+      // Use command registry for execution
+      const result = await commandRegistry.execute(commandName, this.client, args, { timeout });
       const duration = Date.now() - startTime;
-            
-      logger.debug(`Command completed in ${duration}ms: ${command}`);
-            
-      // Parse XML response using unified parser
-      const parsedResponse = await xmlParser.parseDBGpResponse(xmlResponse);
-            
-      // Validate transaction ID
-      this.validateTransactionId(parsedResponse, transactionId);
-            
-      return parsedResponse;
+      
+      logger.debug(`Command completed in ${duration}ms: ${commandName}`);
+      return result;
             
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error(`Command failed after ${duration}ms: ${command} - ${error.message}`);
-      throw error;
+      logger.error(`Command failed after ${duration}ms: ${commandName} - ${error.message}`);
+      
+      // Convert to appropriate error types if not already a DBGp error
+      if (error instanceof DBGpTimeoutError || 
+          error instanceof DBGpConnectionError || 
+          error instanceof DBGpProtocolError) {
+        // Already a specific DBGp error, re-throw as is
+        throw error;
+      }
+
+      // Convert generic errors to appropriate DBGp error types
+      if (error.message.includes('timeout') || error.message.includes('Command timeout')) {
+        throw new DBGpTimeoutError(
+          `Command ${commandName} timed out after ${timeout}ms`,
+          {
+            code: 'COMMAND_TIMEOUT',
+            context: { 
+              command: commandName, 
+              timeout, 
+              duration,
+              originalError: error.message
+            },
+            cause: error
+          }
+        );
+      }
+
+      if (error.message.includes('not connected') || error.message.includes('Not connected')) {
+        throw new DBGpConnectionError(
+          `Cannot execute command ${commandName}: not connected to debugger`,
+          {
+            code: 'NOT_CONNECTED',
+            context: {
+              command: commandName,
+              originalError: error.message
+            },
+            cause: error,
+            recoverable: true
+          }
+        );
+      }
+
+      if (error.message.includes('connection') || error.message.includes('Connection')) {
+        throw new DBGpConnectionError(
+          `Connection error during command ${commandName}: ${error.message}`,
+          {
+            code: 'CONNECTION_ERROR',
+            context: {
+              command: commandName,
+              duration
+            },
+            cause: error,
+            recoverable: true
+          }
+        );
+      }
+
+      // Default to protocol error for other cases
+      throw new DBGpProtocolError(
+        `Protocol error during command ${commandName}: ${error.message}`,
+        {
+          code: 'COMMAND_EXECUTION_ERROR',
+          context: {
+            command: commandName,
+            duration
+          },
+          cause: error,
+          recoverable: false
+        }
+      );
     }
   }
 
 
   /**
-     * Validate transaction ID in response matches request
-     * @param {Object} response - Parsed XML response from xmlParser
-     * @param {number} expectedId - Expected transaction ID
+     * Get list of available commands
+     * @returns {Array<string>} Array of command names
      */
-  validateTransactionId(response, expectedId) {
-    const responseId = response.transactionId;
-    if (responseId !== expectedId) {
-      throw new Error(`Transaction ID mismatch: expected ${expectedId}, got ${responseId}`);
-    }
+  getAvailableCommands() {
+    return commandRegistry.getCommandNames();
   }
 
   /**
-     * Check if response indicates an error
-     * @param {Object} response - Parsed XML response from xmlParser
-     * @returns {Error|null} Error object if response contains error, null otherwise
+     * Check if a command is supported
+     * @param {string} commandName - Name of command to check
+     * @returns {boolean} True if command is supported
      */
-  checkResponseError(response) {
-    return xmlParser.checkForError(response);
+  isCommandSupported(commandName) {
+    return commandRegistry.hasCommand(commandName);
+  }
+
+  /**
+     * Get command information
+     * @param {string} commandName - Name of command
+     * @returns {Object} Command information
+     */
+  getCommandInfo(commandName) {
+    return commandRegistry.getCommandInfo(commandName);
   }
 
   // ===== Core DBGp Commands =====
@@ -99,23 +168,15 @@ class DBGpCommands {
      */
   async status() {
     logger.info('Getting debugger status');
-        
-    const response = await this.executeCommand('status');
-    const error = this.checkResponseError(response);
-    if (error) {
+    
+    try {
+      const result = await this.executeCommand('status');
+      logger.info(`Debugger status: ${result.status} ${result.reason ? `(${result.reason})` : ''}`);
+      return result;
+    } catch (error) {
+      logger.error('Failed to get debugger status:', error.message);
       throw error;
     }
-
-    const status = response.response?.status || response.status || 'unknown';
-    const reason = response.response?.reason || response.reason || '';
-        
-    logger.info(`Debugger status: ${status} ${reason ? `(${reason})` : ''}`);
-        
-    return {
-      status,
-      reason,
-      response
-    };
   }
 
   /**
@@ -125,24 +186,15 @@ class DBGpCommands {
      */
   async featureGet(featureName) {
     logger.debug(`Getting feature: ${featureName}`);
-        
-    const response = await this.executeCommand(`feature_get -n ${featureName}`);
-    const error = this.checkResponseError(response);
-    if (error) {
+    
+    try {
+      const result = await this.executeCommand('feature_get', { featureName });
+      logger.debug(`Feature ${featureName}: supported=${result.supported}, value="${result.value}"`);
+      return result;
+    } catch (error) {
+      logger.error(`Failed to get feature ${featureName}:`, error.message);
       throw error;
     }
-
-    const supported = response.response?.supported || response.data?.supported || '0';
-    const value = response.response?._ || response.response?.value || response.data || '';
-        
-    logger.debug(`Feature ${featureName}: supported=${supported}, value="${value}"`);
-        
-    return {
-      featureName,
-      supported: supported === '1',
-      value,
-      response
-    };
   }
 
   /**
@@ -153,23 +205,15 @@ class DBGpCommands {
      */
   async featureSet(featureName, value) {
     logger.debug(`Setting feature ${featureName} to: ${value}`);
-        
-    const response = await this.executeCommand(`feature_set -n ${featureName} -v ${value}`);
-    const error = this.checkResponseError(response);
-    if (error) {
+    
+    try {
+      const result = await this.executeCommand('feature_set', { featureName, value });
+      logger.debug(`Feature set ${featureName}: success=${result.success}`);
+      return result;
+    } catch (error) {
+      logger.error(`Failed to set feature ${featureName}:`, error.message);
       throw error;
     }
-
-    const success = response.response?.success || response.data?.success || '0';
-        
-    logger.debug(`Feature set ${featureName}: success=${success}`);
-        
-    return {
-      featureName,
-      value,
-      success: success === '1',
-      response
-    };
   }
 
   /**
@@ -178,23 +222,26 @@ class DBGpCommands {
      */
   async stepOver() {
     logger.info('Executing step over');
-        
-    const response = await this.executeCommand('step_over');
-    const error = this.checkResponseError(response);
-    if (error) {
+    
+    try {
+      const result = await this.executeCommand('step_over');
+      logger.info(`Step over completed: ${result.status} ${result.reason ? `(${result.reason})` : ''}`);
+      return result;
+    } catch (error) {
+      logger.error('Failed to execute step over:', error.message);
       throw error;
     }
+  }
 
-    const status = response.response?.status || response.status || 'unknown';
-    const reason = response.response?.reason || response.reason || '';
-        
-    logger.info(`Step over completed: ${status} ${reason ? `(${reason})` : ''}`);
-        
-    return {
-      status,
-      reason,
-      response
-    };
+  /**
+     * Execute any registered command by name
+     * @param {string} commandName - Name of command to execute
+     * @param {Object} args - Command arguments
+     * @param {Object} options - Execution options
+     * @returns {Promise<Object>} Command result
+     */
+  async execute(commandName, args = {}, options = {}) {
+    return await this.executeCommand(commandName, args, options);
   }
 
   /**
@@ -212,6 +259,27 @@ class DBGpCommands {
      */
   getTimeout() {
     return this.commandTimeout;
+  }
+
+  /**
+   * Validate transaction ID in response matches expected ID
+   * @param {Object} response - Response object with transactionId
+   * @param {number} expectedId - Expected transaction ID
+   * @throws {DBGpProtocolError} If transaction IDs don't match
+   */
+  validateTransactionId(response, expectedId) {
+    if (response.transactionId !== expectedId) {
+      throw new DBGpProtocolError(
+        `Transaction ID mismatch: expected ${expectedId}, got ${response.transactionId}`,
+        {
+          code: 'TRANSACTION_MISMATCH',
+          context: {
+            expected: expectedId,
+            actual: response.transactionId
+          }
+        }
+      );
+    }
   }
 }
 

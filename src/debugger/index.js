@@ -22,6 +22,9 @@ const DBGpClient = require('./DBGpClient');
 const { DBGpCommands } = require('./DBGpCommands');
 const { TransactionManager, transactionManager } = require('./TransactionManager');
 const { DBGpXmlParser, xmlParser } = require('./DBGpXmlParser');
+const { CommandRegistry, commandRegistry } = require('./CommandRegistry');
+const { DBGpConfig, dbgpConfig } = require('./DBGpConfig');
+const DBGpProtocol = require('./protocol/DBGpProtocol');
 
 module.exports = {
   DBGpClient,
@@ -30,4 +33,9 @@ module.exports = {
   transactionManager,
   DBGpXmlParser,
   xmlParser,
+  CommandRegistry,
+  commandRegistry,
+  DBGpConfig,
+  dbgpConfig,
+  DBGpProtocol,
 };

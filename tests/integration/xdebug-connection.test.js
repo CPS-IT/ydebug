@@ -171,7 +171,8 @@ describe('Xdebug Integration Tests', () => {
       expect(config).toEqual({
         host: 'localhost',
         port: 9003,
-        timeout: 30000,
+        timeout: 10000,
+        initTimeout: 5000,
       });
       expect(defaultClient.isConnectedToDebugger()).toBe(false);
     });
@@ -188,6 +189,7 @@ describe('Xdebug Integration Tests', () => {
         host: '127.0.0.1',
         port: 9004,
         timeout: 15000,
+        initTimeout: 5000, // Added by DBGpConfig integration
       });
     });
     

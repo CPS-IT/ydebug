@@ -58,7 +58,8 @@ describe('DBGpClient - Fixed', () => {
     test('should use default configuration when no options provided', () => {
       const defaultClient = new DBGpClient();
       const config = defaultClient.getConfig();
-      expect(config.timeout).toBe(30000);
+      expect(config.timeout).toBe(10000); // connectionTimeout from DBGpConfig
+      expect(config.initTimeout).toBe(5000);
     });
 
     test('should accept custom configuration', () => {
@@ -165,9 +166,9 @@ describe('DBGpClient - Fixed', () => {
 
     test('should build commands with options', () => {
       const command = client.buildCommand('breakpoint_set', 2, {
-        t: 'line',
-        f: 'file.php',
-        n: 10
+        type: 'line',
+        filename: 'file.php',
+        lineno: 10
       });
       expect(command).toBe('breakpoint_set -i 2 -t line -f file.php -n 10');
     });

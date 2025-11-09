@@ -23,6 +23,10 @@ const { EventEmitter } = require('events');
 const { logger } = require('../utils/Logger');
 const { transactionManager } = require('./TransactionManager');
 const { xmlParser } = require('./DBGpXmlParser');
+const DBGpConnectionError = require('./errors/DBGpConnectionError');
+const DBGpTimeoutError = require('./errors/DBGpTimeoutError');
+const DBGpProtocol = require('./protocol/DBGpProtocol');
+const { dbgpConfig } = require('./DBGpConfig');
 
 /**
  * DBGp Client for Xdebug communication
@@ -32,11 +36,11 @@ class DBGpClient extends EventEmitter {
   constructor(config = {}) {
     super();
 
+    // Get base configuration from DBGpConfig and merge with constructor overrides
+    const baseConfig = dbgpConfig.getComponentConfig('connection');
     this.config = {
-      host: config.host || 'localhost',
-      port: config.port || 9003,
-      timeout: config.timeout || 30000,
-      ...config,
+      ...baseConfig,
+      ...config  // Constructor overrides take precedence for backward compatibility
     };
 
     this.socket = null;
@@ -44,6 +48,12 @@ class DBGpClient extends EventEmitter {
     this.connectionTimeout = null;
     this.pendingCommands = new Map();
     this.buffer = '';
+
+    // Initialize protocol layer
+    this.protocol = new DBGpProtocol({
+      version: dbgpConfig.get('protocolVersion', '1.0'),
+      config: dbgpConfig.getComponentConfig('protocol')
+    });
   }
 
   /**
@@ -61,7 +71,18 @@ class DBGpClient extends EventEmitter {
       this.connectionTimeout = setTimeout(() => {
         this.cleanup();
         logger.error(`Connection timeout after ${this.config.timeout}ms to ${this.config.host}:${this.config.port}`);
-        reject(new Error(`Connection timeout after ${this.config.timeout}ms`));
+        reject(new DBGpConnectionError(
+          `Connection timeout after ${this.config.timeout}ms`,
+          {
+            code: 'CONNECTION_TIMEOUT',
+            context: {
+              host: this.config.host,
+              port: this.config.port,
+              timeout: this.config.timeout
+            },
+            recoverable: true
+          }
+        ));
       }, this.config.timeout);
 
       try {
@@ -223,7 +244,14 @@ class DBGpClient extends EventEmitter {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      reject(new Error('Connection closed'));
+      reject(new DBGpConnectionError(
+        'Connection closed',
+        {
+          code: 'CONNECTION_CLOSED',
+          recoverable: false,
+          category: 'connection'
+        }
+      ));
     }
     this.pendingCommands.clear();
   }
@@ -237,7 +265,17 @@ class DBGpClient extends EventEmitter {
   sendCommand(command, options = {}) {
     return new Promise((resolve, reject) => {
       if (!this.isConnected || !this.socket) {
-        reject(new Error('Not connected to debugger'));
+        reject(new DBGpConnectionError(
+          'Not connected to debugger',
+          {
+            code: 'NOT_CONNECTED',
+            context: {
+              command: command,
+              isConnected: this.isConnected
+            },
+            recoverable: true
+          }
+        ));
         return;
       }
 
@@ -252,7 +290,18 @@ class DBGpClient extends EventEmitter {
         if (this.pendingCommands.has(transactionId.toString())) {
           this.pendingCommands.delete(transactionId.toString());
           transactionManager.completePending(transactionId);
-          reject(new Error(`Command timeout: ${command}`));
+          reject(new DBGpTimeoutError(
+            `Command timeout: ${command}`,
+            {
+              code: 'COMMAND_TIMEOUT',
+              context: {
+                command: command,
+                transactionId: transactionId,
+                timeout: this.config.timeout
+              },
+              recoverable: true
+            }
+          ));
         }
       }, this.config.timeout);
       
@@ -275,23 +324,30 @@ class DBGpClient extends EventEmitter {
   }
 
   /**
-   * Build XML command string
+   * Build XML command string using protocol layer
    * @param {string} command - Command name
    * @param {number} transactionId - Transaction ID
    * @param {Object} options - Command options
    * @returns {string} XML command string
    */
   buildCommand(command, transactionId, options = {}) {
-    let cmd = `${command} -i ${transactionId}`;
-    
-    // Add command-specific options
-    for (const [key, value] of Object.entries(options)) {
-      if (value !== undefined && value !== null) {
-        cmd += ` -${key} ${value}`;
+    try {
+      // Use protocol layer for command building with validation
+      return this.protocol.buildCommand(command, transactionId, options);
+    } catch (error) {
+      // Fallback to simple command building for backward compatibility
+      logger.debug(`Protocol command building failed, using fallback: ${error.message}`);
+      let cmd = `${command} -i ${transactionId}`;
+      
+      // Add command-specific options
+      for (const [key, value] of Object.entries(options)) {
+        if (value !== undefined && value !== null) {
+          cmd += ` -${key} ${value}`;
+        }
       }
+      
+      return cmd;
     }
-    
-    return cmd;
   }
 
 
