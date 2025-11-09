@@ -27,6 +27,8 @@ const FeatureSetCommand = require('./commands/FeatureSetCommand');
 const StepOverCommand = require('./commands/StepOverCommand');
 const BreakpointSetCommand = require('./commands/BreakpointSetCommand');
 const BreakpointListCommand = require('./commands/BreakpointListCommand');
+const ContextGetCommand = require('./commands/ContextGetCommand');
+const ContextNamesCommand = require('./commands/ContextNamesCommand');
 
 /**
  * Command Registry for managing DBGp commands
@@ -52,6 +54,8 @@ class CommandRegistry {
     this.register(new StepOverCommand());
     this.register(new BreakpointSetCommand());
     this.register(new BreakpointListCommand());
+    this.register(new ContextGetCommand());
+    this.register(new ContextNamesCommand());
 
     logger.debug('Registered built-in DBGp commands');
   }

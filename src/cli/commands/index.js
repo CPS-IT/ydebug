@@ -20,8 +20,10 @@
 
 const ConfigCommand = require('./config');
 const ConnectCommand = require('./connect');
+const InspectCommand = require('./inspect');
 
 module.exports = {
   ConfigCommand,
   ConnectCommand,
+  InspectCommand,
 };

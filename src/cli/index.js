@@ -22,7 +22,7 @@
 
 const { Command } = require('commander');
 const packageJson = require('../../package.json');
-const { ConfigCommand, ConnectCommand } = require('./commands');
+const { ConfigCommand, ConnectCommand, InspectCommand } = require('./commands');
 
 const program = new Command();
 
@@ -99,6 +99,38 @@ function registerCommands() {
     .action(async options => {
       const cmd = new ConnectCommand();
       await cmd.execute(options);
+    });
+
+  // Inspect command
+  program
+    .command('inspect')
+    .description('Inspect variables during debugging session')
+    .option('-c, --context <id>', 'context ID to inspect (0=local, 1=global, 2=class)', '0')
+    .option('-d, --depth <level>', 'stack frame depth level', '0')
+    .option('-f, --filter <pattern>', 'variable name filter (partial match)')
+    .option('-j, --json', 'output in JSON format')
+    .option('--no-colors', 'disable colored output')
+    .option('--max-depth <depth>', 'maximum nesting depth to display', '3')
+    .option('--max-length <length>', 'maximum string length to display', '100')
+    .option('--list-contexts', 'list available contexts only')
+    .option('-h, --host <host>', 'debugger host (default: localhost)')
+    .option('-p, --port <port>', 'debugger port (default: 9003)')
+    .option('-t, --timeout <ms>', 'connection timeout in milliseconds (default: 10000)')
+    .action(async options => {
+      const cmd = new InspectCommand();
+      await cmd.execute({
+        context: parseInt(options.context, 10),
+        depth: parseInt(options.depth, 10),
+        filter: options.filter,
+        json: options.json,
+        noColors: options.noColors,
+        maxDepth: parseInt(options.maxDepth, 10),
+        maxLength: parseInt(options.maxLength, 10),
+        listContexts: options.listContexts,
+        host: options.host,
+        port: options.port,
+        timeout: options.timeout
+      });
     });
 }
 

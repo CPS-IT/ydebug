@@ -282,6 +282,70 @@ class DBGpCommands {
   }
 
   /**
+     * Get available execution contexts
+     * @param {number} [depth=0] - Stack depth level
+     * @returns {Promise<Object>} Available contexts
+     */
+  async getContextNames(depth = 0) {
+    logger.info('Getting available execution contexts');
+    
+    try {
+      const result = await this.executeCommand('context_names', { depth });
+      logger.info(`Found ${result.count} available contexts`);
+      return result;
+    } catch (error) {
+      logger.error('Failed to get context names:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+     * Get variables from specified context
+     * @param {number} [contextId=0] - Context ID (0=local, 1=global, 2=class)
+     * @param {number} [depth=0] - Stack depth level
+     * @returns {Promise<Object>} Variables in context
+     */
+  async getContext(contextId = 0, depth = 0) {
+    logger.info(`Getting variables from context ${contextId} at depth ${depth}`);
+    
+    try {
+      const result = await this.executeCommand('context_get', { contextId, depth });
+      logger.info(`Found ${result.count} variables in context ${contextId}`);
+      return result;
+    } catch (error) {
+      logger.error(`Failed to get context ${contextId}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+     * Get local variables (shorthand for context 0)
+     * @param {number} [depth=0] - Stack depth level
+     * @returns {Promise<Object>} Local variables
+     */
+  async getLocalVariables(depth = 0) {
+    return await this.getContext(0, depth);
+  }
+
+  /**
+     * Get global variables (shorthand for context 1)
+     * @param {number} [depth=0] - Stack depth level
+     * @returns {Promise<Object>} Global variables
+     */
+  async getGlobalVariables(depth = 0) {
+    return await this.getContext(1, depth);
+  }
+
+  /**
+     * Get class variables (shorthand for context 2)
+     * @param {number} [depth=0] - Stack depth level
+     * @returns {Promise<Object>} Class variables
+     */
+  async getClassVariables(depth = 0) {
+    return await this.getContext(2, depth);
+  }
+
+  /**
      * Execute any registered command by name
      * @param {string} commandName - Name of command to execute
      * @param {Object} args - Command arguments
