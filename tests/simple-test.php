@@ -16,9 +16,15 @@
  * This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+// Basic variables for prototype testing
 $test_var = "Hello YDebug Server!";
 $number = 123;
+$test_array = ['apple', 'banana', 'cherry'];
 
 echo "Starting script...\n";
 echo "Variables in scope: $test_var, $number\n";
+
+// Hardcoded breakpoint for prototype validation
+xdebug_break();
+
 echo "Script complete.\n";
