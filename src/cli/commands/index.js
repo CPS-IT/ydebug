@@ -21,9 +21,11 @@
 const ConfigCommand = require('./config');
 const ConnectCommand = require('./connect');
 const InspectCommand = require('./inspect');
+const ServerCommand = require('./server');
 
 module.exports = {
   ConfigCommand,
   ConnectCommand,
   InspectCommand,
+  ServerCommand,
 };

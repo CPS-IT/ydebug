@@ -22,7 +22,7 @@
 
 const { Command } = require('commander');
 const packageJson = require('../../package.json');
-const { ConfigCommand, ConnectCommand, InspectCommand } = require('./commands');
+const { ConfigCommand, ConnectCommand, InspectCommand, ServerCommand } = require('./commands');
 
 const program = new Command();
 
@@ -130,6 +130,34 @@ function registerCommands() {
         host: options.host,
         port: options.port,
         timeout: options.timeout
+      });
+    });
+
+  // Server command
+  program
+    .command('server')
+    .description('Run YDebug in server mode (listen for Xdebug connections)')
+    .option('-h, --host <host>', 'server host (default: localhost)', 'localhost')
+    .option('-p, --port <port>', 'server port (default: 9003)', '9003')
+    .option('--max-connections <num>', 'maximum concurrent connections (default: 10)', '10')
+    .option('--session-timeout <ms>', 'session timeout in milliseconds (default: 300000)', '300000')
+    .option('--breakpoint-file <file>', 'PHP file for automatic breakpoint')
+    .option('--breakpoint-line <line>', 'line number for automatic breakpoint')
+    .option('-j, --json', 'output variables in JSON format')
+    .option('--no-colors', 'disable colored output')
+    .option('--no-auto-inspect', 'disable automatic variable inspection at breakpoints')
+    .action(async options => {
+      const cmd = new ServerCommand();
+      await cmd.execute({
+        host: options.host,
+        port: parseInt(options.port, 10),
+        maxConnections: parseInt(options.maxConnections, 10),
+        sessionTimeout: parseInt(options.sessionTimeout, 10),
+        breakpointFile: options.breakpointFile,
+        breakpointLine: options.breakpointLine ? parseInt(options.breakpointLine, 10) : undefined,
+        json: options.json,
+        noColors: options.noColors,
+        autoInspect: !options.noAutoInspect
       });
     });
 }
