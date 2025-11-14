@@ -22,7 +22,7 @@
 
 const { Command } = require('commander');
 const packageJson = require('../../package.json');
-const { ConfigCommand, ConnectCommand, InspectCommand, ServerCommand } = require('./commands');
+const { AICommand, ConfigCommand, ConnectCommand, InspectCommand, ServerCommand } = require('./commands');
 
 const program = new Command();
 
@@ -56,6 +56,17 @@ program.parse(process.argv);
  * Register all available commands
  */
 function registerCommands() {
+  // AI test command
+  program
+    .command('ai-test')
+    .description('Test Claude API connection')
+    .option('--message', 'send a test message to Claude')
+    .option('--verbose', 'show detailed error information')
+    .action(async (options) => {
+      const cmd = new AICommand();
+      await cmd.execute({ test: true, ...options });
+    });
+
   // Config command
   program
     .command('config')

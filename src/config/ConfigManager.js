@@ -47,6 +47,14 @@ const DEFAULT_CONFIG = {
     maxContextLines: 100,
     analysisDepth: 'medium',
     includeStackTrace: true,
+    claude: {
+      apiKey: null, // Should be set via environment variable ANTHROPIC_API_KEY
+      model: 'claude-sonnet-4-5',
+      maxTokens: 4000,
+      timeout: 30000,
+      maxRetries: 3,
+      rateLimitRpm: 60,
+    },
   },
   editor: {
     command: null,

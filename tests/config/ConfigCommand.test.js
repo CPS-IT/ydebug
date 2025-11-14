@@ -60,12 +60,12 @@ describe('ConfigCommand', () => {
   beforeEach(() => {
     // Create fresh instances
     configCommand = new ConfigCommand();
-    
+
     // Setup spies
     consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    
+
     // Reset all mocks
     jest.clearAllMocks();
     mockCreateSample.mockReset();
@@ -73,7 +73,7 @@ describe('ConfigCommand', () => {
     mockSet.mockReset();
     mockGet.mockReset();
     mockReset.mockReset();
-    
+
     // Setup test environment
     testFiles = [];
     originalCwd = process.cwd();
@@ -86,27 +86,39 @@ describe('ConfigCommand', () => {
     consoleSpy.mockRestore();
     consoleErrorSpy.mockRestore();
     processExitSpy.mockRestore();
-    
-    // Restore working directory
-    process.chdir(originalCwd);
-    
-    // Clean up temporary directory
+
+    // Safely change back to original directory
     try {
-      if (fs.existsSync(tempDir)) {
+      if (process.cwd() !== originalCwd) {
+        process.chdir(originalCwd);
+      }
+    } catch {
+      // If we can't change back to the original, at least get out of the temp directory
+      try {
+        process.chdir(os.homedir());
+      } catch {
+        // Last resort
+        process.chdir('/');
+      }
+    }
+
+    // Clean up temp directory
+    try {
+      if (tempDir && fs.existsSync(tempDir)) {
         fs.rmSync(tempDir, { recursive: true, force: true });
       }
-    } catch (error) {
-      console.warn(`Warning: Could not clean up temp directory: ${error.message}`);
+    } catch {
+      // Silent cleanup failure - not critical for test results
     }
-    
-    // Clean up test files in original directory
+
+    // Clean up test files in the original directory
     testFiles.forEach(file => {
       try {
         if (fs.existsSync(file)) {
           fs.unlinkSync(file);
         }
-      } catch (error) {
-        console.warn(`Warning: Could not clean up test file ${file}: ${error.message}`);
+      } catch {
+        // Silent cleanup failure - not critical for test results
       }
     });
   });
@@ -130,7 +142,7 @@ describe('ConfigCommand', () => {
     test('should create sample configuration with --init', async () => {
       const options = { init: true };
       await configCommand.execute(options);
-      
+
       expect(mockCreateSample).toHaveBeenCalledWith('ydebug.config.json');
       expect(consoleSpy).toHaveBeenCalledWith(
         '[SUCCESS]',
@@ -144,10 +156,10 @@ describe('ConfigCommand', () => {
 
     test('should create sample configuration with custom file path', async () => {
       mockCreateSample.mockReturnValue('/custom/path/config.json');
-      
+
       const options = { init: true, file: '/custom/path/config.json' };
       await configCommand.execute(options);
-      
+
       expect(mockCreateSample).toHaveBeenCalledWith('/custom/path/config.json');
       expect(consoleSpy).toHaveBeenCalledWith(
         '[SUCCESS]',
@@ -160,20 +172,20 @@ describe('ConfigCommand', () => {
       mockCreateSample.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = { init: true };
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Failed to create sample configuration');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     test('should use default filename when --init without --file', async () => {
       mockCreateSample.mockReturnValue('ydebug.config.json');
-      
+
       const options = { init: true };
       await configCommand.execute(options);
-      
+
       expect(mockCreateSample).toHaveBeenCalledWith('ydebug.config.json');
     });
   });
@@ -195,10 +207,10 @@ Current Configuration:
   }
 }`;
       mockShow.mockReturnValue(mockOutput);
-      
+
       const options = { show: true };
       await configCommand.execute(options);
-      
+
       expect(mockShow).toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith(mockOutput);
     });
@@ -208,10 +220,10 @@ Current Configuration:
       mockShow.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = { show: true };
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Failed to load configuration');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -224,9 +236,9 @@ Current Configuration:
         key: 'xdebug.port',
         value: '9004',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('xdebug.port', '9004', undefined);
       expect(consoleSpy).toHaveBeenCalledWith(
         '[SUCCESS]',
@@ -241,9 +253,9 @@ Current Configuration:
         value: 'debug',
         file: '/custom/config.json',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('logging.level', 'debug', '/custom/config.json');
     });
 
@@ -253,9 +265,9 @@ Current Configuration:
         key: 'xdebug.timeout',
         value: '15000',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('xdebug.timeout', '15000', undefined);
     });
 
@@ -265,9 +277,9 @@ Current Configuration:
         key: 'ai.enabled',
         value: 'false',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('ai.enabled', 'false', undefined);
     });
 
@@ -277,9 +289,9 @@ Current Configuration:
         key: 'some.number',
         value: 0,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('some.number', 0, undefined);
     });
 
@@ -289,9 +301,9 @@ Current Configuration:
         key: 'some.string',
         value: '',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('some.string', '', undefined);
     });
 
@@ -300,9 +312,9 @@ Current Configuration:
         set: true,
         value: '9004',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).not.toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
     });
@@ -313,9 +325,9 @@ Current Configuration:
         key: 'xdebug.port',
         value: undefined,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).not.toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
     });
@@ -325,15 +337,15 @@ Current Configuration:
       mockSet.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = {
         set: true,
         key: 'xdebug.port',
         value: '99999',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Invalid configuration value');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -342,14 +354,14 @@ Current Configuration:
   describe('Configuration Get Operations', () => {
     test('should get configuration value with --get', async () => {
       mockGet.mockReturnValue(9003);
-      
+
       const options = {
         get: true,
         key: 'xdebug.port',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockGet).toHaveBeenCalledWith('xdebug.port');
       expect(consoleSpy).toHaveBeenCalledWith('9003');
     });
@@ -360,14 +372,14 @@ Current Configuration:
         port: 9003,
         timeout: 30000,
       });
-      
+
       const options = {
         get: true,
         key: 'xdebug',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(JSON.stringify({
         host: 'localhost',
         port: 9003,
@@ -377,40 +389,40 @@ Current Configuration:
 
     test('should display boolean values correctly', async () => {
       mockGet.mockReturnValue(true);
-      
+
       const options = {
         get: true,
         key: 'ai.enabled',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('true');
     });
 
     test('should display null values correctly', async () => {
       mockGet.mockReturnValue(null);
-      
+
       const options = {
         get: true,
         key: 'logging.file',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('null');
     });
 
     test('should warn when configuration key is not found', async () => {
       mockGet.mockReturnValue(undefined);
-      
+
       const options = {
         get: true,
         key: 'nonexistent.key',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         '[WARNING]',
         'Configuration key \'nonexistent.key\' not found'
@@ -421,9 +433,9 @@ Current Configuration:
       const options = {
         get: true,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockGet).not.toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
     });
@@ -433,14 +445,14 @@ Current Configuration:
       mockGet.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = {
         get: true,
         key: 'xdebug.port',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Configuration load failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -452,9 +464,9 @@ Current Configuration:
         reset: true,
         confirm: true,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockReset).toHaveBeenCalledWith(true);
       expect(consoleSpy).toHaveBeenCalledWith('[SUCCESS]', 'Configuration reset to defaults');
     });
@@ -464,13 +476,13 @@ Current Configuration:
       mockReset.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = {
         reset: true,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockReset).toHaveBeenCalledWith(undefined);
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Reset requires confirmation. Use --confirm flag.');
       expect(processExitSpy).toHaveBeenCalledWith(1);
@@ -481,9 +493,9 @@ Current Configuration:
         reset: true,
         confirm: false,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockReset).toHaveBeenCalledWith(false);
     });
 
@@ -492,14 +504,14 @@ Current Configuration:
       mockReset.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = {
         reset: true,
         confirm: true,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Reset operation failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -508,9 +520,9 @@ Current Configuration:
   describe('Help and Usage Display', () => {
     test('should display usage information when no options provided', async () => {
       const options = {};
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', '');
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'Options:');
@@ -530,9 +542,9 @@ Current Configuration:
         get: false,
         reset: false,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
     });
 
@@ -542,9 +554,9 @@ Current Configuration:
         key: 'xdebug.port',
         // missing value
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
     });
 
@@ -553,9 +565,9 @@ Current Configuration:
         get: true,
         // missing key
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
     });
   });
@@ -563,16 +575,16 @@ Current Configuration:
   describe('Option Precedence and Combinations', () => {
     test('should prioritize --init over other options', async () => {
       mockCreateSample.mockReturnValue('config.json');
-      
+
       const options = {
         init: true,
         show: true,
         set: true,
         get: true,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockCreateSample).toHaveBeenCalled();
       expect(mockShow).not.toHaveBeenCalled();
       expect(mockSet).not.toHaveBeenCalled();
@@ -581,7 +593,7 @@ Current Configuration:
 
     test('should prioritize --show over set/get when init is not present', async () => {
       mockShow.mockReturnValue('Configuration display');
-      
+
       const options = {
         show: true,
         set: true,
@@ -589,9 +601,9 @@ Current Configuration:
         key: 'test.key',
         value: 'test.value',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockShow).toHaveBeenCalled();
       expect(mockSet).not.toHaveBeenCalled();
       expect(mockGet).not.toHaveBeenCalled();
@@ -604,9 +616,9 @@ Current Configuration:
         key: 'xdebug.port',
         value: '9004',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalled();
       expect(mockGet).not.toHaveBeenCalled();
     });
@@ -617,11 +629,11 @@ Current Configuration:
         confirm: true,
         show: true, // This will be executed first due to if-else chain
       };
-      
+
       mockShow.mockReturnValue('Configuration display');
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockShow).toHaveBeenCalled(); // Show takes precedence
       expect(mockReset).not.toHaveBeenCalled();
     });

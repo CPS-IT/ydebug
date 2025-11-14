@@ -57,18 +57,18 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
 
   beforeEach(() => {
     configCommand = new ConfigCommand();
-    
+
     consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     processExitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    
+
     jest.clearAllMocks();
     mockCreateSample.mockReset();
     mockShow.mockReset();
     mockSet.mockReset();
     mockGet.mockReset();
     mockReset.mockReset();
-    
+
     originalCwd = process.cwd();
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ydebug-edge-test-'));
     process.chdir(tempDir);
@@ -78,22 +78,36 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
     consoleSpy.mockRestore();
     consoleErrorSpy.mockRestore();
     processExitSpy.mockRestore();
-    
-    process.chdir(originalCwd);
-    
+
+    // Safely change back to original directory
     try {
-      if (fs.existsSync(tempDir)) {
+      if (process.cwd() !== originalCwd) {
+        process.chdir(originalCwd);
+      }
+    } catch {
+      // If we can't change back to the original, at least get out of the temp directory
+      try {
+        process.chdir(os.homedir());
+      } catch {
+        // Last resort
+        process.chdir('/');
+      }
+    }
+
+    // Clean up temp directory
+    try {
+      if (tempDir && fs.existsSync(tempDir)) {
         fs.rmSync(tempDir, { recursive: true, force: true });
       }
-    } catch (error) {
-      console.warn(`Warning: Could not clean up temp directory: ${error.message}`);
+    } catch {
+      // Silent cleanup failure - not critical for test results
     }
   });
 
   describe('Null and Undefined Input Handling', () => {
     test('should handle null options gracefully', async () => {
       await configCommand.execute(null);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[ERROR]',
         expect.stringContaining('Cannot read properties of null')
@@ -103,7 +117,7 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
 
     test('should handle undefined options gracefully', async () => {
       await configCommand.execute(undefined);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[ERROR]',
         expect.stringContaining('Cannot read properties of undefined')
@@ -119,9 +133,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         get: null,
         reset: null,
       };
-      
+
       await configCommand.execute(options);
-      
+
       // Should show usage since all options are falsy
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
     });
@@ -134,9 +148,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         key: null,
         value: 'some-value',
       };
-      
+
       await configCommand.execute(options);
-      
+
       // Should show usage since key is null
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
       expect(mockSet).not.toHaveBeenCalled();
@@ -148,9 +162,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         key: '',
         value: 'some-value',
       };
-      
+
       await configCommand.execute(options);
-      
+
       // Should show usage since key is empty
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
       expect(mockSet).not.toHaveBeenCalled();
@@ -161,9 +175,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         get: true,
         key: null,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
       expect(mockGet).not.toHaveBeenCalled();
     });
@@ -173,9 +187,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         get: true,
         key: '',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', 'YDebug Configuration Management');
       expect(mockGet).not.toHaveBeenCalled();
     });
@@ -186,9 +200,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         key: 'logging.file',
         value: null,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('logging.file', null, undefined);
     });
   });
@@ -199,15 +213,15 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
       mockSet.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = {
         set: true,
         key: 'xdebug.port',
         value: '9004',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Configuration operation failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -217,10 +231,10 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
       mockShow.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = { show: true };
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Failed to display configuration');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -230,10 +244,10 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
       mockGet.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = { get: true, key: 'xdebug.port' };
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Failed to get configuration value');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -243,10 +257,10 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
       mockReset.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = { reset: true, confirm: true };
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Reset operation failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -256,10 +270,10 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
       mockCreateSample.mockImplementation(() => {
         throw error;
       });
-      
+
       const options = { init: true };
       await configCommand.execute(options);
-      
+
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Failed to create sample configuration');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -268,58 +282,58 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
   describe('Boundary Value Testing', () => {
     test('should handle extremely long key paths', async () => {
       const longKey = 'a'.repeat(1000) + '.' + 'b'.repeat(1000) + '.' + 'c'.repeat(1000);
-      
+
       const options = {
         set: true,
         key: longKey,
         value: 'test-value',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith(longKey, 'test-value', undefined);
     });
 
     test('should handle extremely long values', async () => {
       const longValue = 'x'.repeat(10000);
-      
+
       const options = {
         set: true,
         key: 'test.key',
         value: longValue,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('test.key', longValue, undefined);
     });
 
     test('should handle special characters in keys', async () => {
       const specialKey = 'key-with-special!@#$%^&*()_+{}|:"<>?[];\'\\,./`~chars';
-      
+
       const options = {
         set: true,
         key: specialKey,
         value: 'test-value',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith(specialKey, 'test-value', undefined);
     });
 
     test('should handle Unicode characters in keys and values', async () => {
       const unicodeKey = 'test.ключ.키.キー';
       const unicodeValue = 'значение 값 価値 🎯';
-      
+
       const options = {
         set: true,
         key: unicodeKey,
         value: unicodeValue,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith(unicodeKey, unicodeValue, undefined);
     });
   });
@@ -331,9 +345,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         key: 'test.value',
         value: '00123', // Leading zeros should be preserved as string
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('test.value', '00123', undefined);
     });
 
@@ -343,9 +357,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         key: 'test.value',
         value: 'TRUE', // Different case
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('test.value', 'TRUE', undefined);
     });
 
@@ -355,18 +369,18 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         key: 'test.nan',
         value: 'NaN',
       };
-      
+
       await configCommand.execute(options1);
       expect(mockSet).toHaveBeenCalledWith('test.nan', 'NaN', undefined);
-      
+
       mockSet.mockClear();
-      
+
       const options2 = {
         set: true,
         key: 'test.infinity',
         value: 'Infinity',
       };
-      
+
       await configCommand.execute(options2);
       expect(mockSet).toHaveBeenCalledWith('test.infinity', 'Infinity', undefined);
     });
@@ -375,7 +389,7 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
   describe('Complex Configuration Objects', () => {
     test('should handle large configuration objects in get operations', async () => {
       const largeConfig = {};
-      
+
       // Create a moderately large nested object
       for (let i = 0; i < 50; i++) {
         largeConfig[`key${i}`] = {
@@ -385,16 +399,16 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
           },
         };
       }
-      
+
       mockGet.mockReturnValue(largeConfig);
-      
+
       const options = {
         get: true,
         key: 'large.config',
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockGet).toHaveBeenCalledWith('large.config');
       expect(consoleSpy).toHaveBeenCalledWith(JSON.stringify(largeConfig, null, 2));
     });
@@ -406,15 +420,15 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         boolean: true,
         null: null,
       });
-      
+
       const options = {
         set: true,
         key: 'complex.config',
         value: complexValue,
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockSet).toHaveBeenCalledWith('complex.config', complexValue, undefined);
     });
   });
@@ -427,9 +441,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         anotherUnknownOption: { nested: 'value' },
         someArray: [1, 2, 3],
       };
-      
+
       await configCommand.execute(options);
-      
+
       // Should still work with init despite extra properties
       expect(mockCreateSample).toHaveBeenCalled();
     });
@@ -440,11 +454,11 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         callback: () => console.log('test'),
         anotherFunction: function() { return 'test'; },
       };
-      
+
       mockShow.mockReturnValue('config display');
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockShow).toHaveBeenCalled();
     });
 
@@ -455,9 +469,9 @@ describe('ConfigCommand Edge Cases and Error Handling', () => {
         [symbolKey]: 'symbol value',
         [Symbol.iterator]: function* () { yield 'test'; },
       };
-      
+
       await configCommand.execute(options);
-      
+
       expect(mockCreateSample).toHaveBeenCalled();
     });
   });

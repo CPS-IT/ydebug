@@ -1,7 +1,7 @@
 # ADR-008: Choose Direct DBGp Protocol Implementation
 
 **Status:** Accepted  
-**Date:** 2024-11-08  
+**Date:** 2025-11-08  
 **Deciders:** YDebug Development Team
 
 ## Context
