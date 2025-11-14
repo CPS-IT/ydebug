@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This project creates a debugging solution that allows AI agents to:
 
-- Understand actual execution flow of PHP applications
+- Understand the actual execution flow of PHP applications
 - Observe data transformations throughout the application lifecycle
 - Inspect variable states and values at any point during execution
 - Gain contextual understanding of application behavior beyond static code analysis
@@ -20,7 +20,7 @@ This project creates a debugging solution that allows AI agents to:
 ### Prototype (Proof of Concept)
 
 - AI agent inspects variable values at one specific breakpoint in a simple PHP script
-- Minimal implementation with hardcoded breakpoint location
+- Minimal implementation with a hardcoded breakpoint location
 - Focus on demonstrating technical feasibility
 
 ### MVP (Minimal Viable Product)
@@ -71,12 +71,12 @@ This is a PHP-focused project that will likely require:
 - **NEVER** use checkmarks (✓, ✅), crosses (✗, ❌), arrows (→), or any emoji
 - **NEVER** use special Unicode bullets (•, ◦, ▪) or decorative characters
 - Use only standard ASCII characters: letters, numbers, basic punctuation
-- Use text alternatives: "COMPLETED", "DONE", "FAILED", "TODO", "[x]", "[ ]"
+- Use text alternatives: "Completed", "Done", "Failed", "Todo", "[x]", "[ ]"
 - This applies to ALL files: code, documentation, comments, commit messages
 
 **Acceptable Alternatives:**
-- Instead of ✅: "COMPLETED", "DONE", "[x]"
-- Instead of ❌: "FAILED", "ERROR", "[ ]" 
+- Instead of ✅: "Completed", "Done", "[x]"
+- Instead of ❌: "Failed", "Error", "[ ]" 
 - Instead of →: "->" or "to"
 - Instead of •: "-" or "*"
 - Instead of any emoji: descriptive text
@@ -86,6 +86,6 @@ This is a PHP-focused project that will likely require:
 - Primary focus on PHP debugging integration
 - AI-to-debugger communication bridge required
 - Real-time execution context access needed
-- Developer oversight and control mechanisms essential
-- Architecture planning complete with 7 documented ADRs
+- Developer oversight and control mechanisms are essential
+- Architecture planning complete with 9 documented ADRs
 - Implementation planning ready for development phase
