@@ -61,16 +61,27 @@ class ServerCommand extends BaseCommand {
             console.log('');
         });
 
-        server.on('sessionInitialized', (sessionId, sessionData) => {
+        server.on('sessionInitialized', async (sessionId, sessionData) => {
             console.log(`📡 Session ${sessionId} connected`);
             console.log(`   Language: ${sessionData.language}`);
             console.log(`   Protocol: ${sessionData.protocol_version}`);
             console.log(`   File: ${sessionData.fileuri}`);
             console.log('');
 
-            // Set automatic breakpoint if specified
-            if (options.breakpointFile && options.breakpointLine) {
-                this.setAutomaticBreakpoint(server, sessionId, options.breakpointFile, options.breakpointLine);
+            try {
+                // Set automatic breakpoint if specified
+                if (options.breakpointFile && options.breakpointLine) {
+                    await this.setAutomaticBreakpoint(server, sessionId, options.breakpointFile, options.breakpointLine);
+                } else {
+                    // No explicit breakpoint - start execution to trigger any xdebug_break() calls
+                    const session = server.getSession(sessionId);
+                    if (session) {
+                        console.log(`▶️  Starting script execution for session ${sessionId}`);
+                        await session.run();
+                    }
+                }
+            } catch (error) {
+                logger.error(`Error initializing session ${sessionId}:`, error);
             }
         });
 

@@ -116,6 +116,7 @@ function registerCommands() {
     .option('-h, --host <host>', 'debugger host (default: localhost)')
     .option('-p, --port <port>', 'debugger port (default: 9003)')
     .option('-t, --timeout <ms>', 'connection timeout in milliseconds (default: 10000)')
+    .option('-s, --server', 'run in server mode (listen for Xdebug connections)')
     .action(async options => {
       const cmd = new InspectCommand();
       await cmd.execute({
@@ -129,7 +130,8 @@ function registerCommands() {
         listContexts: options.listContexts,
         host: options.host,
         port: options.port,
-        timeout: options.timeout
+        timeout: options.timeout,
+        server: options.server
       });
     });
 

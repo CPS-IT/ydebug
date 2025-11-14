@@ -102,12 +102,16 @@ class DBGpSession extends EventEmitter {
         try {
             const parsed = this.parseXmlMessage(message);
             
+            // Debug logging to understand the structure
+            this.logger.debug(`Session ${this.sessionId} parsed keys:`, Object.keys(parsed));
+            
             if (parsed.init) {
                 this.handleInitMessage(parsed.init);
             } else if (parsed.response) {
                 this.handleResponseMessage(parsed.response);
             } else {
-                this.logger.warn(`Session ${this.sessionId} received unknown message type`);
+                this.logger.warn(`Session ${this.sessionId} received unknown message type. Keys:`, Object.keys(parsed));
+                this.logger.debug(`Full parsed structure:`, JSON.stringify(parsed, null, 2));
             }
         } catch (error) {
             this.logger.error(`Session ${this.sessionId} message parsing error:`, error);

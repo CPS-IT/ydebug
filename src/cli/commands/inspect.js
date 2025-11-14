@@ -22,6 +22,7 @@ const BaseCommand = require('./base');
 const DBGpClient = require('../../debugger/DBGpClient');
 const { DBGpCommands } = require('../../debugger/DBGpCommands');
 const VariableFormatter = require('../../debugger/VariableFormatter');
+const ServerCommand = require('./server');
 const { logger } = require('../../utils/Logger');
 
 /**
@@ -43,9 +44,29 @@ class InspectCommand extends BaseCommand {
    * @param {string} [options.host='localhost'] - Debugger host
    * @param {number} [options.port=9003] - Debugger port
    * @param {number} [options.timeout=10000] - Connection timeout
+   * @param {boolean} [options.server=false] - Run in server mode instead of client mode
    * @returns {Promise<void>}
    */
   async execute(options = {}) {
+    // If server mode is requested, delegate to ServerCommand
+    if (options.server) {
+      console.log('Running in server mode...');
+      const serverCommand = new ServerCommand();
+      
+      // Map inspect options to server options
+      const serverOptions = {
+        host: options.host,
+        port: options.port,
+        maxConnections: 10,
+        sessionTimeout: options.timeout || 300000,
+        json: options.json,
+        noColors: options.noColors,
+        autoInspect: true // Enable automatic variable inspection
+      };
+      
+      return await serverCommand.execute(serverOptions);
+    }
+
     const startTime = Date.now();
     let client = null;
 
