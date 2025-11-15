@@ -1,83 +1,400 @@
 # YDebug - AI Agent PHP Debugging Solution
 
-YDebug enables AI agents to step through PHP applications in real-time, providing insight into code execution and application behavior.
+YDebug enables AI agents to step through PHP applications in real-time, providing insight into code execution and application behavior through the DBGp protocol and Xdebug integration.
 
 ## Core Concept
 
 Traditional debugging requires human developers to manually set breakpoints, step through code, and inspect variables. YDebug extends this capability to AI agents, allowing them to:
 
 - Understand the actual execution flow of PHP applications
-- Observe how data transforms throughout the application lifecycle  
+- Observe how data transforms throughout the application lifecycle
 - Inspect variable states and values at any point during execution
 - Gain contextual understanding of application behavior beyond static code analysis
 
 ## Benefits
 
 **For AI Assistance:**
+
 - Enables AI to provide debugging help based on actual execution context
 - Allows AI to understand complex application flows that are difficult to trace through static analysis
 - Provides real-time insight into variable states and data transformations
 
 **For Developers:**
+
 - Creates a collaborative debugging environment where AI can actively participate in problem-solving
 - Enables AI to suggest fixes based on observed runtime behavior
 - Offers a new paradigm for AI-assisted development and debugging
 
+## Project Status
+
+**Current Phase:** Prototype Development (Feature Complete)  
+**Completed Features:**
+- [x] Project architecture and planning (7 ADRs completed)
+- [x] CLI framework with Commander.js and comprehensive command set
+- [x] DBGp protocol implementation with direct socket communication
+- [x] Xdebug connection testing and validation
+- [x] Comprehensive configuration management with environment variables
+- [x] Variable inspection and debugging core functionality
+- [x] Server mode for listening to Xdebug connections
+- [x] Breakpoint management and session handling
+- [x] Basic logging system with configurable levels
+- [x] AI-powered analysis integration with Claude API (DEMO)
+- [x] Comprehensive test suite (1800+ tests across 51 files)
+
+## Requirements
+
+### System Requirements
+- **Node.js:** 18.0 or higher
+- **PHP:** 7.4 or higher with **Xdebug 3.0+**
+- **Package Manager:** npm or yarn
+- **Operating System:** macOS, Linux, or Windows
+
+### Optional Requirements
+- **Claude API Key:** For AI analysis features (set ANTHROPIC_API_KEY environment variable)
+
+## Installation
+
+### Quick Install
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd ydebug
+
+# Install dependencies
+npm install
+
+# Verify installation
+npm test
+```
+
+### Global CLI Installation
+
+```bash
+# Link for global usage (optional)
+npm link
+
+# Then use globally
+ydebug --help
+```
+
+## Configuration
+
+### 1. Initialize YDebug Configuration
+
+```bash
+# Create default configuration file
+node src/cli/index.js config --init
+
+# View current configuration
+node src/cli/index.js config --show
+```
+
+### 2. Configure Xdebug in PHP
+
+Add to your `php.ini` or create separate `xdebug.ini`:
+
+```ini
+zend_extension=xdebug
+xdebug.mode=debug
+xdebug.start_with_request=yes
+xdebug.client_host=localhost
+xdebug.client_port=9003
+xdebug.log=/tmp/xdebug.log
+```
+
+### 3. Test Connection
+
+```bash
+# Test Xdebug connection
+node src/cli/index.js connect
+
+# Test with custom settings
+node src/cli/index.js connect --host 127.0.0.1 --port 9004
+```
+
+### 4. Configure Claude API (Optional)
+
+For AI analysis features:
+
+```bash
+# Set API key via environment variable
+export ANTHROPIC_API_KEY="your-api-key-here"
+
+# Test API connection
+node src/cli/index.js ai-test
+```
+
+## Available Commands
+
+### Configuration Management
+```bash
+config --init                    # Create sample configuration file
+config --show                    # Display current configuration  
+config --reset --confirm         # Reset to defaults
+config-set <key> <value>         # Set configuration value
+config-get <key>                 # Get configuration value
+```
+
+### Connection and Testing
+```bash
+connect                          # Test Xdebug connection
+connect --host <host>            # Test with custom host
+connect --port <port>            # Test with custom port  
+connect --timeout <ms>           # Test with custom timeout
+ai-test                          # Test Claude API connection
+ai-test --message                # Send test message to Claude
+```
+
+### Variable Inspection and Debugging
+```bash
+inspect                          # Inspect variables in debugging session
+inspect --context <id>           # Inspect specific context (0=local, 1=global, 2=class)
+inspect --depth <level>          # Set stack frame depth level
+inspect --filter <pattern>       # Filter variables by name pattern
+inspect --json                   # Output in JSON format
+inspect --list-contexts          # List available contexts only
+inspect --server                 # Run in server mode
+```
+
+### Server Mode Operations
+```bash
+server                           # Run YDebug in server mode
+server --host <host>             # Custom server host (default: localhost)
+server --port <port>             # Custom server port (default: 9003)
+server --max-connections <num>   # Maximum concurrent connections
+server --session-timeout <ms>    # Session timeout in milliseconds
+server --breakpoint-file <file>  # PHP file for automatic breakpoint
+server --breakpoint-line <line>  # Line number for automatic breakpoint
+server --json                    # Output variables in JSON format
+server --no-colors               # Disable colored output
+server --no-auto-inspect         # Disable automatic variable inspection
+```
+
+### AI Analysis (DEMO Features)
+```bash
+analyze                          # AI analysis with sample context (DEMO)
+analyze --type <type>            # Analysis type: variableAnalysis, errorAnalysis, performanceAnalysis, logicAnalysis
+analyze --file <file>            # PHP file to analyze  
+analyze --line <line>            # Line number for analysis context
+analyze --context <data>         # Context data (JSON string or file path)
+analyze --variables <data>       # Variables data (JSON string or file path)
+analyze --expected-behavior <desc> # Expected behavior description
+analyze --max-tokens <tokens>    # Maximum tokens for AI response (default: 2000)
+analyze --json                   # Output in JSON format
+analyze --verbose                # Show detailed output
+```
+
+**IMPORTANT:** The `analyze` command is currently a **DEMO feature** that works with sample context data to demonstrate AI analysis capabilities. It requires the ANTHROPIC_API_KEY environment variable.
+
 ## Documentation
 
-### Project Planning
-- [Project Goal](documentation/plan/goal.md) – Original vision and concept
-- [Prototype Scope](documentation/plan/prototype.md) – Initial proof of concept requirements
-- [MVP Requirements](documentation/plan/mvp.md) – Complete feature set and user stories
-- [Implementation Plan](documentation/plan/Implementation.md) - Development phases and milestones
+### User Guides
 
-### Architecture
-- [Architectural Overview](documentation/architecture/ArchitecturalOverview.md) – Complete system architecture
-- [Initial Questions](documentation/architecture/InitialQuestions.md) – Key technical planning questions
+| Guide | Description |
+|-------|-------------|
+| [Configuration Management](documentation/user-guide/configuration.md) | Complete configuration setup and management |
+| [Connect Command](documentation/user-guide/connect-command.md) | Xdebug connection testing and troubleshooting |
+| [Analyze Command](documentation/user-guide/analyze-command.md) | AI-powered debugging analysis (DEMO) |
+| [Server Mode](documentation/user-guide/server-mode.md) | Running YDebug in server mode |
+| [Claude API Setup](documentation/user-guide/claude-api-setup.md) | Claude API configuration and setup |
+| [Claude API Usage](documentation/user-guide/claude-api-usage.md) | Using AI analysis features |
 
-#### Architecture Decision Records (ADRs)
-- [ADR-001: Choose Xdebug with DBGp Protocol](documentation/architecture/001-choose-xdebug-dbgp-protocol.md)
-- [ADR-002: Choose Node.js for Prototype](documentation/architecture/002-choose-nodejs-for-prototype.md)
-- [ADR-003: Choose API Gateway Architecture](documentation/architecture/003-choose-api-gateway-architecture.md)
-- [ADR-004: Choose CLI Interface for Prototype](documentation/architecture/004-choose-cli-interface-for-prototype.md)
-- [ADR-005: Choose Claude Code Integration](documentation/architecture/005-choose-claude-code-integration.md)
-- [ADR-006: Choose Local Deployment Model](documentation/architecture/006-choose-local-deployment-model.md)
-- [ADR-007: Choose IDE-Agnostic Plugin Architecture](documentation/architecture/007-choose-ide-agnostic-plugin-architecture.md)
+### Project Planning and Architecture
+
+| Document | Description |
+|----------|-------------|
+| [Project Goal](documentation/plan/goal.md) | Original vision and concept |
+| [Prototype Scope](documentation/plan/prototype.md) | Initial proof of concept requirements |
+| [MVP Requirements](documentation/plan/mvp.md) | Complete feature set and user stories |
+| [Implementation Plan](documentation/plan/Implementation.md) | Development phases and milestones |
+| [Architectural Overview](documentation/architecture/ArchitecturalOverview.md) | Complete system architecture |
+
+### Architecture Decision Records (ADRs)
+
+All major technical decisions are documented:
+
+| ADR | Decision |
+|-----|----------|
+| [ADR-001](documentation/architecture/001-choose-xdebug-dbgp-protocol.md) | Choose Xdebug with DBGp Protocol |
+| [ADR-002](documentation/architecture/002-choose-nodejs-for-prototype.md) | Choose Node.js for Prototype |
+| [ADR-003](documentation/architecture/003-choose-api-gateway-architecture.md) | Choose API Gateway Architecture |
+| [ADR-004](documentation/architecture/004-choose-cli-interface-for-prototype.md) | Choose CLI Interface for Prototype |
+| [ADR-005](documentation/architecture/005-choose-claude-code-integration.md) | Choose Claude Code Integration |
+| [ADR-006](documentation/architecture/006-choose-local-deployment-model.md) | Choose Local Deployment Model |
+| [ADR-007](documentation/architecture/007-choose-ide-agnostic-plugin-architecture.md) | Choose IDE-Agnostic Plugin Architecture |
+| [ADR-008](documentation/architecture/008-choose-direct-dbgp-implementation.md) | Choose Direct DBGp Protocol Implementation |
+| [ADR-009](documentation/architecture/009-choose-dbgp-server-mode.md) | Choose DBGp Server Mode |
 
 ## Architecture Summary
 
-YDebug follows a local-first, CLI-driven architecture:
+YDebug follows a local-first, CLI-driven architecture with comprehensive DBGp protocol support:
 
 ```
-Developer → CLI → YDebug Service (Node.js) → DBGp → Xdebug → PHP
-                       ↓                           
-                 Claude Code API              
+Developer -> YDebug CLI -> DBGp Client/Server -> Xdebug -> PHP Application
+                |
+                v
+           Configuration -> Claude API (AI Analysis)
+                |
+                v
+           Logging System
 ```
 
 **Key Features:**
-- Local deployment for source code security
-- CLI-first interface with future plugin extensibility
-- Claude Code integration for AI analysis
-- DBGp protocol for PHP debugging integration
-- Plugin architecture for future IDE integrations
 
-## Development Status
-
-**Current Phase:** Architectural Planning Complete  
-**Next Phase:** Prototype Development
-
-## Getting Started
-
-Documentation for setup and usage will be available once the prototype is complete.
+- **Local deployment** for source code security and performance
+- **CLI-first interface** with comprehensive command set
+- **Bidirectional DBGp communication** (client and server modes)
+- **Claude API integration** for AI-powered analysis
+- **Comprehensive configuration management** with environment variable support
+- **Plugin-ready architecture** for future IDE integrations
+- **Extensive test coverage** with 1800+ automated tests
 
 ## Project Structure
 
 ```
 ydebug/
+├── src/
+│   ├── cli/
+│   │   ├── index.js             # Main CLI entry point
+│   │   └── commands/            # Command implementations
+│   │       ├── analyze.js       # AI analysis command (DEMO)
+│   │       ├── ai.js           # Claude API test command  
+│   │       ├── config.js       # Configuration management
+│   │       ├── connect.js      # Xdebug connection testing
+│   │       ├── inspect.js      # Variable inspection
+│   │       └── server.js       # Server mode operations
+│   ├── debugger/
+│   │   ├── index.js            # Main debugger module
+│   │   ├── DBGpClient.js       # DBGp protocol client
+│   │   ├── DBGpServer.js       # DBGp protocol server
+│   │   ├── DBGpSession.js      # Session management
+│   │   ├── DBGpCommands.js     # High-level command interface
+│   │   ├── CommandRegistry.js  # Command registration system
+│   │   ├── VariableFormatter.js # Variable display formatting
+│   │   ├── commands/           # DBGp command implementations
+│   │   ├── protocol/           # DBGp protocol handling
+│   │   └── errors/             # Custom error classes
+│   ├── config/
+│   │   ├── index.js            # Configuration module
+│   │   └── ConfigManager.js    # Configuration management
+│   ├── ai/
+│   │   ├── AnalysisService.js  # AI analysis service
+│   │   └── ClaudeClient.js     # Claude API client
+│   └── utils/
+│       └── Logger.js           # Logging system
+├── tests/                      # Comprehensive test suite (1800+ tests)
+│   ├── ai/                     # AI service tests
+│   ├── cli/                    # CLI command tests  
+│   ├── config/                 # Configuration tests
+│   ├── debugger/               # DBGp protocol and debugging tests
+│   ├── integration/            # Integration tests
+│   └── utils/                  # Utility tests
 ├── documentation/
-│   ├── plan/                 # Project planning documents
-│   └── architecture/         # Architecture decisions and overview
-├── src/                      # Source code (coming in prototype phase)
-├── tests/                    # Test suite (coming in prototype phase)
+│   ├── architecture/           # Architecture decisions and overview
+│   ├── plan/                   # Project planning documents
+│   └── user-guide/            # User documentation and guides
+├── package.json               # Node.js project configuration
+├── jest.config.js            # Jest testing configuration
 └── README.md                 # This file
 ```
+
+## Development and Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run linting
+npm run lint
+
+# Run validation (lint + test)
+npm run validate
+```
+
+### Test Coverage
+
+The project maintains comprehensive test coverage with **1800+ tests** across **51 test files** covering:
+
+- **Configuration management** - Environment variables, file-based config, validation
+- **DBGp protocol implementation** - Client/server communication, command parsing
+- **CLI functionality** - All commands with various options and error scenarios
+- **Variable inspection** - Context retrieval, formatting, filtering
+- **Session management** - Connection handling, timeouts, cleanup
+- **AI integration** - Claude API communication, analysis services
+- **Error handling** - Custom exceptions, graceful failures
+- **Integration scenarios** - End-to-end workflows and real Xdebug testing
+
+### Development Scripts
+
+```bash
+npm run dev          # Development mode with auto-restart
+npm run start        # Production mode
+npm run lint:fix     # Auto-fix linting issues
+npm run docker:dev   # Run in Docker development environment
+```
+
+## Use Cases
+
+### 1. Interactive Debugging Session
+
+```bash
+# Start server mode and set a breakpoint
+ydebug server --breakpoint-file /path/to/script.php --breakpoint-line 42
+
+# In another terminal, trigger your PHP script
+# YDebug will automatically inspect variables when breakpoint hits
+```
+
+### 2. Variable Inspection
+
+```bash
+# Connect to existing debugging session and inspect variables
+ydebug inspect --context 0 --filter "user" --json
+```
+
+### 3. AI-Powered Analysis (DEMO)
+
+```bash
+# Analyze sample context with AI
+export ANTHROPIC_API_KEY="your-key"
+ydebug analyze --type errorAnalysis --verbose
+```
+
+### 4. Connection Testing and Troubleshooting
+
+```bash
+# Test Xdebug connection with detailed output
+ydebug connect --timeout 5000 --verbose
+```
+
+## Contributing
+
+This project is in active development. Key areas for contribution:
+
+1. **Enhanced AI Analysis** - Expand beyond DEMO mode with real debugging context
+2. **IDE Plugins** - Implement plugins for PhpStorm, VS Code, etc.
+3. **Advanced Debugging Features** - Stack trace analysis, performance profiling
+4. **Documentation** - User guides, tutorials, and examples
+5. **Testing** - Additional integration tests and edge cases
+
+See the [Implementation Plan](documentation/plan/Implementation.md) for development roadmap and [Architecture Documentation](documentation/architecture/) for technical details.
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
+
+## Support and Community
+
+- **Issues:** Report bugs and request features via GitHub Issues
+- **Documentation:** Comprehensive guides available in `/documentation`
+- **Testing:** Run `npm test` to verify your installation
+- **Configuration Help:** See [Configuration Guide](documentation/user-guide/configuration.md)

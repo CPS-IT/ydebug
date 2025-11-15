@@ -25,52 +25,81 @@ YDebug is an AI Agent PHP Debugging Solution that enables AI agents to participa
 
 ## Complete Architecture Diagram
 
+```mermaid
+graph TB
+    %% External Services
+    Claude[Claude Code API<br/>Anthropic]
+    
+    %% Local Developer Machine
+    subgraph Local["🖥️ Local Developer Machine"]
+        %% IDE Plugins
+        subgraph IDEs["IDE Plugins"]
+            VSCode[VS Code<br/>Extension]
+            PhpStorm[PhpStorm<br/>Plugin]
+            OtherIDE[Other<br/>IDEs]
+        end
+        
+        %% YDebug Core Service
+        subgraph YDebug["YDebug Core Service (Node.js)"]
+            CLI[CLI Interface<br/>ydebug commands]
+            Gateway[API Gateway<br/>REST/WebSocket]
+            Session[Session<br/>Manager]
+            DBGpClient[DBGp<br/>Client]
+            Config[Config<br/>Manager]
+            Storage[Local<br/>Storage]
+            AIEngine[AI Analysis<br/>Engine]
+        end
+        
+        %% PHP Application & Xdebug
+        subgraph PHPApp["PHP Application"]
+            Script[Target<br/>Script]
+        end
+        
+        subgraph Xdebug["Xdebug Extension"]
+            DebugEngine[Debugging<br/>Engine]
+            Breakpoints[Breakpoint<br/>Management]
+        end
+    end
+    
+    %% IDE Plugin Connections
+    VSCode -.->|Plugin Interface| Gateway
+    PhpStorm -.->|Plugin Interface| Gateway
+    OtherIDE -.->|Plugin Interface| Gateway
+    
+    %% Core Service Internal Flow
+    CLI --> Gateway
+    Gateway --> Session
+    Session --> DBGpClient
+    Gateway --> AIEngine
+    Config --> Gateway
+    Storage --> Session
+    
+    %% DBGp Protocol Communication
+    DBGpClient <-->|DBGp Protocol<br/>Port 9003| DebugEngine
+    Script --> DebugEngine
+    DebugEngine --> Breakpoints
+    
+    %% AI Integration
+    AIEngine <-->|HTTPS API<br/>Analysis Requests| Claude
+    
+    %% Styling
+    classDef external fill:#ffcccc,stroke:#ff6666,stroke-width:2px
+    classDef core fill:#ccffcc,stroke:#66cc66,stroke-width:2px
+    classDef plugin fill:#ccccff,stroke:#6666cc,stroke-width:2px
+    classDef php fill:#ffffcc,stroke:#cccc66,stroke-width:2px
+    
+    class Claude external
+    class CLI,Gateway,Session,DBGpClient,Config,Storage,AIEngine core
+    class VSCode,PhpStorm,OtherIDE plugin
+    class Script,DebugEngine,Breakpoints php
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                YDebug Architecture                                      │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                         │
-│  ┌──────────────────┐    Plugin Interface     ┌─────────────────────────────────────┐  │
-│  │   IDE Plugins    │◄──────────────────────────┤        YDebug Core Service        │  │
-│  │                  │                           │                                     │  │
-│  │ ┌─────────────┐  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │  VS Code    │  │    HTTP/WebSocket API     │ │ CLI Interface│  │ API Gateway │  │  │
-│  │ │  Extension  │  │                           │ │             │  │             │  │  │
-│  │ └─────────────┘  │                           │ └─────────────┘  └─────────────┘  │  │
-│  │ ┌─────────────┐  │                           │                                     │  │
-│  │ │ PhpStorm    │  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │   Plugin    │  │                           │ │   Session   │  │    DBGp     │  │  │
-│  │ └─────────────┘  │                           │ │  Manager    │  │   Client    │  │  │
-│  │ ┌─────────────┐  │                           │ └─────────────┘  └─────────────┘  │  │
-│  │ │   Other     │  │                           │                                     │  │
-│  │ │   IDEs      │  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ └─────────────┘  │                           │ │    Config   │  │    Local    │  │  │
-│  └──────────────────┘                           │ │  Manager    │  │   Storage   │  │  │
-│                                                  │ └─────────────┘  └─────────────┘  │  │
-│                                                  └─────────────────────────────────────┘  │
-│                                                                                         │
-│  ┌──────────────────┐    DBGp Protocol          ┌─────────────────────────────────────┐  │
-│  │ PHP Application  │◄──────────────────────────┤             Xdebug              │  │
-│  │                  │         (Port 9003)        │                                     │  │
-│  │ ┌─────────────┐  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │   Target    │  │                           │ │  Debugging  │  │ Breakpoint  │  │  │
-│  │ │   Script    │  │                           │ │   Engine    │  │  Management │  │  │
-│  │ └─────────────┘  │                           │ └─────────────┘  └─────────────┘  │  │
-│  └──────────────────┘                           └─────────────────────────────────────┘  │
-│                                                                                         │
-│  ┌──────────────────┐    HTTPS API               ┌─────────────────────────────────────┐  │
-│  │   Claude Code    │◄──────────────────────────┤         AI Integration           │  │
-│  │                  │                           │                                     │  │
-│  │ ┌─────────────┐  │                           │ ┌─────────────┐  ┌─────────────┐  │  │
-│  │ │   Anthropic  │  │                           │ │   Claude    │  │   Analysis  │  │  │
-│  │ │     API      │  │                           │ │  Analyzer   │  │   Engine    │  │  │
-│  │ └─────────────┘  │                           │ └─────────────┘  └─────────────┘  │  │
-│  └──────────────────┘                           └─────────────────────────────────────┘  │
-│                                                                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
 
-Local Developer Machine (All components except Claude Code API)
-```
+**Architecture Flow:**
+1. **Developer** → CLI commands or IDE plugins
+2. **YDebug Core** → Processes requests via API Gateway
+3. **DBGp Client** → Communicates with Xdebug over TCP (port 9003)
+4. **AI Engine** → Sends analysis requests to Claude Code API
+5. **Local Storage** → All debugging data remains on developer machine
 
 ## Core Components
 
@@ -143,7 +172,7 @@ Local Developer Machine (All components except Claude Code API)
 ### Core Technologies
 | Component | Technology | Rationale |
 |-----------|------------|-----------|
-| **Runtime** | Node.js 18+ | Team expertise, rapid prototyping, DBGp library availability |
+| **Runtime** | Node.js 24 LTS | Team expertise, rapid prototyping, DBGp library availability |
 | **Debugging Protocol** | Xdebug with DBGp | Industry standard, mature ecosystem, comprehensive features |
 | **AI Platform** | Anthropic Claude Code | Team expertise, proven code analysis capabilities |
 | **Interface** | CLI (Command Line) | Rapid development, scriptable, IDE-agnostic |
@@ -163,15 +192,17 @@ Local Developer Machine (All components except Claude Code API)
 
 ### Architecture Decision Records Status
 
-| ADR | Decision | Status | Rationale |
-|-----|----------|---------|-----------|
-| **ADR-001** | Xdebug with DBGp Protocol | **Accepted** | Industry standard, proven reliability, extensive features |
-| **ADR-002** | Node.js for Prototype | **Provisional** | Team expertise, rapid development, reconsider after prototype |
-| **ADR-003** | API Gateway Architecture | **Accepted** | Clean separation, scalable, platform-agnostic AI integration |
-| **ADR-004** | CLI Interface for Prototype | **Provisional** | Rapid development, plugin architecture foundation |
-| **ADR-005** | Claude Code Integration | **Accepted** | Team expertise, proven code analysis capabilities |
-| **ADR-006** | Local Development Tool | **Accepted** | Security, privacy, performance, developer trust |
-| **ADR-007** | IDE-Agnostic Plugin Architecture | **Accepted** | Flexibility, extensibility, community contributions |
+| ADR         | Decision                         | Status          | Rationale                                                         |
+|-------------|----------------------------------|-----------------|-------------------------------------------------------------------|
+| **ADR-001** | Xdebug with DBGp Protocol        | **Accepted**    | Industry standard, proven reliability, extensive features         |
+| **ADR-002** | Node.js for Prototype            | **Provisional** | Team expertise, rapid development, reconsider after prototype     |
+| **ADR-003** | API Gateway Architecture         | **Accepted**    | Clean separation, scalable, platform-agnostic AI integration      |
+| **ADR-004** | CLI Interface for Prototype      | **Provisional** | Rapid development, plugin architecture foundation                 |
+| **ADR-005** | Claude Code Integration          | **Accepted**    | Team expertise, proven code analysis capabilities                 |
+| **ADR-006** | Local Development Tool           | **Accepted**    | Security, privacy, performance, developer trust                   |
+| **ADR-007** | IDE-Agnostic Plugin Architecture | **Accepted**    | Flexibility, extensibility, community contributions               |
+| **ADR-008** | Direct DBGp Implementation       | **Accepted**    | Security, performance, full protocol control                      |
+| **ADR-009** | DBGp Server Mode Architecture    | **Accepted**    | IDE compatibility, reliable operation, complete debugging control |
 
 ### Key Decision Themes
 
@@ -185,6 +216,8 @@ Local Developer Machine (All components except Claude Code API)
 - **Local Deployment:** Security and privacy priority
 - **Claude Code Integration:** Team expertise leverage
 - **Plugin Architecture:** Community extensibility strategy
+- **Direct DBGp Implementation:** Security and performance benefits
+- **DBGp Server Mode:** Reliable IDE-independent debugging operation
 
 #### Risk Mitigation Strategies
 - **Modular architecture** enables technology migration without complete rewrites
@@ -369,6 +402,8 @@ class AIManager {
 - [ADR-005: Choose Claude Code Integration](/Users/d.wenzel/projekt/ydebug/documentation/architecture/005-choose-claude-code-integration.md) - AI platform selection
 - [ADR-006: Choose Local Development Tool Deployment](/Users/d.wenzel/projekt/ydebug/documentation/architecture/006-choose-local-deployment-model.md) - Security and deployment model
 - [ADR-007: Choose IDE-Agnostic Plugin Architecture](/Users/d.wenzel/projekt/ydebug/documentation/architecture/007-choose-ide-agnostic-plugin-architecture.md) - Extensibility strategy
+- [ADR-008: Choose Direct DBGp Implementation](/Users/d.wenzel/projekt/ydebug/documentation/architecture/008-choose-direct-dbgp-implementation.md) - Security and performance approach
+- [ADR-009: Choose DBGp Server Mode Architecture](/Users/d.wenzel/projekt/ydebug/documentation/architecture/009-choose-dbgp-server-mode.md) - IDE compatibility solution
 
 ### Project Planning Documents
 - [Project Goal](/Users/d.wenzel/projekt/ydebug/documentation/plan/goal.md) - Vision and core concept
