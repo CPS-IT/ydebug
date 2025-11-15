@@ -221,9 +221,13 @@ class ClaudeClient {
     const requestOptions = {
       model: options.model || this.config.model,
       max_tokens: options.maxTokens || this.config.maxTokens,
-      messages: Array.isArray(messages) ? messages : [{ role: 'user', content: messages }],
-      ...options
+      messages: Array.isArray(messages) ? messages : [{ role: 'user', content: messages }]
     };
+
+    // Add other options except maxTokens (which is already converted to max_tokens)
+    // eslint-disable-next-line no-unused-vars
+    const { maxTokens, model, ...otherOptions } = options;
+    Object.assign(requestOptions, otherOptions);
         
     let lastError;
     let attempt = 0;

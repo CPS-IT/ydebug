@@ -19,6 +19,7 @@
  */
 
 const AICommand = require('./ai');
+const AnalyzeCommand = require('./analyze');
 const ConfigCommand = require('./config');
 const ConnectCommand = require('./connect');
 const InspectCommand = require('./inspect');
@@ -26,6 +27,7 @@ const ServerCommand = require('./server');
 
 module.exports = {
   AICommand,
+  AnalyzeCommand,
   ConfigCommand,
   ConnectCommand,
   InspectCommand,

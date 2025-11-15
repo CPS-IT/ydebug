@@ -22,7 +22,7 @@
 
 const { Command } = require('commander');
 const packageJson = require('../../package.json');
-const { AICommand, ConfigCommand, ConnectCommand, InspectCommand, ServerCommand } = require('./commands');
+const { AICommand, AnalyzeCommand, ConfigCommand, ConnectCommand, InspectCommand, ServerCommand } = require('./commands');
 
 const program = new Command();
 
@@ -143,6 +143,34 @@ function registerCommands() {
         port: options.port,
         timeout: options.timeout,
         server: options.server
+      });
+    });
+
+  // Analyze command
+  program
+    .command('analyze')
+    .description('AI-powered analysis of debugging context and variables')
+    .option('-t, --type <type>', 'analysis type (variableAnalysis, errorAnalysis, performanceAnalysis, logicAnalysis)', 'variableAnalysis')
+    .option('-f, --file <file>', 'PHP file to analyze')
+    .option('-l, --line <line>', 'line number for analysis context')
+    .option('-c, --context <data>', 'context data (JSON string or file path)')
+    .option('--variables <data>', 'variables data (JSON string or file path)')
+    .option('--expected-behavior <description>', 'expected behavior description (for logic analysis)')
+    .option('--max-tokens <tokens>', 'maximum tokens for AI response', '2000')
+    .option('-j, --json', 'output in JSON format')
+    .option('-v, --verbose', 'show detailed output')
+    .action(async options => {
+      const cmd = new AnalyzeCommand();
+      await cmd.execute({
+        type: options.type,
+        file: options.file,
+        line: options.line ? parseInt(options.line, 10) : undefined,
+        context: options.context,
+        variables: options.variables,
+        expectedBehavior: options.expectedBehavior,
+        maxTokens: options.maxTokens ? parseInt(options.maxTokens, 10) : undefined,
+        json: options.json,
+        verbose: options.verbose
       });
     });
 
