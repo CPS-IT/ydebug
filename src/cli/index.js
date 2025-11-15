@@ -22,7 +22,7 @@
 
 const { Command } = require('commander');
 const packageJson = require('../../package.json');
-const { AICommand, AnalyzeCommand, ConfigCommand, ConnectCommand, InspectCommand, ServerCommand } = require('./commands');
+const { AICommand, AnalyzeCommand, ConfigCommand, ConnectCommand, InspectCommand, ServerCommand, MCPServerCommand } = require('./commands');
 
 const program = new Command();
 
@@ -199,6 +199,22 @@ function registerCommands() {
         json: options.json,
         noColors: options.noColors,
         autoInspect: !options.noAutoInspect
+      });
+    });
+
+  // MCP Server command
+  program
+    .command('mcp-server')
+    .description('Run YDebug MCP server for Claude Code integration')
+    .option('-t, --transport <type>', 'transport type (stdio, http)', 'stdio')
+    .option('-p, --port <port>', 'port for HTTP transport (not yet implemented)')
+    .option('--debug', 'enable debug logging')
+    .action(async options => {
+      const cmd = new MCPServerCommand();
+      await cmd.execute({
+        transport: options.transport,
+        port: options.port ? parseInt(options.port, 10) : undefined,
+        debug: options.debug
       });
     });
 }

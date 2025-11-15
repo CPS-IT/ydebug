@@ -160,8 +160,16 @@ class ServerCommand extends BaseCommand {
       }
     };
 
-    process.on('SIGINT', () => shutdown('SIGINT'));
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    // Remove existing listeners to prevent memory leaks during testing
+    process.removeAllListeners('SIGINT');
+    process.removeAllListeners('SIGTERM');
+    
+    // Add signal handlers
+    const sigintHandler = () => shutdown('SIGINT');
+    const sigtermHandler = () => shutdown('SIGTERM');
+    
+    process.on('SIGINT', sigintHandler);
+    process.on('SIGTERM', sigtermHandler);
 
     try {
       await server.start();

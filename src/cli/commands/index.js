@@ -24,6 +24,7 @@ const ConfigCommand = require('./config');
 const ConnectCommand = require('./connect');
 const InspectCommand = require('./inspect');
 const ServerCommand = require('./server');
+const MCPServerCommand = require('./mcp-server');
 
 module.exports = {
   AICommand,
@@ -32,4 +33,5 @@ module.exports = {
   ConnectCommand,
   InspectCommand,
   ServerCommand,
+  MCPServerCommand,
 };

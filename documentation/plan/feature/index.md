@@ -4,50 +4,52 @@ This document provides a comprehensive overview of all YDebug features, their cu
 
 ## Feature Overview
 
-| ID | Feature Name | Status | Phase | Link |
-|----|--------------|--------|--------|------|
-| 001 | Project Scaffolding | Done | Prototype | [001-ProjectScaffolding.md](prototype/done/001-ProjectScaffolding.md) |
-| 002 | Basic CLI Framework | Done | Prototype | [002-BasicCLIFramework.md](prototype/done/002-BasicCLIFramework.md) |
-| 003 | DBGp Library Integration | Done | Prototype | [003-DBGpLibraryIntegration.md](prototype/done/003-DBGpLibraryIntegration.md) |
-| 004 | Xdebug Connection Test | Done | Prototype | [004-XdebugConnectionTest.md](prototype/done/004-XdebugConnectionTest.md) |
-| 005 | Configuration Management | Done | Prototype | [005-ConfigurationManagement.md](prototype/done/005-ConfigurationManagement.md) |
-| 006 | Basic Logging System | Done | Prototype | [006-BasicLoggingSystem.md](prototype/done/006-BasicLoggingSystem.md) |
-| 007 | DBGp Command Execution | Done | Prototype | [007-DBGpCommandExecution.md](prototype/done/007-DBGpCommandExecution.md) |
-| 007-1 | Architectural Refactoring (Critical) | Done | Prototype | [007-add-1-ArchitecturalRefactoringCritical.md](prototype/done/007-add-1-ArchitecturalRefactoringCritical.md) |
-| 007-2 | Architectural Refactoring (Structural) | Done | Prototype | [007-add-2-ArchitecturalRefactoringStructural.md](prototype/done/007-add-2-ArchitecturalRefactoringStructural.md) |
-| 008 | Breakpoint Management | Done | Prototype | [008-BreakpointManagement.md](prototype/done/008-BreakpointManagement.md) |
-| 009 | Variable Inspection Core | Done | Prototype | [009-VariableInspectionCore.md](prototype/done/009-VariableInspectionCore.md) |
-| 009-1 | Variable Inspection Server Mode | Done | Prototype | [009-add-1-VariableInspectionServerMode.md](prototype/done/009-add-1-VariableInspectionServerMode.md) |
-| 010 | Session Management | Done | Prototype | [010-SessionManagement.md](prototype/done/010-SessionManagement.md) |
-| 011 | PHP Script Integration | Done | Prototype | [011-PHPScriptIntegration.md](prototype/done/011-PHPScriptIntegration.md) |
-| 012 | Variable Display Formatting | Skipped | Prototype | [012-VariableDisplayFormatting.md](prototype/skipped/012-VariableDisplayFormatting.md) |
-| 013 | Claude Code API Setup | Done | Prototype | [013-ClaudeCodeAPISetup.md](prototype/done/013-ClaudeCodeAPISetup.md) |
-| 014 | Basic AI Analysis | Done | Prototype | [014-BasicAIAnalysis.md](prototype/done/014-BasicAIAnalysis.md) |
-| 015 | Debugging Context Preparation | Skipped | Prototype | [015-DebuggingContextPreparation.md](prototype/skipped/015-DebuggingContextPreparation.md) |
-| 016 | AI Response Processing | Planned | MVP | [016-AIResponseProcessing.md](mvp/016-AIResponseProcessing.md) |
-| 017 | Prompt Engineering | Planned | MVP | [017-PromptEngineering.md](mvp/017-PromptEngineering.md) |
-| 018 | End-to-End Testing | Planned | MVP | [018-EndToEndTesting.md](mvp/018-EndToEndTesting.md) |
-| 019 | Error Handling Recovery | Planned | MVP | [019-ErrorHandlingRecovery.md](mvp/019-ErrorHandlingRecovery.md) |
-| 020 | Technology Validation | Planned | MVP | [020-TechnologyValidation.md](mvp/020-TechnologyValidation.md) |
-| 021 | Comprehensive Logging System | Planned | MVP | [021-ComprehensiveLoggingSystem.md](mvp/021-ComprehensiveLoggingSystem.md) |
-| 022 | Advanced Breakpoint Management | Planned | MVP | [022-AdvancedBreakpointManagement.md](mvp/022-AdvancedBreakpointManagement.md) |
-| 023 | Advanced Session Management | Planned | MVP | [023-AdvancedSessionManagement.md](mvp/023-AdvancedSessionManagement.md) |
-| 024 | Comprehensive PHP Test Suite | Planned | MVP | [024-ComprehensivePHPTestSuite.md](mvp/024-ComprehensivePHPTestSuite.md) |
-| 025 | Advanced Variable Display Formatting | Planned | MVP | [025-AdvancedVariableDisplayFormatting.md](mvp/025-AdvancedVariableDisplayFormatting.md) |
-| 026 | Comprehensive Debugging Context Preparation | Planned | MVP | [026-ComprehensiveDebuggingContextPreparation.md](mvp/026-ComprehensiveDebuggingContextPreparation.md) |
-| 027 | MCP Server Foundation | Planned | MCP | [027-MCPServerFoundation.md](mcp/027-MCPServerFoundation.md) |
-| 028 | MCP Debugging Tools | Planned | MCP | [028-MCPDebuggingTools.md](mcp/028-MCPDebuggingTools.md) |
-| 029 | MCP Variable Inspection Tools | Planned | MCP | [029-MCPVariableInspectionTools.md](mcp/029-MCPVariableInspectionTools.md) |
-| 030 | MCP AI Analysis Tools | Planned | MCP | [030-MCPAIAnalysisTools.md](mcp/030-MCPAIAnalysisTools.md) |
-| 031 | MCP Resource Management | Planned | MCP | [031-MCPResourceManagement.md](mcp/031-MCPResourceManagement.md) |
-| 032 | MCP CLI Integration | Planned | MCP | [032-MCPCLIIntegration.md](mcp/032-MCPCLIIntegration.md) |
-| 033 | MCP Integration Testing | Planned | MCP | [033-MCPIntegrationTesting.md](mcp/033-MCPIntegrationTesting.md) |
+| ID    | Feature Name                                | Status      | Phase     | Link                                                                                                              |
+|-------|---------------------------------------------|-------------|-----------|-------------------------------------------------------------------------------------------------------------------|
+| 001   | Project Scaffolding                         | Done        | Prototype | [001-ProjectScaffolding.md](prototype/done/001-ProjectScaffolding.md)                                             |
+| 002   | Basic CLI Framework                         | Done        | Prototype | [002-BasicCLIFramework.md](prototype/done/002-BasicCLIFramework.md)                                               |
+| 003   | DBGp Library Integration                    | Done        | Prototype | [003-DBGpLibraryIntegration.md](prototype/done/003-DBGpLibraryIntegration.md)                                     |
+| 004   | Xdebug Connection Test                      | Done        | Prototype | [004-XdebugConnectionTest.md](prototype/done/004-XdebugConnectionTest.md)                                         |
+| 005   | Configuration Management                    | Done        | Prototype | [005-ConfigurationManagement.md](prototype/done/005-ConfigurationManagement.md)                                   |
+| 006   | Basic Logging System                        | Done        | Prototype | [006-BasicLoggingSystem.md](prototype/done/006-BasicLoggingSystem.md)                                             |
+| 007   | DBGp Command Execution                      | Done        | Prototype | [007-DBGpCommandExecution.md](prototype/done/007-DBGpCommandExecution.md)                                         |
+| 007-1 | Architectural Refactoring (Critical)        | Done        | Prototype | [007-add-1-ArchitecturalRefactoringCritical.md](prototype/done/007-add-1-ArchitecturalRefactoringCritical.md)     |
+| 007-2 | Architectural Refactoring (Structural)      | Done        | Prototype | [007-add-2-ArchitecturalRefactoringStructural.md](prototype/done/007-add-2-ArchitecturalRefactoringStructural.md) |
+| 008   | Breakpoint Management                       | Done        | Prototype | [008-BreakpointManagement.md](prototype/done/008-BreakpointManagement.md)                                         |
+| 009   | Variable Inspection Core                    | Done        | Prototype | [009-VariableInspectionCore.md](prototype/done/009-VariableInspectionCore.md)                                     |
+| 009-1 | Variable Inspection Server Mode             | Done        | Prototype | [009-add-1-VariableInspectionServerMode.md](prototype/done/009-add-1-VariableInspectionServerMode.md)             |
+| 010   | Session Management                          | Done        | Prototype | [010-SessionManagement.md](prototype/done/010-SessionManagement.md)                                               |
+| 011   | PHP Script Integration                      | Done        | Prototype | [011-PHPScriptIntegration.md](prototype/done/011-PHPScriptIntegration.md)                                         |
+| 012   | Variable Display Formatting                 | Skipped     | Prototype | [012-VariableDisplayFormatting.md](prototype/skipped/012-VariableDisplayFormatting.md)                            |
+| 013   | Claude Code API Setup                       | Done        | Prototype | [013-ClaudeCodeAPISetup.md](prototype/done/013-ClaudeCodeAPISetup.md)                                             |
+| 014   | Basic AI Analysis                           | Done        | Prototype | [014-BasicAIAnalysis.md](prototype/done/014-BasicAIAnalysis.md)                                                   |
+| 015   | Debugging Context Preparation               | Skipped     | Prototype | [015-DebuggingContextPreparation.md](prototype/skipped/015-DebuggingContextPreparation.md)                        |
+| 016   | AI Response Processing                      | Planned     | MVP       | [016-AIResponseProcessing.md](mvp/016-AIResponseProcessing.md)                                                    |
+| 017   | Prompt Engineering                          | Planned     | MVP       | [017-PromptEngineering.md](mvp/017-PromptEngineering.md)                                                          |
+| 018   | End-to-End Testing                          | Planned     | MVP       | [018-EndToEndTesting.md](mvp/018-EndToEndTesting.md)                                                              |
+| 019   | Error Handling Recovery                     | Planned     | MVP       | [019-ErrorHandlingRecovery.md](mvp/019-ErrorHandlingRecovery.md)                                                  |
+| 020   | Technology Validation                       | Planned     | MVP       | [020-TechnologyValidation.md](mvp/020-TechnologyValidation.md)                                                    |
+| 021   | Comprehensive Logging System                | Planned     | MVP       | [021-ComprehensiveLoggingSystem.md](mvp/021-ComprehensiveLoggingSystem.md)                                        |
+| 022   | Advanced Breakpoint Management              | Planned     | MVP       | [022-AdvancedBreakpointManagement.md](mvp/022-AdvancedBreakpointManagement.md)                                    |
+| 023   | Advanced Session Management                 | Planned     | MVP       | [023-AdvancedSessionManagement.md](mvp/023-AdvancedSessionManagement.md)                                          |
+| 024   | Comprehensive PHP Test Suite                | Planned     | MVP       | [024-ComprehensivePHPTestSuite.md](mvp/024-ComprehensivePHPTestSuite.md)                                          |
+| 025   | Advanced Variable Display Formatting        | Planned     | MVP       | [025-AdvancedVariableDisplayFormatting.md](mvp/025-AdvancedVariableDisplayFormatting.md)                          |
+| 026   | Comprehensive Debugging Context Preparation | Planned     | MVP       | [026-ComprehensiveDebuggingContextPreparation.md](mvp/026-ComprehensiveDebuggingContextPreparation.md)            |
+| 027   | MCP Server Foundation                       | Done        | MCP       | [027-MCPServerFoundation.md](mcp/done/027-MCPServerFoundation.md)                                                      |
+| 028   | MCP Debugging Tools                         | Planned     | MCP       | [028-MCPDebuggingTools.md](mcp/028-MCPDebuggingTools.md)                                                          |
+| 029   | MCP Variable Inspection Tools               | Planned     | MCP       | [029-MCPVariableInspectionTools.md](mcp/029-MCPVariableInspectionTools.md)                                        |
+| 030   | MCP AI Analysis Tools                       | Planned     | MCP       | [030-MCPAIAnalysisTools.md](mcp/030-MCPAIAnalysisTools.md)                                                        |
+| 031   | MCP Resource Management                     | Planned     | MCP       | [031-MCPResourceManagement.md](mcp/031-MCPResourceManagement.md)                                                  |
+| 032   | MCP CLI Integration                         | Planned     | MCP       | [032-MCPCLIIntegration.md](mcp/032-MCPCLIIntegration.md)                                                          |
+| 033   | MCP Integration Testing                     | Planned     | MCP       | [033-MCPIntegrationTesting.md](mcp/033-MCPIntegrationTesting.md)                                                  |
+| 034   | MCP HTTP+SSE Transport                      | Planned     | MCP       | [034-MCPHTTPTransport.md](mcp/034-MCPHTTPTransport.md)                                                            |
 
 ## Status Legend
 
 - **Done**: Feature has been implemented and tested
 - **Skipped**: Feature was intentionally skipped during prototype phase
 - **Planned**: Feature is documented but not yet implemented
+- **In Progress**: Feature is being implemented
 
 ## Phase Classification
 
@@ -82,7 +84,7 @@ The MCP phase implements Claude Code integration through Model Context Protocol:
 - **CLI Integration**: MCP server commands and configuration management
 - **Comprehensive Testing**: Protocol compliance and integration testing
 
-**MCP Status**: **PLANNED** - 7 features documented, ready for implementation
+**MCP Status**: **IN PROGRESS** - 8 features documented, 1 completed, 7 ready for implementation
 
 ### Future Phase
 Extended capabilities beyond core MCP integration:
@@ -97,14 +99,14 @@ Extended capabilities beyond core MCP integration:
 ### Completed Features by Phase
 - **Prototype**: 13/15 features implemented (87% completion rate)
 - **MVP**: 0/11 features implemented (0% completion rate)
-- **MCP**: 0/7 features implemented (0% completion rate)
+- **MCP**: 1/8 features implemented (12.5% completion rate)
 - **Future**: 0/1+ features implemented (0% completion rate)
 
 ### Overall Progress
-- **Total Features Documented**: 33
-- **Features Implemented**: 13 (39%)
+- **Total Features Documented**: 34
+- **Features Implemented**: 14 (41%)
 - **Features Skipped**: 2 (6%)
-- **Features Remaining**: 18+ (55%)
+- **Features Remaining**: 18+ (53%)
 
 ## Key Architectural Decisions
 
@@ -118,10 +120,10 @@ The following features resulted in significant architectural decisions documente
 
 ## Current Development Focus
 
-**Active Phase**: Transition from Prototype to MVP/MCP phases
+**Active Phase**: MCP and MVP phases ready for implementation
 **Next Feature Options**: 
 - Feature 016 (AI Response Processing) for MVP track
-- Feature 027 (MCP Server Foundation) for MCP track
+- Feature 028 (MCP Debugging Tools) or Feature 034 (MCP HTTP+SSE Transport) for MCP track
 **Architecture**: Stable foundation established through prototype phase
 **Technology Stack**: Node.js, DBGp Protocol, Claude API, MCP Protocol, Jest testing framework
 
