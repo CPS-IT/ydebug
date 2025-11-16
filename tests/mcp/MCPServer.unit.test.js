@@ -729,15 +729,59 @@ describe('MCPServer Unit Tests', () => {
   });
 
   describe('handleResourcesList', () => {
-    test('should return empty resources list', async () => {
+    test('should return list of registered resources', async () => {
       const result = await server.handleResourcesList({});
-      expect(result).toEqual({ resources: [] });
+      
+      expect(result).toHaveProperty('resources');
+      expect(Array.isArray(result.resources)).toBe(true);
+      expect(result.resources).toHaveLength(6);
+      
+      // Check that each resource has required fields
+      result.resources.forEach(resource => {
+        expect(resource).toHaveProperty('uri');
+        expect(resource).toHaveProperty('name');
+        expect(resource).toHaveProperty('description');
+        expect(resource).toHaveProperty('mimeType');
+        expect(resource).toHaveProperty('annotations');
+        expect(resource.uri).toMatch(/^ydebug:\/\//);
+        expect(resource.mimeType).toBe('application/json');
+        expect(resource.annotations).toHaveProperty('supportsSubscriptions', true);
+      });
+      
+      // Check specific resource URIs are present
+      const uris = result.resources.map(r => r.uri);
+      expect(uris).toContain('ydebug://debugging-session');
+      expect(uris).toContain('ydebug://active-breakpoints');
+      expect(uris).toContain('ydebug://execution-state');
+      expect(uris).toContain('ydebug://variable-context');
+      expect(uris).toContain('ydebug://execution-history');
+      expect(uris).toContain('ydebug://analysis-results');
     });
   });
 
   describe('handleResourcesRead', () => {
-    test('should throw not implemented error', async () => {
-      await expect(server.handleResourcesRead({})).rejects.toThrow('Resource reading not yet implemented');
+    test('should require URI parameter', async () => {
+      await expect(server.handleResourcesRead({})).rejects.toThrow('Resource URI is required');
+    });
+
+    test('should handle resource not found', async () => {
+      await expect(server.handleResourcesRead({ uri: 'ydebug://nonexistent' })).rejects.toThrow('Resource not found: ydebug://nonexistent');
+    });
+
+    test('should read valid resource', async () => {
+      // Mock the resource registry readResource method to avoid actual service calls
+      const mockReadResource = jest.spyOn(server.resourceRegistry, 'readResource')
+        .mockResolvedValue({ data: 'mock resource data' });
+
+      const result = await server.handleResourcesRead({ uri: 'ydebug://debugging-session' });
+      
+      expect(result).toHaveProperty('contents');
+      expect(Array.isArray(result.contents)).toBe(true);
+      expect(result.contents[0]).toHaveProperty('uri', 'ydebug://debugging-session');
+      expect(result.contents[0]).toHaveProperty('mimeType', 'application/json');
+      expect(result.contents[0]).toHaveProperty('text');
+      
+      mockReadResource.mockRestore();
     });
   });
 
@@ -857,12 +901,17 @@ describe('MCPServer Unit Tests', () => {
     test('should return complete server status', () => {
       const status = server.getStatus();
 
-      expect(status).toEqual({
-        isRunning: false,
-        transport: { type: 'StdioTransport', isConnected: true },
-        capabilities: { isNegotiated: false },
-        services: { serviceCount: 0, services: [] }
-      });
+      expect(status).toHaveProperty('isRunning', false);
+      expect(status).toHaveProperty('transport', { type: 'StdioTransport', isConnected: true });
+      expect(status).toHaveProperty('capabilities', { isNegotiated: false });
+      expect(status).toHaveProperty('services', { serviceCount: 0, services: [] });
+      expect(status).toHaveProperty('resources');
+      expect(status.resources).toHaveProperty('resourceCount', 6);
+      expect(status.resources).toHaveProperty('resources');
+      expect(status.resources).toHaveProperty('subscriptions', 0);
+      expect(status.resources).toHaveProperty('cachedResources', 0);
+      expect(Array.isArray(status.resources.resources)).toBe(true);
+      expect(status.resources.resources).toHaveLength(6);
     });
 
     test('should handle missing transport', () => {

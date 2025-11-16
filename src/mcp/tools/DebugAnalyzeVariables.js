@@ -259,7 +259,7 @@ class DebugAnalyzeVariables extends BaseMCPTool {
     const insights = [];
 
     Object.entries(expectedValues).forEach(([name, expectedValue]) => {
-      if (variables.hasOwnProperty(name)) {
+      if (Object.prototype.hasOwnProperty.call(variables, name)) {
         const actualValue = variables[name];
         if (actualValue !== expectedValue) {
           insights.push(
@@ -321,7 +321,7 @@ class DebugAnalyzeVariables extends BaseMCPTool {
    * @param {Object} expectedValues - Expected values
    * @returns {Array} Identified issues
    */
-  identifyVariableIssues(variables, expectedValues) {
+  identifyVariableIssues(variables, _expectedValues) {
     const issues = [];
 
     // Check for common issues

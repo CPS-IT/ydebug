@@ -229,7 +229,7 @@ class DebugExplainBehavior extends BaseMCPTool {
     
     if (expected && expected !== observed) {
       parts.push(`5. Expected behavior: ${expected}`);
-      parts.push(`6. The difference suggests there may be a logic issue or unexpected condition`);
+      parts.push('6. The difference suggests there may be a logic issue or unexpected condition');
     }
 
     return parts.join('\n');
@@ -258,7 +258,7 @@ class DebugExplainBehavior extends BaseMCPTool {
    * Generate technical explanation
    */
   generateTechnicalExplanation(context, observed, expected) {
-    const technical = [`Execution context analysis:`];
+    const technical = ['Execution context analysis:'];
     
     if (context.execution) {
       technical.push(`- Status: ${context.execution.status || 'unknown'}`);
@@ -276,7 +276,7 @@ class DebugExplainBehavior extends BaseMCPTool {
     }
     
     if (observed !== expected) {
-      technical.push(`- Behavior variance detected between observed and expected outcomes`);
+      technical.push('- Behavior variance detected between observed and expected outcomes');
     }
     
     return technical.join('\n');
@@ -327,7 +327,7 @@ class DebugExplainBehavior extends BaseMCPTool {
    * @param {number} lineNum - Line number
    * @returns {string} Explanation
    */
-  explainCodeLine(line, lineNum) {
+  explainCodeLine(line, _lineNum) {
     if (line.includes('=') && !line.includes('==')) {
       return 'Variable assignment - setting a value';
     } else if (line.includes('if (') || line.includes('elseif (')) {

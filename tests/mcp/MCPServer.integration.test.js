@@ -102,7 +102,20 @@ describe('MCPServer Integration', () => {
     test('should handle resources list request', async () => {
       const result = await server.handleResourcesList({});
       
-      expect(result).toEqual({ resources: [] });
+      expect(result).toHaveProperty('resources');
+      expect(Array.isArray(result.resources)).toBe(true);
+      expect(result.resources).toHaveLength(6);
+      
+      // Check that each resource has the required MCP resource format
+      result.resources.forEach(resource => {
+        expect(resource).toHaveProperty('uri');
+        expect(resource).toHaveProperty('name');
+        expect(resource).toHaveProperty('description');
+        expect(resource).toHaveProperty('mimeType', 'application/json');
+        expect(resource).toHaveProperty('annotations');
+        expect(resource.uri).toMatch(/^ydebug:\/\//);
+        expect(resource.annotations).toHaveProperty('supportsSubscriptions', true);
+      });
     });
 
     test('should handle tools/call with proper error for missing tool name', async () => {
@@ -112,8 +125,12 @@ describe('MCPServer Integration', () => {
       expect(result.content[0].text).toContain('Tool name is required');
     });
 
-    test('should throw error for unimplemented resources/read', async () => {
-      await expect(server.handleResourcesRead({})).rejects.toThrow('Resource reading not yet implemented');
+    test('should throw error for missing URI in resources/read', async () => {
+      await expect(server.handleResourcesRead({})).rejects.toThrow('Resource URI is required');
+    });
+
+    test('should throw error for unknown resource in resources/read', async () => {
+      await expect(server.handleResourcesRead({ uri: 'unknown://resource' })).rejects.toThrow('Resource not found: unknown://resource');
     });
 
     test('should handle initialize request', async () => {

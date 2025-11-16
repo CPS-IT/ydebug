@@ -256,7 +256,7 @@ class DebugSuggestBreakpoints extends BaseMCPTool {
   /**
    * Analyze line for bug finding
    */
-  analyzeForBugFinding(suggestion, line, problemDescription) {
+  analyzeForBugFinding(suggestion, line, _problemDescription) {
     // Variable assignments
     if (line.includes('=') && !line.includes('==') && !line.includes('!=')) {
       suggestion.reason = 'Variable assignment - check values being set';

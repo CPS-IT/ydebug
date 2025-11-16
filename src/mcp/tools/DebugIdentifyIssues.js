@@ -482,9 +482,9 @@ class DebugIdentifyIssues extends BaseMCPTool {
     };
 
     priority.nextAction = priority.critical > 0 ? 'Address critical issues immediately' :
-                         priority.high > 0 ? 'Focus on high-severity issues first' :
-                         priority.medium > 0 ? 'Review medium-priority issues' :
-                         'No urgent issues found';
+      priority.high > 0 ? 'Focus on high-severity issues first' :
+        priority.medium > 0 ? 'Review medium-priority issues' :
+          'No urgent issues found';
 
     return priority;
   }

@@ -10,6 +10,9 @@ const JsonRpcHandler = require('./protocol/JsonRpcHandler');
 const CapabilityManager = require('./protocol/CapabilityManager');
 const StdioTransport = require('./transport/StdioTransport');
 
+// MCP Resource System
+const MCPResourceRegistry = require('./resources/index');
+
 // MCP Debugging Tools
 const DebugStartSession = require('./tools/DebugStartSession');
 const DebugStopSession = require('./tools/DebugStopSession');
@@ -19,6 +22,14 @@ const DebugListBreakpoints = require('./tools/DebugListBreakpoints');
 const DebugStepExecution = require('./tools/DebugStepExecution');
 const DebugContinueExecution = require('./tools/DebugContinueExecution');
 const DebugGetStatus = require('./tools/DebugGetStatus');
+
+// MCP Resources
+const DebuggingSessionResource = require('./resources/DebuggingSessionResource');
+const ActiveBreakpointsResource = require('./resources/ActiveBreakpointsResource');
+const ExecutionStateResource = require('./resources/ExecutionStateResource');
+const VariableContextResource = require('./resources/VariableContextResource');
+const ExecutionHistoryResource = require('./resources/ExecutionHistoryResource');
+const AnalysisResultsResource = require('./resources/AnalysisResultsResource');
 
 class MCPServer extends EventEmitter {
   constructor(config = {}) {
@@ -48,6 +59,11 @@ class MCPServer extends EventEmitter {
     this.tools = new Map();
     this.setupDebuggingTools();
 
+    // MCP Resources
+    this.resourceRegistry = new MCPResourceRegistry();
+    this.resourceSubscriptions = new Map(); // Track client subscriptions
+    this.setupResources();
+
     // MCP handlers
     this.methodHandlers = new Map();
     this.setupCoreHandlers();
@@ -70,6 +86,12 @@ class MCPServer extends EventEmitter {
     for (const [name, service] of Object.entries(services)) {
       this.serviceRegistry.register(name, service);
     }
+
+    // Initialize resources with services
+    await this.initializeResources();
+
+    // Setup resource event handling
+    this.setupResourceEventHandling();
 
     // Initialize transport
     this.initializeTransport();
@@ -400,25 +422,6 @@ class MCPServer extends EventEmitter {
     }
   }
 
-  /**
-   * Handle resources/list request (placeholder)
-   * @param {object} params - Parameters
-   * @returns {object} Resources list
-   */
-  async handleResourcesList(_params) {
-    // Will be implemented in Feature 031
-    return { resources: [] };
-  }
-
-  /**
-   * Handle resources/read request (placeholder)
-   * @param {object} params - Resource read parameters
-   * @returns {object} Resource content
-   */
-  async handleResourcesRead(_params) {
-    // Will be implemented in Feature 031
-    throw new Error('Resource reading not yet implemented');
-  }
 
   /**
    * Handle ping request
@@ -484,15 +487,175 @@ class MCPServer extends EventEmitter {
   }
 
   /**
+   * Setup MCP resources
+   */
+  setupResources() {
+    const resources = [
+      DebuggingSessionResource,
+      ActiveBreakpointsResource,
+      ExecutionStateResource,
+      VariableContextResource,
+      ExecutionHistoryResource,
+      AnalysisResultsResource
+    ];
+
+    // Initialize and register each resource
+    resources.forEach(ResourceClass => {
+      const resource = new ResourceClass(this.serviceRegistry);
+      const metadata = resource.getMetadata();
+      this.resourceRegistry.register(resource.uri, resource);
+      this.logger.debug(`Registered MCP resource: ${metadata.name}`);
+    });
+
+    this.logger.info(`Registered ${this.resourceRegistry.resources.size} MCP resources`);
+  }
+
+  /**
+   * Initialize resources with services
+   * @returns {Promise<void>}
+   */
+  async initializeResources() {
+    for (const [uri, resource] of this.resourceRegistry.resources) {
+      try {
+        if (resource.initialize && typeof resource.initialize === 'function') {
+          await resource.initialize();
+          this.logger.debug(`Initialized resource: ${uri}`);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to initialize resource ${uri}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Setup resource event handling for updates and subscriptions
+   */
+  setupResourceEventHandling() {
+    this.resourceRegistry.on('resource:updated', (data) => {
+      this.handleResourceUpdate(data);
+    });
+
+    this.resourceRegistry.on('resource:error', (error) => {
+      this.logger.error('Resource error:', error);
+      this.emit('resourceError', error);
+    });
+  }
+
+  /**
+   * Handle resource update notifications
+   * @param {object} data - Update data
+   */
+  async handleResourceUpdate(data) {
+    const { uri, updateData } = data;
+    
+    // Notify subscribed clients about resource updates
+    const subscriptions = this.resourceSubscriptions.get(uri);
+    if (subscriptions && subscriptions.size > 0) {
+      try {
+        // Create notification message
+        const notification = this.jsonRpc.createNotification('resource/updated', {
+          uri: uri,
+          data: updateData
+        });
+        
+        // Send to subscribed clients (for now we assume single client)
+        await this.sendMessage(notification);
+        
+        this.logger.debug(`Sent resource update notification for: ${uri}`);
+      } catch (error) {
+        this.logger.error('Failed to send resource update notification:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle resources/list request
+   * @param {object} params - Parameters
+   * @returns {object} Resources list
+   */
+  async handleResourcesList(_params) {
+    const resources = [];
+    
+    // Convert registered resources to MCP resource list format
+    for (const resource of this.resourceRegistry.resources.values()) {
+      const metadata = resource.getMetadata();
+      resources.push({
+        uri: resource.uri,
+        name: metadata.name,
+        description: metadata.description,
+        mimeType: metadata.mimeType || 'application/json',
+        annotations: {
+          supportsSubscriptions: resource.supportsSubscriptions()
+        }
+      });
+    }
+
+    this.logger.debug(`Listing ${resources.length} available resources`);
+    return { resources };
+  }
+
+  /**
+   * Handle resources/read request
+   * @param {object} params - Resource read parameters
+   * @returns {object} Resource content
+   */
+  async handleResourcesRead(params) {
+    const { uri } = params;
+
+    try {
+      if (!uri) {
+        throw new Error('Resource URI is required');
+      }
+
+      const resource = this.resourceRegistry.resources.get(uri);
+      if (!resource) {
+        throw new Error(`Resource not found: ${uri}`);
+      }
+
+      this.logger.info(`Reading MCP resource: ${uri}`, params);
+
+      // Read the resource with provided options
+      const readOptions = {
+        filter: params.filter || null,
+        limit: params.limit || null,
+        offset: params.offset || null
+      };
+
+      const content = await this.resourceRegistry.readResource(uri, readOptions);
+      
+      this.logger.info(`MCP resource '${uri}' read successfully`);
+      
+      return {
+        contents: [{
+          uri: uri,
+          mimeType: 'application/json',
+          text: JSON.stringify(content, null, 2)
+        }]
+      };
+
+    } catch (error) {
+      this.logger.error('MCP resource read failed:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get server status
    * @returns {object} Server status
    */
   getStatus() {
+    const resourceStats = this.resourceRegistry.getStats();
     return {
       isRunning: this.isRunning,
       transport: this.transport ? this.transport.getStatus() : null,
       capabilities: this.capabilityManager.getStatus(),
-      services: this.serviceRegistry.getStatus()
+      services: this.serviceRegistry.getStatus(),
+      resources: {
+        resourceCount: resourceStats.totalResources,
+        resources: this.resourceRegistry.listResources(),
+        subscriptions: resourceStats.totalSubscriptions,
+        cachedResources: resourceStats.cachedResources
+      }
     };
   }
 }
