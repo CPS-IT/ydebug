@@ -211,7 +211,8 @@ describe('BaseMCPTool', () => {
           type: 'text',
           text: 'Simple text message'
         }],
-        isError: false
+        isError: false,
+        isSuccess: true
       });
     });
 
@@ -224,7 +225,8 @@ describe('BaseMCPTool', () => {
           type: 'text',
           text: JSON.stringify(data, null, 2)
         }],
-        isError: false
+        isError: false,
+        isSuccess: true
       });
     });
 
@@ -264,6 +266,7 @@ describe('BaseMCPTool', () => {
           text: 'Error: Test error'
         }],
         isError: true,
+        isSuccess: false,
         _meta: {
           error: 'Test error',
           stack: error.stack
@@ -280,6 +283,7 @@ describe('BaseMCPTool', () => {
           text: 'Error: Simple error message'
         }],
         isError: true,
+        isSuccess: false,
         _meta: {
           error: 'Simple error message',
           stack: undefined

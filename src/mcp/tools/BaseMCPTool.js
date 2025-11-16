@@ -38,13 +38,23 @@ class BaseMCPTool {
    * Validate tool parameters against schema
    * @param {object} params - Parameters to validate
    * @param {object} schema - JSON schema for validation
-   * @returns {object} Validation result { valid: boolean, errors?: string[] }
+   * @returns {object} Validation result with valid boolean and errors array
    */
-  validateParameters(params, schema) {
+  validateParameters(params, schema = undefined) {
     // Simple parameter validation - could be enhanced with JSON schema library
     const errors = [];
+    
+    // If schema is explicitly null, skip validation
+    if (schema === null) {
+      return { valid: true };
+    }
+    
+    // If no schema provided (undefined), use the tool's input schema
+    if (schema === undefined) {
+      schema = this.getDefinition().inputSchema;
+    }
 
-    if (schema.required) {
+    if (schema && schema.required) {
       for (const requiredParam of schema.required) {
         if (!(requiredParam in params)) {
           errors.push(`Missing required parameter: ${requiredParam}`);
@@ -52,22 +62,85 @@ class BaseMCPTool {
       }
     }
 
-    if (schema.properties) {
+    if (schema && schema.properties) {
       for (const [paramName, paramSchema] of Object.entries(schema.properties)) {
         if (paramName in params) {
           const paramValue = params[paramName];
           
           // Type validation
           if (paramSchema.type) {
-            const actualType = Array.isArray(paramValue) ? 'array' : typeof paramValue;
+            let actualType = Array.isArray(paramValue) ? 'array' : typeof paramValue;
+            
+            // Handle integer type (which is a JSON Schema concept, not a JavaScript type)
+            if (paramSchema.type === 'integer' && typeof paramValue === 'number' && Number.isInteger(paramValue)) {
+              actualType = 'integer';
+            }
+            
             if (actualType !== paramSchema.type) {
               errors.push(`Parameter ${paramName} must be of type ${paramSchema.type}, got ${actualType}`);
+            }
+          }
+
+          // Range validation for numbers
+          if (typeof paramValue === 'number') {
+            if (paramSchema.minimum !== undefined && paramValue < paramSchema.minimum) {
+              errors.push(`Parameter ${paramName} must be at least ${paramSchema.minimum}`);
+            }
+            if (paramSchema.maximum !== undefined && paramValue > paramSchema.maximum) {
+              errors.push(`Parameter ${paramName} must be at most ${paramSchema.maximum}`);
             }
           }
 
           // Enum validation
           if (paramSchema.enum && !paramSchema.enum.includes(paramValue)) {
             errors.push(`Parameter ${paramName} must be one of: ${paramSchema.enum.join(', ')}`);
+          }
+          
+          // Nested object validation
+          if (paramSchema.type === 'object' && paramSchema.properties && typeof paramValue === 'object' && paramValue !== null) {
+            // Check required properties in nested object
+            if (paramSchema.required) {
+              for (const requiredNestedParam of paramSchema.required) {
+                if (!(requiredNestedParam in paramValue)) {
+                  errors.push(`Missing required parameter: ${requiredNestedParam}`);
+                }
+              }
+            }
+            
+            // Recursively validate nested properties
+            for (const [nestedParamName, nestedParamSchema] of Object.entries(paramSchema.properties)) {
+              if (nestedParamName in paramValue) {
+                const nestedParamValue = paramValue[nestedParamName];
+                
+                // Type validation for nested properties
+                if (nestedParamSchema.type) {
+                  let nestedActualType = Array.isArray(nestedParamValue) ? 'array' : typeof nestedParamValue;
+                  
+                  if (nestedParamSchema.type === 'integer' && typeof nestedParamValue === 'number' && Number.isInteger(nestedParamValue)) {
+                    nestedActualType = 'integer';
+                  }
+                  
+                  if (nestedActualType !== nestedParamSchema.type) {
+                    errors.push(`Parameter ${paramName}.${nestedParamName} must be of type ${nestedParamSchema.type}, got ${nestedActualType}`);
+                  }
+                }
+                
+                // Range validation for nested numbers
+                if (typeof nestedParamValue === 'number') {
+                  if (nestedParamSchema.minimum !== undefined && nestedParamValue < nestedParamSchema.minimum) {
+                    errors.push(`Parameter ${paramName}.${nestedParamName} must be at least ${nestedParamSchema.minimum}`);
+                  }
+                  if (nestedParamSchema.maximum !== undefined && nestedParamValue > nestedParamSchema.maximum) {
+                    errors.push(`Parameter ${paramName}.${nestedParamName} must be at most ${nestedParamSchema.maximum}`);
+                  }
+                }
+                
+                // Enum validation for nested properties
+                if (nestedParamSchema.enum && !nestedParamSchema.enum.includes(nestedParamValue)) {
+                  errors.push(`Parameter ${paramName}.${nestedParamName} must be one of: ${nestedParamSchema.enum.join(', ')}`);
+                }
+              }
+            }
           }
         }
       }
@@ -89,7 +162,8 @@ class BaseMCPTool {
     // Standard MCP tool response format
     const response = {
       content: [],
-      isError: false
+      isError: false,
+      isSuccess: true
     };
 
     if (data === null || data === undefined) {
@@ -102,10 +176,18 @@ class BaseMCPTool {
 
     switch (format) {
     case 'json':
-      response.content.push({
-        type: 'text',
-        text: JSON.stringify(data, null, 2)
-      });
+      try {
+        response.content.push({
+          type: 'text',
+          text: JSON.stringify(data, null, 2)
+        });
+      } catch (error) {
+        // Handle circular references gracefully
+        response.content.push({
+          type: 'text',
+          text: '[Object with circular references - cannot serialize to JSON]'
+        });
+      }
       break;
 
     case 'text':
@@ -123,10 +205,18 @@ class BaseMCPTool {
           text: data
         });
       } else {
-        response.content.push({
-          type: 'text',
-          text: JSON.stringify(data, null, 2)
-        });
+        try {
+          response.content.push({
+            type: 'text',
+            text: JSON.stringify(data, null, 2)
+          });
+        } catch (error) {
+          // Handle circular references gracefully
+          response.content.push({
+            type: 'text',
+            text: '[Object with circular references - cannot serialize to JSON]'
+          });
+        }
       }
       break;
     }
@@ -137,20 +227,23 @@ class BaseMCPTool {
   /**
    * Format error response for MCP protocol
    * @param {Error|string} error - Error object or message
+   * @param {string} [customMessage] - Custom error message to display instead of error.message
    * @returns {object} Formatted MCP error response
    */
-  formatErrorResponse(error) {
+  formatErrorResponse(error, customMessage = null) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
+    const displayMessage = customMessage || errorMessage;
 
     return {
       content: [
         {
           type: 'text',
-          text: `Error: ${errorMessage}`
+          text: `Error: ${displayMessage}`
         }
       ],
       isError: true,
+      isSuccess: false,
       _meta: {
         error: errorMessage,
         stack: errorStack
@@ -190,7 +283,7 @@ class BaseMCPTool {
     const errors = [];
 
     // Session ID validation (will be common for many debugging tools)
-    if (params.sessionId && typeof params.sessionId !== 'string') {
+    if ('sessionId' in params && typeof params.sessionId !== 'string') {
       errors.push('sessionId must be a string');
     }
 

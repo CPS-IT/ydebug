@@ -8,7 +8,7 @@ const EventEmitter = require('events');
 class Transport extends EventEmitter {
   constructor() {
     super();
-    this.isConnected = false;
+    this._isConnected = false;
   }
 
   /**
@@ -37,13 +37,29 @@ class Transport extends EventEmitter {
   }
 
   /**
+   * Get connection status
+   * @returns {boolean}
+   */
+  get isConnected() {
+    return this._isConnected;
+  }
+
+  /**
+   * Set connection status
+   * @param {boolean} value - Connection status
+   */
+  set isConnected(value) {
+    this._isConnected = value;
+  }
+
+  /**
    * Get transport status
    * @returns {object}
    */
   getStatus() {
     return {
       type: this.constructor.name,
-      isConnected: this.isConnected
+      isConnected: this._isConnected
     };
   }
 }

@@ -19,7 +19,7 @@ describe('JsonRpcHandler', () => {
     describe('Request Creation', () => {
       test('should create valid JSON-RPC request with ID', () => {
         const request = handler.createRequest('test_method', { param: 'value' }, 123);
-        
+
         expect(request).toEqual({
           jsonrpc: '2.0',
           method: 'test_method',
@@ -30,7 +30,7 @@ describe('JsonRpcHandler', () => {
 
       test('should create request without params when null', () => {
         const request = handler.createRequest('test_method', null, 123);
-        
+
         expect(request).toEqual({
           jsonrpc: '2.0',
           method: 'test_method',
@@ -41,7 +41,7 @@ describe('JsonRpcHandler', () => {
 
       test('should create request without ID when null', () => {
         const request = handler.createRequest('test_method', { param: 'value' }, null);
-        
+
         expect(request).toEqual({
           jsonrpc: '2.0',
           method: 'test_method',
@@ -54,7 +54,7 @@ describe('JsonRpcHandler', () => {
         const arrayParams = handler.createRequest('method', ['param1', 'param2'], 1);
         const stringParams = handler.createRequest('method', 'string_param', 2);
         const numberParams = handler.createRequest('method', 42, 3);
-        
+
         expect(arrayParams.params).toEqual(['param1', 'param2']);
         expect(stringParams.params).toBe('string_param');
         expect(numberParams.params).toBe(42);
@@ -64,7 +64,7 @@ describe('JsonRpcHandler', () => {
     describe('Notification Creation', () => {
       test('should create valid JSON-RPC notification', () => {
         const notification = handler.createNotification('notify_method', { data: 'test' });
-        
+
         expect(notification).toEqual({
           jsonrpc: '2.0',
           method: 'notify_method',
@@ -75,7 +75,7 @@ describe('JsonRpcHandler', () => {
 
       test('should create notification without params', () => {
         const notification = handler.createNotification('notify_method');
-        
+
         expect(notification).toEqual({
           jsonrpc: '2.0',
           method: 'notify_method'
@@ -87,7 +87,7 @@ describe('JsonRpcHandler', () => {
     describe('Response Creation', () => {
       test('should create success response', () => {
         const response = handler.createSuccessResponse({ result: 'success' }, 123);
-        
+
         expect(response).toEqual({
           jsonrpc: '2.0',
           result: { result: 'success' },
@@ -97,7 +97,7 @@ describe('JsonRpcHandler', () => {
 
       test('should create success response with null result', () => {
         const response = handler.createSuccessResponse(null, 456);
-        
+
         expect(response).toEqual({
           jsonrpc: '2.0',
           result: null,
@@ -112,7 +112,7 @@ describe('JsonRpcHandler', () => {
           { method: 'unknown' },
           789
         );
-        
+
         expect(response).toEqual({
           jsonrpc: '2.0',
           error: {
@@ -131,7 +131,7 @@ describe('JsonRpcHandler', () => {
           null,
           999
         );
-        
+
         expect(response).toEqual({
           jsonrpc: '2.0',
           error: {
@@ -150,7 +150,7 @@ describe('JsonRpcHandler', () => {
       const request = { jsonrpc: '2.0', method: 'test', id: 1 };
       const notification = { jsonrpc: '2.0', method: 'test' };
       const response = { jsonrpc: '2.0', result: 'ok', id: 1 };
-      
+
       expect(handler.isRequest(request)).toBe(true);
       expect(handler.isRequest(notification)).toBe(false);
       expect(handler.isRequest(response)).toBe(false);
@@ -160,7 +160,7 @@ describe('JsonRpcHandler', () => {
       const request = { jsonrpc: '2.0', method: 'test', id: 1 };
       const notification = { jsonrpc: '2.0', method: 'test' };
       const response = { jsonrpc: '2.0', result: 'ok', id: 1 };
-      
+
       expect(handler.isNotification(notification)).toBe(true);
       expect(handler.isNotification(request)).toBe(false);
       expect(handler.isNotification(response)).toBe(false);
@@ -170,7 +170,7 @@ describe('JsonRpcHandler', () => {
       const request = { jsonrpc: '2.0', method: 'test', id: 1 };
       const successResponse = { jsonrpc: '2.0', result: 'ok', id: 1 };
       const errorResponse = { jsonrpc: '2.0', error: { code: -1, message: 'error' }, id: 1 };
-      
+
       expect(handler.isResponse(successResponse)).toBe(true);
       expect(handler.isResponse(errorResponse)).toBe(true);
       expect(handler.isResponse(request)).toBe(false);
@@ -179,7 +179,7 @@ describe('JsonRpcHandler', () => {
     test('should identify error responses', () => {
       const successResponse = { jsonrpc: '2.0', result: 'ok', id: 1 };
       const errorResponse = { jsonrpc: '2.0', error: { code: -1, message: 'error' }, id: 1 };
-      
+
       expect(handler.isErrorResponse(errorResponse)).toBe(true);
       expect(handler.isErrorResponse(successResponse)).toBe(false);
     });
@@ -190,7 +190,7 @@ describe('JsonRpcHandler', () => {
       const request = { jsonrpc: '2.0', method: 'test', id: 1 };
       const notification = { jsonrpc: '2.0', method: 'test' };
       const response = { jsonrpc: '2.0', result: 'ok', id: 1 };
-      
+
       expect(handler.validateMessage(request)).toEqual({ valid: true });
       expect(handler.validateMessage(notification)).toEqual({ valid: true });
       expect(handler.validateMessage(response)).toEqual({ valid: true });
@@ -198,45 +198,45 @@ describe('JsonRpcHandler', () => {
 
     test('should reject messages without jsonrpc field', () => {
       const invalid = { method: 'test', id: 1 };
-      
+
       const result = handler.validateMessage(invalid);
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Missing jsonrpc field');
     });
 
     test('should reject messages with wrong jsonrpc version', () => {
       const invalid = { jsonrpc: '1.0', method: 'test', id: 1 };
-      
+
       const result = handler.validateMessage(invalid);
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Invalid jsonrpc version');
     });
 
     test('should reject requests without method', () => {
       const invalid = { jsonrpc: '2.0' }; // No method, no result/error, no ID - ambiguous case
-      
+
       const result = handler.validateMessage(invalid);
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Request must have method field');
     });
 
     test('should reject responses without result or error', () => {
       const invalid = { jsonrpc: '2.0', id: 1 };
-      
+
       const result = handler.validateMessage(invalid);
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Response must have result or error field');
     });
 
     test('should reject responses with both result and error', () => {
       const invalid = { jsonrpc: '2.0', result: 'ok', error: { code: -1, message: 'error' }, id: 1 };
-      
+
       const result = handler.validateMessage(invalid);
-      
+
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Response cannot have both result and error fields');
     });
@@ -244,7 +244,7 @@ describe('JsonRpcHandler', () => {
     test('should reject error objects without required fields', () => {
       const missingCode = { jsonrpc: '2.0', error: { message: 'error' }, id: 1 };
       const missingMessage = { jsonrpc: '2.0', error: { code: -1 }, id: 1 };
-      
+
       expect(handler.validateMessage(missingCode).valid).toBe(false);
       expect(handler.validateMessage(missingMessage).valid).toBe(false);
     });
@@ -253,9 +253,9 @@ describe('JsonRpcHandler', () => {
   describe('Message Parsing', () => {
     test('should parse valid JSON-RPC messages', () => {
       const request = '{"jsonrpc":"2.0","method":"test","id":1}';
-      
+
       const result = handler.parseMessage(request);
-      
+
       expect(result.success).toBe(true);
       expect(result.message).toEqual({
         jsonrpc: '2.0',
@@ -266,25 +266,25 @@ describe('JsonRpcHandler', () => {
 
     test('should handle invalid JSON', () => {
       const invalid = '{"jsonrpc":"2.0","method":}';
-      
+
       const result = handler.parseMessage(invalid);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid JSON');
     });
 
     test('should handle invalid JSON-RPC structure', () => {
       const invalid = '{"jsonrpc":"1.0","method":"test"}';
-      
+
       const result = handler.parseMessage(invalid);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid jsonrpc version');
     });
 
     test('should handle empty strings', () => {
       const result = handler.parseMessage('');
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Empty message');
     });
@@ -293,7 +293,7 @@ describe('JsonRpcHandler', () => {
       const result1 = handler.parseMessage(null);
       const result2 = handler.parseMessage(undefined);
       const result3 = handler.parseMessage(123);
-      
+
       expect(result1.success).toBe(false);
       expect(result2.success).toBe(false);
       expect(result3.success).toBe(false);
@@ -303,16 +303,16 @@ describe('JsonRpcHandler', () => {
   describe('Message Serialization', () => {
     test('should serialize messages to JSON', () => {
       const message = { jsonrpc: '2.0', method: 'test', id: 1 };
-      
+
       const serialized = handler.serializeMessage(message);
-      
+
       expect(serialized).toBe('{"jsonrpc":"2.0","method":"test","id":1}');
     });
 
     test('should handle serialization errors gracefully', () => {
       const circular = {};
       circular.self = circular;
-      
+
       expect(() => {
         handler.serializeMessage(circular);
       }).toThrow();
@@ -330,10 +330,10 @@ describe('JsonRpcHandler', () => {
         },
         id: 'unique-id'
       };
-      
+
       const serialized = handler.serializeMessage(original);
       const parsed = handler.parseMessage(serialized);
-      
+
       expect(parsed.success).toBe(true);
       expect(parsed.message).toEqual(original);
     });
@@ -355,7 +355,7 @@ describe('JsonRpcHandler', () => {
         null,
         null
       );
-      
+
       expect(parseError.error.code).toBe(-32700);
     });
   });
@@ -368,21 +368,21 @@ describe('JsonRpcHandler', () => {
         id: 1,
         extraField: 'should be ignored'
       };
-      
+
       const result = handler.validateMessage(message);
       expect(result.valid).toBe(true);
     });
 
     test('should handle numeric string IDs', () => {
       const message = { jsonrpc: '2.0', method: 'test', id: '123' };
-      
+
       const result = handler.validateMessage(message);
       expect(result.valid).toBe(true);
     });
 
     test('should handle null IDs in requests', () => {
       const message = { jsonrpc: '2.0', method: 'test', id: null };
-      
+
       const result = handler.validateMessage(message);
       expect(result.valid).toBe(true);
     });
@@ -402,11 +402,11 @@ describe('JsonRpcHandler', () => {
           }
         }
       };
-      
+
       const request = handler.createRequest('complex_test', complexParams, 1);
       const serialized = handler.serializeMessage(request);
       const parsed = handler.parseMessage(serialized);
-      
+
       expect(parsed.success).toBe(true);
       expect(parsed.message.params).toEqual(complexParams);
     });

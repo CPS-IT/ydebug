@@ -18,11 +18,11 @@ class ServiceRegistry {
    */
   register(name, service) {
     if (this.services.has(name)) {
-      this.logger.warn(`Service '${name}' is already registered, overwriting`);
+      this.logger.warn(`Service '${String(name)}' is already registered, overwriting`);
     }
     
     this.services.set(name, service);
-    this.logger.debug(`Service '${name}' registered`);
+    this.logger.debug(`Service '${String(name)}' registered`);
   }
 
   /**
@@ -33,7 +33,7 @@ class ServiceRegistry {
   get(name) {
     const service = this.services.get(name);
     if (!service) {
-      this.logger.error(`Service '${name}' not found in registry`);
+      this.logger.error(`Service '${String(name)}' not found in registry`);
     }
     return service || null;
   }
@@ -55,7 +55,7 @@ class ServiceRegistry {
   unregister(name) {
     const removed = this.services.delete(name);
     if (removed) {
-      this.logger.debug(`Service '${name}' unregistered`);
+      this.logger.debug(`Service '${String(name)}' unregistered`);
     }
     return removed;
   }

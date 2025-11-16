@@ -98,8 +98,8 @@ class JsonRpcHandler {
    * @returns {object} Validation result { valid: boolean, error?: string }
    */
   validateMessage(message) {
-    // Check if message is an object
-    if (!message || typeof message !== 'object') {
+    // Check if message is an object (and not an array or null)
+    if (!message || typeof message !== 'object' || Array.isArray(message)) {
       return { valid: false, error: 'Message must be an object' };
     }
 
@@ -134,7 +134,7 @@ class JsonRpcHandler {
 
       // Validate error format
       if (message.error !== undefined) {
-        if (typeof message.error !== 'object' || !message.error) {
+        if (typeof message.error !== 'object' || !message.error || Array.isArray(message.error)) {
           return { valid: false, error: 'Error must be an object' };
         }
         if (typeof message.error.code !== 'number') {
@@ -170,31 +170,39 @@ class JsonRpcHandler {
   parseMessage(data) {
     // Handle empty strings
     if (data === '') {
-      return { 
-        success: false, 
-        error: 'Empty message' 
+      return {
+        success: false,
+        error: 'Empty message'
       };
     }
-    
+
+    // Handle other falsy inputs that aren't valid JSON strings
+    if (data == null || typeof data !== 'string') {
+      return {
+        success: false,
+        error: 'Invalid JSON: input must be a string'
+      };
+    }
+
     try {
       const message = JSON.parse(data);
       const validation = this.validateMessage(message);
-      
+
       if (!validation.valid) {
-        return { 
-          success: false, 
-          error: validation.error 
+        return {
+          success: false,
+          error: validation.error
         };
       }
 
-      return { 
-        success: true, 
-        message 
+      return {
+        success: true,
+        message
       };
     } catch (error) {
-      return { 
-        success: false, 
-        error: `Invalid JSON: ${error.message}` 
+      return {
+        success: false,
+        error: `Invalid JSON: ${error.message}`
       };
     }
   }
@@ -214,7 +222,8 @@ class JsonRpcHandler {
    * @returns {boolean}
    */
   isRequest(message) {
-    return message && message.method !== undefined && message.id !== undefined;
+    if (!message || typeof message !== 'object') return false;
+    return message.method !== undefined && 'id' in message;
   }
 
   /**
@@ -223,7 +232,8 @@ class JsonRpcHandler {
    * @returns {boolean}
    */
   isNotification(message) {
-    return message && message.method !== undefined && message.id === undefined;
+    if (!message || typeof message !== 'object') return false;
+    return message.method !== undefined && !('id' in message);
   }
 
   /**
@@ -232,7 +242,8 @@ class JsonRpcHandler {
    * @returns {boolean}
    */
   isResponse(message) {
-    return message && (message.result !== undefined || message.error !== undefined);
+    if (!message || typeof message !== 'object') return false;
+    return message.result !== undefined || message.error !== undefined;
   }
 
   /**
@@ -241,7 +252,8 @@ class JsonRpcHandler {
    * @returns {boolean}
    */
   isErrorResponse(message) {
-    return message && message.error !== undefined;
+    if (!message || typeof message !== 'object') return false;
+    return message.error !== undefined;
   }
 
   /**

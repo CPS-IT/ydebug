@@ -10,6 +10,16 @@ const JsonRpcHandler = require('./protocol/JsonRpcHandler');
 const CapabilityManager = require('./protocol/CapabilityManager');
 const StdioTransport = require('./transport/StdioTransport');
 
+// MCP Debugging Tools
+const DebugStartSession = require('./tools/DebugStartSession');
+const DebugStopSession = require('./tools/DebugStopSession');
+const DebugSetBreakpoint = require('./tools/DebugSetBreakpoint');
+const DebugRemoveBreakpoint = require('./tools/DebugRemoveBreakpoint');
+const DebugListBreakpoints = require('./tools/DebugListBreakpoints');
+const DebugStepExecution = require('./tools/DebugStepExecution');
+const DebugContinueExecution = require('./tools/DebugContinueExecution');
+const DebugGetStatus = require('./tools/DebugGetStatus');
+
 class MCPServer extends EventEmitter {
   constructor(config = {}) {
     super();
@@ -33,6 +43,10 @@ class MCPServer extends EventEmitter {
     this.jsonRpc = new JsonRpcHandler();
     this.capabilityManager = new CapabilityManager();
     this.transport = null;
+
+    // MCP Tools
+    this.tools = new Map();
+    this.setupDebuggingTools();
 
     // MCP handlers
     this.methodHandlers = new Map();
@@ -144,13 +158,39 @@ class MCPServer extends EventEmitter {
   }
 
   /**
+   * Setup debugging tools for MCP
+   */
+  setupDebuggingTools() {
+    const tools = [
+      DebugStartSession,
+      DebugStopSession,
+      DebugSetBreakpoint,
+      DebugRemoveBreakpoint,
+      DebugListBreakpoints,
+      DebugStepExecution,
+      DebugContinueExecution,
+      DebugGetStatus
+    ];
+
+    // Initialize and register each tool
+    tools.forEach(ToolClass => {
+      const tool = new ToolClass(this.serviceRegistry);
+      const definition = tool.getDefinition();
+      this.tools.set(definition.name, tool);
+      this.logger.debug(`Registered MCP tool: ${definition.name}`);
+    });
+
+    this.logger.info(`Registered ${this.tools.size} debugging tools`);
+  }
+
+  /**
    * Setup core MCP method handlers
    */
   setupCoreHandlers() {
     // Initialize request - client capabilities negotiation
     this.methodHandlers.set('initialize', this.handleInitialize.bind(this));
     
-    // Tools capability handlers (will be implemented in Feature 028)
+    // Tools capability handlers
     this.methodHandlers.set('tools/list', this.handleToolsList.bind(this));
     this.methodHandlers.set('tools/call', this.handleToolsCall.bind(this));
     
@@ -283,23 +323,81 @@ class MCPServer extends EventEmitter {
   }
 
   /**
-   * Handle tools/list request (placeholder)
+   * Handle tools/list request
    * @param {object} params - Parameters
    * @returns {object} Tools list
    */
   async handleToolsList(_params) {
-    // Will be implemented in Feature 028
-    return { tools: [] };
+    const tools = [];
+    
+    // Convert registered tools to MCP tool list format
+    for (const tool of this.tools.values()) {
+      const definition = tool.getDefinition();
+      tools.push({
+        name: definition.name,
+        description: definition.description,
+        inputSchema: definition.inputSchema
+      });
+    }
+
+    this.logger.debug(`Listing ${tools.length} available tools`);
+    return { tools };
   }
 
   /**
-   * Handle tools/call request (placeholder)
+   * Handle tools/call request
    * @param {object} params - Tool call parameters
    * @returns {object} Tool result
    */
-  async handleToolsCall(_params) {
-    // Will be implemented in Feature 028
-    throw new Error('Tool calling not yet implemented');
+  async handleToolsCall(params) {
+    const { name: toolName, arguments: toolArgs = {} } = params;
+
+    try {
+      if (!toolName) {
+        throw new Error('Tool name is required');
+      }
+
+      const tool = this.tools.get(toolName);
+      if (!tool) {
+        // Create a basic error response if tool not found
+        return {
+          isSuccess: false,
+          content: [{
+            type: 'text',
+            text: `Tool '${toolName}' not found`
+          }]
+        };
+      }
+
+      this.logger.info(`Executing MCP tool: ${toolName}`, toolArgs);
+
+      // Validate parameters against tool schema
+      const validation = tool.validateParameters(toolArgs);
+      if (!validation.valid) {
+        return tool.formatErrorResponse(
+          new Error('Invalid parameters'),
+          `Invalid parameters: ${validation.errors.join(', ')}`
+        );
+      }
+
+      // Execute the tool
+      const result = await tool.execute(toolArgs);
+      
+      this.logger.info(`MCP tool '${toolName}' executed successfully`);
+      return result;
+
+    } catch (error) {
+      this.logger.error('MCP tool execution failed:', error);
+      
+      // Return formatted error response
+      return {
+        isSuccess: false,
+        content: [{
+          type: 'text',
+          text: `Tool execution failed: ${error.message}`
+        }]
+      };
+    }
   }
 
   /**

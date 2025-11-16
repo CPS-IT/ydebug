@@ -50,8 +50,8 @@ class CapabilityManager {
   getServerCapabilities() {
     return {
       protocolVersion: this.serverCapabilities.protocolVersion,
-      serverInfo: this.serverCapabilities.serverInfo,
-      capabilities: this.serverCapabilities.capabilities
+      serverInfo: { ...this.serverCapabilities.serverInfo },
+      capabilities: JSON.parse(JSON.stringify(this.serverCapabilities.capabilities))
     };
   }
 
@@ -105,13 +105,21 @@ class CapabilityManager {
       return false;
     }
 
-    // Client info is optional but should be object if present
-    if (capabilities.clientInfo && typeof capabilities.clientInfo !== 'object') {
+    // Client info is optional but should be object if present (not null, not array)
+    if (capabilities.clientInfo !== undefined && (
+        capabilities.clientInfo === null || 
+        Array.isArray(capabilities.clientInfo) || 
+        typeof capabilities.clientInfo !== 'object'
+    )) {
       return false;
     }
 
-    // Capabilities field is optional but should be object if present
-    if (capabilities.capabilities && typeof capabilities.capabilities !== 'object') {
+    // Capabilities field is optional but should be object if present (not null, not array)
+    if (capabilities.capabilities !== undefined && (
+        capabilities.capabilities === null || 
+        Array.isArray(capabilities.capabilities) || 
+        typeof capabilities.capabilities !== 'object'
+    )) {
       return false;
     }
 

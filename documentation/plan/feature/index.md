@@ -43,6 +43,7 @@ This document provides a comprehensive overview of all YDebug features, their cu
 | 032   | MCP CLI Integration                         | Planned     | MCP       | [032-MCPCLIIntegration.md](mcp/032-MCPCLIIntegration.md)                                                          |
 | 033   | MCP Integration Testing                     | Planned     | MCP       | [033-MCPIntegrationTesting.md](mcp/033-MCPIntegrationTesting.md)                                                  |
 | 034   | MCP HTTP+SSE Transport                      | Planned     | MCP       | [034-MCPHTTPTransport.md](mcp/034-MCPHTTPTransport.md)                                                            |
+| 035   | JsonRpcMessageValidator Refactor            | Planned     | MCP       | [035-JsonRpcMessageValidatorRefactor.md](mcp/035-JsonRpcMessageValidatorRefactor.md)                              |
 
 ## Status Legend
 
@@ -73,7 +74,7 @@ The MVP phase will extend prototype capabilities toward full production readines
 
 **MVP Status**: **PLANNED** - 11 features documented, ready for implementation
 
-### MCP Phase (Features 027-033)
+### MCP Phase (Features 027-035)
 The MCP phase implements Claude Code integration through Model Context Protocol:
 
 - **MCP Server Foundation**: Core JSON-RPC 2.0 server with capability negotiation
@@ -83,8 +84,9 @@ The MCP phase implements Claude Code integration through Model Context Protocol:
 - **Resource Management**: MCP resources for debugging state and context access
 - **CLI Integration**: MCP server commands and configuration management
 - **Comprehensive Testing**: Protocol compliance and integration testing
+- **Code Quality**: Refactoring and architectural improvements
 
-**MCP Status**: **IN PROGRESS** - 8 features documented, 1 completed, 7 ready for implementation
+**MCP Status**: **IN PROGRESS** - 9 features documented, 1 completed, 8 ready for implementation
 
 ### Future Phase
 Extended capabilities beyond core MCP integration:
@@ -99,14 +101,14 @@ Extended capabilities beyond core MCP integration:
 ### Completed Features by Phase
 - **Prototype**: 13/15 features implemented (87% completion rate)
 - **MVP**: 0/11 features implemented (0% completion rate)
-- **MCP**: 1/8 features implemented (12.5% completion rate)
+- **MCP**: 1/9 features implemented (11.1% completion rate)
 - **Future**: 0/1+ features implemented (0% completion rate)
 
 ### Overall Progress
-- **Total Features Documented**: 34
-- **Features Implemented**: 14 (41%)
+- **Total Features Documented**: 35
+- **Features Implemented**: 14 (40%)
 - **Features Skipped**: 2 (6%)
-- **Features Remaining**: 18+ (53%)
+- **Features Remaining**: 19+ (54%)
 
 ## Key Architectural Decisions
 

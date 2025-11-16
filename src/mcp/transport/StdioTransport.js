@@ -38,7 +38,7 @@ class StdioTransport extends Transport {
 
     process.stdin.on('end', () => {
       this.logger.info('STDIO input stream ended');
-      this.isConnected = false;
+      this._isConnected = false;
       this.emit('disconnect');
     });
 
@@ -53,7 +53,7 @@ class StdioTransport extends Transport {
       this.emit('error', error);
     });
 
-    this.isConnected = true;
+    this._isConnected = true;
     this.logger.info('STDIO transport started successfully');
     this.emit('connect');
   }
@@ -75,7 +75,7 @@ class StdioTransport extends Transport {
     process.stdin.removeAllListeners('error');
     process.stdout.removeAllListeners('error');
 
-    this.isConnected = false;
+    this._isConnected = false;
     this.messageBuffer = '';
     
     this.logger.info('STDIO transport stopped');

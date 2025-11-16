@@ -83,7 +83,20 @@ describe('MCPServer Integration', () => {
     test('should handle tools list request', async () => {
       const result = await server.handleToolsList({});
       
-      expect(result).toEqual({ tools: [] });
+      expect(result).toHaveProperty('tools');
+      expect(Array.isArray(result.tools)).toBe(true);
+      expect(result.tools.length).toBe(8); // 8 debugging tools registered
+      
+      // Check that all expected tools are present
+      const toolNames = result.tools.map(tool => tool.name);
+      expect(toolNames).toContain('debug_start_session');
+      expect(toolNames).toContain('debug_stop_session');
+      expect(toolNames).toContain('debug_set_breakpoint');
+      expect(toolNames).toContain('debug_remove_breakpoint');
+      expect(toolNames).toContain('debug_list_breakpoints');
+      expect(toolNames).toContain('debug_step_execution');
+      expect(toolNames).toContain('debug_continue_execution');
+      expect(toolNames).toContain('debug_get_status');
     });
 
     test('should handle resources list request', async () => {
@@ -92,8 +105,11 @@ describe('MCPServer Integration', () => {
       expect(result).toEqual({ resources: [] });
     });
 
-    test('should throw error for unimplemented tools/call', async () => {
-      await expect(server.handleToolsCall({})).rejects.toThrow('Tool calling not yet implemented');
+    test('should handle tools/call with proper error for missing tool name', async () => {
+      const result = await server.handleToolsCall({});
+      
+      expect(result.isSuccess).toBe(false);
+      expect(result.content[0].text).toContain('Tool name is required');
     });
 
     test('should throw error for unimplemented resources/read', async () => {
