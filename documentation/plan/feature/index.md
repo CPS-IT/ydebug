@@ -36,14 +36,15 @@ This document provides a comprehensive overview of all YDebug features, their cu
 | 025   | Advanced Variable Display Formatting        | Planned     | MVP       | [025-AdvancedVariableDisplayFormatting.md](mvp/025-AdvancedVariableDisplayFormatting.md)                          |
 | 026   | Comprehensive Debugging Context Preparation | Planned     | MVP       | [026-ComprehensiveDebuggingContextPreparation.md](mvp/026-ComprehensiveDebuggingContextPreparation.md)            |
 | 027   | MCP Server Foundation                       | Done        | MCP       | [027-MCPServerFoundation.md](mcp/done/027-MCPServerFoundation.md)                                                      |
-| 028   | MCP Debugging Tools                         | Planned     | MCP       | [028-MCPDebuggingTools.md](mcp/028-MCPDebuggingTools.md)                                                          |
-| 029   | MCP Variable Inspection Tools               | Planned     | MCP       | [029-MCPVariableInspectionTools.md](mcp/029-MCPVariableInspectionTools.md)                                        |
-| 030   | MCP AI Analysis Tools                       | Planned     | MCP       | [030-MCPAIAnalysisTools.md](mcp/030-MCPAIAnalysisTools.md)                                                        |
+| 028   | MCP Debugging Tools                         | Done        | MCP       | [028-MCPDebuggingTools.md](mcp-iteration-1/done/028-MCPDebuggingTools.md)                                          |
+| 029   | MCP Variable Inspection Tools               | Done        | MCP       | [029-MCPVariableInspectionTools.md](mcp-iteration-1/done/029-MCPVariableInspectionTools.md)                        |
+| 030   | MCP AI Analysis Tools                       | Done        | MCP       | [030-MCPAIAnalysisTools.md](mcp-iteration-1/done/030-MCPAIAnalysisTools.md)                                        |
 | 031   | MCP Resource Management                     | Planned     | MCP       | [031-MCPResourceManagement.md](mcp/031-MCPResourceManagement.md)                                                  |
 | 032   | MCP CLI Integration                         | Planned     | MCP       | [032-MCPCLIIntegration.md](mcp/032-MCPCLIIntegration.md)                                                          |
 | 033   | MCP Integration Testing                     | Planned     | MCP       | [033-MCPIntegrationTesting.md](mcp/033-MCPIntegrationTesting.md)                                                  |
 | 034   | MCP HTTP+SSE Transport                      | Planned     | MCP       | [034-MCPHTTPTransport.md](mcp/034-MCPHTTPTransport.md)                                                            |
 | 035   | JsonRpcMessageValidator Refactor            | Planned     | MCP       | [035-JsonRpcMessageValidatorRefactor.md](mcp/035-JsonRpcMessageValidatorRefactor.md)                              |
+| 036   | MCP Variable Inspection Refactoring         | Planned     | MCP       | [036-MCPVariableInspectionRefactoring.md](mcp-iteration-2/036-MCPVariableInspectionRefactoring.md)                |
 
 ## Status Legend
 
@@ -74,7 +75,7 @@ The MVP phase will extend prototype capabilities toward full production readines
 
 **MVP Status**: **PLANNED** - 11 features documented, ready for implementation
 
-### MCP Phase (Features 027-035)
+### MCP Phase (Features 027-036)
 The MCP phase implements Claude Code integration through Model Context Protocol:
 
 - **MCP Server Foundation**: Core JSON-RPC 2.0 server with capability negotiation
@@ -86,7 +87,7 @@ The MCP phase implements Claude Code integration through Model Context Protocol:
 - **Comprehensive Testing**: Protocol compliance and integration testing
 - **Code Quality**: Refactoring and architectural improvements
 
-**MCP Status**: **IN PROGRESS** - 9 features documented, 1 completed, 8 ready for implementation
+**MCP Status**: **IN PROGRESS** - 10 features documented, 4 completed, 6 ready for implementation
 
 ### Future Phase
 Extended capabilities beyond core MCP integration:
@@ -101,14 +102,14 @@ Extended capabilities beyond core MCP integration:
 ### Completed Features by Phase
 - **Prototype**: 13/15 features implemented (87% completion rate)
 - **MVP**: 0/11 features implemented (0% completion rate)
-- **MCP**: 1/9 features implemented (11.1% completion rate)
+- **MCP**: 4/10 features implemented (40.0% completion rate)
 - **Future**: 0/1+ features implemented (0% completion rate)
 
 ### Overall Progress
-- **Total Features Documented**: 35
-- **Features Implemented**: 14 (40%)
+- **Total Features Documented**: 36
+- **Features Implemented**: 17 (47%)
 - **Features Skipped**: 2 (6%)
-- **Features Remaining**: 19+ (54%)
+- **Features Remaining**: 17+ (47%)
 
 ## Key Architectural Decisions
 
@@ -125,7 +126,7 @@ The following features resulted in significant architectural decisions documente
 **Active Phase**: MCP and MVP phases ready for implementation
 **Next Feature Options**: 
 - Feature 016 (AI Response Processing) for MVP track
-- Feature 028 (MCP Debugging Tools) or Feature 034 (MCP HTTP+SSE Transport) for MCP track
+- Feature 031 (MCP Resource Management) or Feature 034 (MCP HTTP+SSE Transport) for MCP track
 **Architecture**: Stable foundation established through prototype phase
 **Technology Stack**: Node.js, DBGp Protocol, Claude API, MCP Protocol, Jest testing framework
 
