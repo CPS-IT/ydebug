@@ -35,7 +35,7 @@ describe('ServiceRegistry Enhanced Tests', () => {
       registry.register('duplicate', service1);
       registry.register('duplicate', service2);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith("Service 'duplicate' is already registered, overwriting");
+      expect(mockLogger.warn).toHaveBeenCalledWith('Service \'duplicate\' is already registered, overwriting');
       expect(registry.get('duplicate')).toBe(service2);
     });
 
@@ -44,7 +44,7 @@ describe('ServiceRegistry Enhanced Tests', () => {
 
       registry.register('testService', service);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith("Service 'testService' registered");
+      expect(mockLogger.debug).toHaveBeenCalledWith('Service \'testService\' registered');
     });
 
     test('should handle registering complex service objects', () => {
@@ -158,7 +158,7 @@ describe('ServiceRegistry Enhanced Tests', () => {
     test('should log error when service not found', () => {
       registry.get('nonExistent');
 
-      expect(mockLogger.error).toHaveBeenCalledWith("Service 'nonExistent' not found in registry");
+      expect(mockLogger.error).toHaveBeenCalledWith('Service \'nonExistent\' not found in registry');
     });
 
     test('should handle getting undefined services correctly', () => {
@@ -172,7 +172,7 @@ describe('ServiceRegistry Enhanced Tests', () => {
       expect(result).toBeNull();
 
       // But the error should still be logged because service is falsy
-      expect(mockLogger.error).toHaveBeenCalledWith("Service 'undefinedService' not found in registry");
+      expect(mockLogger.error).toHaveBeenCalledWith('Service \'undefinedService\' not found in registry');
     });
 
     test('should handle getting null services correctly', () => {
@@ -184,7 +184,7 @@ describe('ServiceRegistry Enhanced Tests', () => {
       expect(result).toBeNull();
 
       // Should log error because service is falsy
-      expect(mockLogger.error).toHaveBeenCalledWith("Service 'nullService' not found in registry");
+      expect(mockLogger.error).toHaveBeenCalledWith('Service \'nullService\' not found in registry');
     });
 
     test('should handle getting falsy but valid services', () => {
@@ -197,9 +197,9 @@ describe('ServiceRegistry Enhanced Tests', () => {
       expect(registry.get('falseService')).toBeNull();
 
       // All should log errors because they are falsy
-      expect(mockLogger.error).toHaveBeenCalledWith("Service 'zeroService' not found in registry");
-      expect(mockLogger.error).toHaveBeenCalledWith("Service 'emptyStringService' not found in registry");
-      expect(mockLogger.error).toHaveBeenCalledWith("Service 'falseService' not found in registry");
+      expect(mockLogger.error).toHaveBeenCalledWith('Service \'zeroService\' not found in registry');
+      expect(mockLogger.error).toHaveBeenCalledWith('Service \'emptyStringService\' not found in registry');
+      expect(mockLogger.error).toHaveBeenCalledWith('Service \'falseService\' not found in registry');
     });
 
     test('should handle case-sensitive service names', () => {
@@ -243,14 +243,14 @@ describe('ServiceRegistry Enhanced Tests', () => {
       const result = registry.unregister('test');
 
       expect(result).toBe(true);
-      expect(mockLogger.debug).toHaveBeenCalledWith("Service 'test' unregistered");
+      expect(mockLogger.debug).toHaveBeenCalledWith('Service \'test\' unregistered');
     });
 
     test('should not log when unregistering non-existent service', () => {
       const result = registry.unregister('nonExistent');
 
       expect(result).toBe(false);
-      expect(mockLogger.debug).not.toHaveBeenCalledWith("Service 'nonExistent' unregistered");
+      expect(mockLogger.debug).not.toHaveBeenCalledWith('Service \'nonExistent\' unregistered');
     });
 
     test('should handle unregistering all service types', () => {

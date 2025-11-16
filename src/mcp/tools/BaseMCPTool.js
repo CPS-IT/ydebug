@@ -181,7 +181,7 @@ class BaseMCPTool {
           type: 'text',
           text: JSON.stringify(data, null, 2)
         });
-      } catch (error) {
+      } catch {
         // Handle circular references gracefully
         response.content.push({
           type: 'text',
@@ -210,7 +210,7 @@ class BaseMCPTool {
             type: 'text',
             text: JSON.stringify(data, null, 2)
           });
-        } catch (error) {
+        } catch {
           // Handle circular references gracefully
           response.content.push({
             type: 'text',

@@ -28,7 +28,7 @@ Implement the core Model Context Protocol (MCP) server framework with JSON-RPC 2
   - [x] Protocol version agreement
 - [x] Create transport layer
   - [x] STDIO transport for local development
-  - [ ] ~~HTTP+SSE transport interface (foundation)~~(moved to [034-MCPHTTPTransport](../034-MCPHTTPTransport.md)) 
+  - [ ] ~~HTTP+SSE transport interface (foundation)~~(moved to [034-MCPHTTPTransport](../../mcp-iteration-2/034-MCPHTTPTransport.md)) 
   - [x] Transport switching and configuration
   - [x] Connection management and error handling
 

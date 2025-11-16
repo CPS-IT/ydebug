@@ -107,7 +107,7 @@ class CapabilityManager {
 
     // Client info is optional but should be object if present (not null, not array)
     if (capabilities.clientInfo !== undefined && (
-        capabilities.clientInfo === null || 
+      capabilities.clientInfo === null || 
         Array.isArray(capabilities.clientInfo) || 
         typeof capabilities.clientInfo !== 'object'
     )) {
@@ -116,7 +116,7 @@ class CapabilityManager {
 
     // Capabilities field is optional but should be object if present (not null, not array)
     if (capabilities.capabilities !== undefined && (
-        capabilities.capabilities === null || 
+      capabilities.capabilities === null || 
         Array.isArray(capabilities.capabilities) || 
         typeof capabilities.capabilities !== 'object'
     )) {

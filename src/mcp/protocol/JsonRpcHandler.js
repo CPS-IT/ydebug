@@ -177,7 +177,7 @@ class JsonRpcHandler {
     }
 
     // Handle other falsy inputs that aren't valid JSON strings
-    if (data == null || typeof data !== 'string') {
+    if (data === null || data === undefined || typeof data !== 'string') {
       return {
         success: false,
         error: 'Invalid JSON: input must be a string'

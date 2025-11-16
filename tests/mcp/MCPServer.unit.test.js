@@ -10,7 +10,6 @@ const MCPServer = require('../../src/mcp/MCPServer');
 const ServiceRegistry = require('../../src/mcp/ServiceRegistry');
 const JsonRpcHandler = require('../../src/mcp/protocol/JsonRpcHandler');
 const CapabilityManager = require('../../src/mcp/protocol/CapabilityManager');
-const StdioTransport = require('../../src/mcp/transport/StdioTransport');
 
 // Mock all dependencies
 const mockLogger = {
@@ -644,7 +643,7 @@ describe('MCPServer Unit Tests', () => {
       const result = await server.handleToolsCall(params);
 
       expect(mockLogger.info).toHaveBeenCalledWith('Executing MCP tool: debug_get_status', {});
-      expect(mockLogger.info).toHaveBeenCalledWith("MCP tool 'debug_get_status' executed successfully");
+      expect(mockLogger.info).toHaveBeenCalledWith('MCP tool \'debug_get_status\' executed successfully');
       expect(result).toEqual({ isSuccess: true, content: [{ type: 'text', text: 'Success' }] });
     });
 
@@ -669,7 +668,7 @@ describe('MCPServer Unit Tests', () => {
         isSuccess: false,
         content: [{
           type: 'text',
-          text: "Tool 'nonexistent_tool' not found"
+          text: 'Tool \'nonexistent_tool\' not found'
         }]
       });
     });
