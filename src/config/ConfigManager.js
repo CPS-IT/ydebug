@@ -70,6 +70,32 @@ const DEFAULT_CONFIG = {
     showPrivateProperties: false,
     colorOutput: true,
   },
+  mcp: {
+    server: {
+      transport: 'stdio',
+      port: 3000,
+      host: 'localhost',
+      debug: false,
+      maxConnections: 10,
+      timeout: 30000,
+      capabilities: {
+        tools: true,
+        resources: true,
+        prompts: false,
+        logging: true
+      }
+    },
+    client: {
+      timeout: 10000,
+      retries: 3
+    },
+    features: {
+      resourceSubscriptions: true,
+      toolValidation: true,
+      resourceCaching: true,
+      cacheTTL: 5000
+    }
+  },
 };
 
 /**
@@ -104,6 +130,12 @@ const ENV_MAPPINGS = {
   'YDEBUG_LOG_LEVEL': 'logging.level',
   'YDEBUG_LOG_FILE': 'logging.file',
   'YDEBUG_AI_ENABLED': 'ai.enabled',
+  'YDEBUG_MCP_TRANSPORT': 'mcp.server.transport',
+  'YDEBUG_MCP_PORT': 'mcp.server.port',
+  'YDEBUG_MCP_HOST': 'mcp.server.host',
+  'YDEBUG_MCP_DEBUG': 'mcp.server.debug',
+  'YDEBUG_MCP_TIMEOUT': 'mcp.server.timeout',
+  'YDEBUG_MCP_CACHE_TTL': 'mcp.features.cacheTTL',
 };
 
 /**

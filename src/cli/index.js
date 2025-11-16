@@ -209,12 +209,22 @@ function registerCommands() {
     .option('-t, --transport <type>', 'transport type (stdio, http)', 'stdio')
     .option('-p, --port <port>', 'port for HTTP transport (not yet implemented)')
     .option('--debug', 'enable debug logging')
+    .option('--status', 'show server status and exit')
+    .option('--health-check', 'perform health check and exit')
+    .option('--test-tools', 'test all MCP tools and exit')
+    .option('--test-resources', 'test all MCP resources and exit')
+    .option('--validate', 'validate MCP configuration and exit')
     .action(async options => {
       const cmd = new MCPServerCommand();
       await cmd.execute({
         transport: options.transport,
         port: options.port ? parseInt(options.port, 10) : undefined,
-        debug: options.debug
+        debug: options.debug,
+        status: options.status,
+        healthCheck: options.healthCheck,
+        testTools: options.testTools,
+        testResources: options.testResources,
+        validate: options.validate
       });
     });
 }

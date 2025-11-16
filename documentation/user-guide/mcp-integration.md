@@ -1,41 +1,52 @@
-# MCP Integration Guide
+# YDebug MCP Server User Guide
 
-**Model Context Protocol (MCP) Server for Claude Code Integration**
+**Complete Model Context Protocol Integration for Claude Code**
 
-This guide covers YDebug's MCP server functionality, which enables seamless integration with Claude Code for AI-assisted PHP debugging.
+This comprehensive guide covers YDebug's MCP server implementation, which provides Claude Code with direct access to professional PHP debugging capabilities through a standardized protocol.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [What is MCP?](#what-is-mcp)
 - [Getting Started](#getting-started)
+- [Available Debugging Tools](#available-debugging-tools)
+- [Available Resources](#available-resources)
 - [MCP Server Commands](#mcp-server-commands)
-- [Claude Code Connection](#claude-code-connection)
-- [Current Capabilities](#current-capabilities)
-- [Configuration Options](#configuration-options)
+- [Diagnostic Features](#diagnostic-features)
+- [Configuration Management](#configuration-management)
+- [Claude Code Integration Workflow](#claude-code-integration-workflow)
 - [Troubleshooting](#troubleshooting)
-- [Architecture Details](#architecture-details)
-- [Future Features](#future-features)
+- [Advanced Usage](#advanced-usage)
+- [Architecture Overview](#architecture-overview)
 
 ## Overview
 
-YDebug includes a complete Model Context Protocol (MCP) server implementation that allows Claude Code to connect directly to YDebug and use its debugging capabilities as if they were built-in tools.
+YDebug provides a comprehensive Model Context Protocol (MCP) server that transforms Claude Code into a powerful PHP debugging partner. The MCP server exposes 20+ debugging tools and 6 specialized resources, enabling Claude Code to perform sophisticated debugging tasks with real-time PHP execution data.
 
 **Key Benefits:**
-- Seamless Claude Code integration without manual setup
-- AI-assisted debugging with real execution context
-- Access to professional PHP debugging tools through Claude Code
-- Real-time variable inspection and code analysis
+- **20+ Debugging Tools** - Session management, breakpoints, execution control, variable inspection, and AI analysis
+- **6 Specialized Resources** - Real-time access to session state, breakpoints, execution context, variables, history, and analysis results
+- **Professional Debugging** - Full Xdebug integration with step-by-step execution control
+- **AI-Powered Analysis** - Claude Code can analyze execution patterns, identify issues, and suggest solutions
+- **Zero-Configuration** - Automatic discovery and connection with Claude Code
+- **Diagnostic Tools** - Built-in health checks, testing, and validation features
 
 ## What is MCP?
 
-The Model Context Protocol (MCP) is an open standard that enables AI tools like Claude Code to securely connect to external data sources and tools. YDebug's MCP server exposes debugging functionality through this protocol.
+The Model Context Protocol (MCP) is an open standard developed by Anthropic that enables AI assistants like Claude Code to securely connect to external tools and data sources. YDebug implements a complete MCP server that exposes its debugging capabilities through this standardized protocol.
 
-**MCP provides:**
-- Standardized communication between AI tools and external services
-- Secure, local connections without exposing sensitive data
-- Tool and resource discovery for AI assistants
-- Capability negotiation between clients and servers
+**MCP Architecture:**
+- **JSON-RPC 2.0** - Standardized request/response communication
+- **Local Security** - STDIO transport keeps all data on your machine
+- **Tool Discovery** - Claude Code automatically discovers available debugging capabilities
+- **Resource Access** - Real-time access to debugging session data
+- **Capability Negotiation** - Server and client agree on supported features
+
+**Why MCP for Debugging:**
+- Claude Code gains access to live PHP execution data
+- AI analysis can be performed on actual runtime conditions
+- Debugging becomes a collaborative process between developer and AI
+- No manual data copying or context switching required
 
 ## Getting Started
 
@@ -45,14 +56,14 @@ The Model Context Protocol (MCP) is an open standard that enables AI tools like 
 - PHP application with Xdebug enabled
 - Claude Code (no additional configuration needed)
 
-### Basic Usage
+### Quick Start
 
 1. **Start the MCP Server:**
    ```bash
    ydebug mcp-server
    ```
 
-2. **Server Output:**
+2. **Server Ready Output:**
    ```
    YDebug MCP Server for Claude Code Integration
    Transport: stdio
@@ -61,26 +72,422 @@ The Model Context Protocol (MCP) is an open standard that enables AI tools like 
    
    Server is ready to accept MCP connections from Claude Code
    
-   Using STDIO transport - communicate via stdin/stdout
-   Send JSON-RPC 2.0 messages to interact with the server
+   MCP Server Status:
+     Running: true
+     Transport: stdio
+     Connected: false
+     Capabilities Negotiated: false
+     Services: 1 registered
+     Resources: 6 registered
+     Subscriptions: 0 active
+     Cached Resources: 0
+   
+   Registered Tools:
+     - debug_start_session
+     - debug_stop_session
+     - debug_set_breakpoint
+     - debug_remove_breakpoint
+     - debug_list_breakpoints
+     - debug_step_execution
+     - debug_continue_execution
+     - debug_get_status
+     - debug_get_execution_context
+     - debug_get_stack_trace
+     - debug_inspect_variables
+     - debug_inspect_scope
+     - debug_inspect_object
+     - debug_evaluate_expression
+     - debug_analyze_context
+     - debug_analyze_execution
+     - debug_analyze_variables
+     - debug_explain_behavior
+     - debug_identify_issues
+     - debug_suggest_breakpoints
+   
+   Registered Resources:
+     - ydebug://debugging-session
+     - ydebug://active-breakpoints
+     - ydebug://execution-state
+     - ydebug://variable-context
+     - ydebug://execution-history
+     - ydebug://analysis-results
    
    Press Ctrl+C to stop server
    ```
 
 3. **Connect from Claude Code:**
-   - Claude Code will automatically detect and connect to the MCP server
-   - No additional configuration required
+   - Claude Code automatically detects the MCP server
+   - Connection occurs immediately when Claude Code starts
+   - All debugging tools become available to Claude Code
 
-### Verification
+### Connection Verification
 
-The server will display connection status:
+Successful connection displays:
 ```
 Claude Code client connected
 ```
 
-When Claude Code disconnects:
+Disconnection shows:
 ```
 Claude Code client disconnected
+```
+
+## Available Debugging Tools
+
+YDebug's MCP server provides 20 specialized debugging tools that Claude Code can use to interact with your PHP application during debugging sessions.
+
+### Session Management Tools
+
+#### `debug_start_session`
+Start a new debugging session by connecting to Xdebug.
+
+**Parameters:**
+- `host` (string, optional) - Xdebug host (default: localhost)
+- `port` (integer, optional) - Xdebug port (default: 9003)
+- `timeout` (integer, optional) - Connection timeout in ms (default: 10000)
+
+**Claude Code Usage:**
+```
+Start a debugging session on localhost port 9003
+```
+
+#### `debug_stop_session`
+Stop the current debugging session and disconnect from Xdebug.
+
+**Parameters:**
+- `sessionId` (string, optional) - Session ID to stop (defaults to current)
+- `force` (boolean, optional) - Force stop even if execution is paused (default: false)
+
+**Claude Code Usage:**
+```
+Stop the current debugging session
+```
+
+#### `debug_get_status`
+Get the current debugging session status and connection information.
+
+**No parameters required**
+
+**Claude Code Usage:**
+```
+Show me the current debugging session status
+```
+
+### Breakpoint Management Tools
+
+#### `debug_set_breakpoint`
+Set a breakpoint at a specific file and line number.
+
+**Parameters:**
+- `file` (string, required) - PHP file path
+- `line` (integer, required) - Line number
+- `condition` (string, optional) - Conditional expression
+- `temporary` (boolean, optional) - Remove after first hit (default: false)
+
+**Claude Code Usage:**
+```
+Set a breakpoint in src/User.php at line 45
+```
+
+#### `debug_remove_breakpoint`
+Remove a specific breakpoint by ID.
+
+**Parameters:**
+- `breakpointId` (string, required) - Breakpoint ID to remove
+
+**Claude Code Usage:**
+```
+Remove breakpoint with ID bp_123
+```
+
+#### `debug_list_breakpoints`
+List all active breakpoints with their details.
+
+**Parameters:**
+- `includeDisabled` (boolean, optional) - Include disabled breakpoints (default: false)
+
+**Claude Code Usage:**
+```
+Show me all active breakpoints
+```
+
+### Execution Control Tools
+
+#### `debug_step_execution`
+Step through code execution (step into, step over, or step out).
+
+**Parameters:**
+- `type` (string, required) - Step type: 'into', 'over', or 'out'
+- `count` (integer, optional) - Number of steps (default: 1)
+
+**Claude Code Usage:**
+```
+Step into the next function call
+```
+```
+Step over the current line
+```
+
+#### `debug_continue_execution`
+Continue execution until the next breakpoint or script end.
+
+**Parameters:**
+- `until` (object, optional) - Continue until specific location
+  - `file` (string) - File path
+  - `line` (integer) - Line number
+
+**Claude Code Usage:**
+```
+Continue execution until the next breakpoint
+```
+
+### Variable Inspection Tools
+
+#### `debug_inspect_variables`
+Inspect variables in the current execution context.
+
+**Parameters:**
+- `scope` (string, optional) - Variable scope: 'local', 'global', 'superglobal' (default: 'local')
+- `maxDepth` (integer, optional) - Maximum object depth (default: 3)
+- `filter` (string, optional) - Variable name filter pattern
+
+**Claude Code Usage:**
+```
+Show me all local variables in the current scope
+```
+
+#### `debug_inspect_scope`
+Inspect a specific variable scope with detailed information.
+
+**Parameters:**
+- `scopeType` (string, required) - Scope type: 'local', 'global', 'superglobal'
+- `includeMetadata` (boolean, optional) - Include variable metadata (default: true)
+
+**Claude Code Usage:**
+```
+Inspect the global variable scope
+```
+
+#### `debug_inspect_object`
+Inspect a specific object's properties and methods.
+
+**Parameters:**
+- `objectId` (string, required) - Object identifier or variable name
+- `includePrivate` (boolean, optional) - Include private properties (default: true)
+- `includeMethods` (boolean, optional) - Include method information (default: true)
+
+**Claude Code Usage:**
+```
+Inspect the $user object including private properties
+```
+
+#### `debug_evaluate_expression`
+Evaluate a PHP expression in the current debugging context.
+
+**Parameters:**
+- `expression` (string, required) - PHP expression to evaluate
+- `maxLength` (integer, optional) - Maximum result length (default: 1000)
+- `silent` (boolean, optional) - Don't throw on evaluation errors (default: false)
+
+**Claude Code Usage:**
+```
+Evaluate the expression '$user->getName()' in the current context
+```
+
+### Context and Analysis Tools
+
+#### `debug_get_execution_context`
+Get comprehensive information about the current execution context.
+
+**Parameters:**
+- `includeVariables` (boolean, optional) - Include variable information (default: true)
+- `includeStackTrace` (boolean, optional) - Include stack trace (default: true)
+- `maxDepth` (integer, optional) - Maximum data depth (default: 2)
+
+**Claude Code Usage:**
+```
+Show me the complete execution context with variables and stack trace
+```
+
+#### `debug_get_stack_trace`
+Get the current execution stack trace with frame details.
+
+**Parameters:**
+- `maxFrames` (integer, optional) - Maximum number of frames (default: 20)
+- `includeArguments` (boolean, optional) - Include function arguments (default: true)
+- `includeSource` (boolean, optional) - Include source code context (default: false)
+
+**Claude Code Usage:**
+```
+Show me the stack trace with function arguments
+```
+
+### AI-Powered Analysis Tools
+
+#### `debug_analyze_context`
+Perform AI analysis of the current debugging context.
+
+**Parameters:**
+- `focus` (string, optional) - Analysis focus: 'variables', 'execution', 'performance', 'logic'
+- `includeHistory` (boolean, optional) - Include execution history (default: true)
+- `depth` (string, optional) - Analysis depth: 'shallow', 'medium', 'deep' (default: 'medium')
+
+**Claude Code Usage:**
+```
+Analyze the current context focusing on variable states
+```
+
+#### `debug_analyze_execution`
+Analyze execution flow and identify patterns or issues.
+
+**Parameters:**
+- `startFrame` (integer, optional) - Starting stack frame (default: 0)
+- `endFrame` (integer, optional) - Ending stack frame (default: current)
+- `includePerformance` (boolean, optional) - Include performance metrics (default: true)
+
+**Claude Code Usage:**
+```
+Analyze the execution flow and identify any performance issues
+```
+
+#### `debug_analyze_variables`
+Perform detailed analysis of variable states and changes.
+
+**Parameters:**
+- `variableNames` (array, optional) - Specific variables to analyze
+- `includeHistory` (boolean, optional) - Include variable change history (default: true)
+- `detectPatterns` (boolean, optional) - Detect data patterns (default: true)
+
+**Claude Code Usage:**
+```
+Analyze the variables $user and $order for any issues or patterns
+```
+
+#### `debug_explain_behavior`
+Get AI explanation of current code behavior and execution state.
+
+**Parameters:**
+- `includeContext` (boolean, optional) - Include surrounding code context (default: true)
+- `explainVariables` (boolean, optional) - Explain variable states (default: true)
+- `suggestImprovements` (boolean, optional) - Suggest code improvements (default: false)
+
+**Claude Code Usage:**
+```
+Explain what's happening at this point in the code execution
+```
+
+#### `debug_identify_issues`
+Identify potential issues in the current execution state.
+
+**Parameters:**
+- `checkTypes` (array, optional) - Issue types to check: 'logic', 'performance', 'security', 'style'
+- `severity` (string, optional) - Minimum severity: 'low', 'medium', 'high' (default: 'medium')
+- `includeRecommendations` (boolean, optional) - Include fix recommendations (default: true)
+
+**Claude Code Usage:**
+```
+Identify any logic or performance issues in the current state
+```
+
+#### `debug_suggest_breakpoints`
+Get AI suggestions for optimal breakpoint placement.
+
+**Parameters:**
+- `file` (string, optional) - Specific file to analyze (defaults to current)
+- `analysisType` (string, optional) - Analysis type: 'logical', 'performance', 'error-prone' (default: 'logical')
+- `maxSuggestions` (integer, optional) - Maximum suggestions (default: 10)
+
+**Claude Code Usage:**
+```
+Suggest optimal breakpoint locations for debugging this issue
+```
+
+## Available Resources
+
+YDebug provides 6 specialized MCP resources that Claude Code can access to get real-time debugging information.
+
+### `ydebug://debugging-session`
+**Current debugging session state and information**
+
+Provides:
+- Session status and connection information
+- Target script and debugger details
+- Session statistics and timing
+- Connection health metrics
+
+**Claude Code Usage:**
+```
+Show me the current debugging session information
+```
+
+### `ydebug://active-breakpoints`
+**Active breakpoint states and hit information**
+
+Provides:
+- List of all active breakpoints
+- Breakpoint hit counts and conditions
+- File locations and line numbers
+- Enabled/disabled status
+
+**Claude Code Usage:**
+```
+What breakpoints are currently active?
+```
+
+### `ydebug://execution-state`
+**Current execution position and call stack**
+
+Provides:
+- Current file and line position
+- Full call stack with frame details
+- Execution status (running, paused, stopped)
+- Performance timing information
+
+**Claude Code Usage:**
+```
+Where is the execution currently paused?
+```
+
+### `ydebug://variable-context`
+**Runtime variable states and values**
+
+Provides:
+- Local, global, and superglobal variables
+- Variable types and values
+- Object properties and structures
+- Variable change tracking
+
+**Claude Code Usage:**
+```
+Show me all variables in the current context
+```
+
+### `ydebug://execution-history`
+**Execution flow history and step tracking**
+
+Provides:
+- Step-by-step execution history
+- Function call sequences
+- Variable state changes over time
+- Performance metrics per step
+
+**Claude Code Usage:**
+```
+Show me the execution history for this debugging session
+```
+
+### `ydebug://analysis-results`
+**Cached AI analysis results and insights**
+
+Provides:
+- Previous AI analysis results
+- Performance insights and recommendations
+- Issue identification results
+- Suggested improvements and optimizations
+
+**Claude Code Usage:**
+```
+What analysis results are available for this session?
 ```
 
 ## MCP Server Commands
@@ -94,11 +501,11 @@ ydebug mcp-server
 
 ### Command Options
 
-| Option | Description | Default | Notes |
-|--------|-------------|---------|-------|
-| `--transport <type>` | Transport protocol | `stdio` | Only `stdio` currently supported |
-| `--port <port>` | HTTP port number | - | HTTP transport not yet implemented |
-| `--debug` | Enable debug logging | `false` | Shows detailed MCP protocol messages |
+| Option                | Description           | Default | Notes                                |
+|-----------------------|-----------------------|---------|--------------------------------------|
+| `--transport <type>`  | Transport protocol    | `stdio` | Only `stdio` currently supported     |
+| `--port <port>`       | HTTP port number      | -       | HTTP transport not yet implemented   |
+| `--debug`             | Enable debug logging  | `false` | Shows detailed MCP protocol messages |
 
 ### Examples
 
@@ -135,16 +542,11 @@ Claude Code automatically discovers and connects to MCP servers running on your 
 
 ### What Claude Code Can Access
 
-Currently available through the MCP server:
-- Server status and health checks
-- Basic capability information
-- Foundation for future debugging tools
-
-**Planned capabilities (roadmap):**
-- Variable inspection tools
-- Breakpoint management
-- Session control
-- Real-time debugging assistance
+**Complete Debugging Toolkit:**
+- **20+ Professional Debugging Tools** - Full session management, breakpoint control, execution stepping, variable inspection, and AI analysis
+- **6 Real-Time Resources** - Live access to session state, breakpoints, execution context, variables, history, and analysis results
+- **AI-Powered Analysis** - Context analysis, execution flow analysis, variable pattern detection, issue identification, and improvement suggestions
+- **Professional Features** - Conditional breakpoints, expression evaluation, multi-scope variable inspection, and comprehensive stack trace analysis
 
 ## Current Capabilities
 
@@ -265,12 +667,12 @@ This shows:
 
 ### Common Error Messages
 
-| Message | Cause | Solution |
-|---------|-------|----------|
-| `Transport not initialized` | Server startup issue | Restart server |
-| `Method not found` | Client sent unknown request | Update Claude Code |
-| `STDIO transport error` | Communication issue | Check system permissions |
-| `Service registration failed` | Configuration problem | Check YDebug configuration |
+| Message                         | Cause                           | Solution                       |
+|---------------------------------|---------------------------------|--------------------------------|
+| `Transport not initialized`     | Server startup issue            | Restart server                 |
+| `Method not found`              | Client sent unknown request     | Update Claude Code             |
+| `STDIO transport error`         | Communication issue             | Check system permissions       |
+| `Service registration failed`   | Configuration problem           | Check YDebug configuration     |
 
 ## Architecture Details
 
