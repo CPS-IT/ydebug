@@ -285,10 +285,11 @@ class ConfigManager {
   }
 
   /**
-   * Reset configuration (remove user config file)
+   * Reset configuration (reset values to defaults, preserving file by default)
    * @param {boolean} confirm - Confirmation flag
+   * @param {boolean} deleteFile - If true, delete the file instead of resetting content
    */
-  reset(confirm = false) {
+  reset(confirm = false, deleteFile = false) {
     if (!confirm) {
       throw new Error('Reset requires confirmation. Use --confirm flag.');
     }
@@ -298,16 +299,29 @@ class ConfigManager {
 
     for (const configPath of configPaths) {
       if (fs.existsSync(configPath)) {
-        fs.unlinkSync(configPath);
-        console.log(`Removed: ${configPath}`);
-        resetCount++;
+        if (deleteFile) {
+          // Delete the file (original behavior, now requires explicit flag)
+          fs.unlinkSync(configPath);
+          console.log(`Removed: ${configPath}`);
+          resetCount++;
+        } else {
+          // Reset content to defaults but preserve the file (new default behavior)
+          try {
+            fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2));
+            console.log(`Reset content of: ${configPath}`);
+            resetCount++;
+          } catch (error) {
+            console.warn(`Warning: Could not reset ${configPath}: ${error.message}`);
+          }
+        }
       }
     }
 
     if (resetCount === 0) {
       console.log('No local configuration files found to reset.');
     } else {
-      console.log(`Reset ${resetCount} configuration file(s) to defaults.`);
+      const action = deleteFile ? 'removed' : 'reset';
+      console.log(`${resetCount} configuration file(s) ${action}.`);
     }
 
     // Clear cache

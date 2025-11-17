@@ -580,18 +580,20 @@ class AnalysisResultsResource extends BaseMCPResource {
     }
 
     // Listen for MCP tool analysis events
-    const mcpServer = this.services.get('mcp');
-    if (mcpServer) {
-      mcpServer.on('tool:executed', (data) => {
-        if (this.isAnalysisTool(data.toolName) && data.result) {
-          this.cacheAnalysisResult({
-            type: data.toolName,
-            result: data.result,
-            context: data.params,
-            toolExecution: true
-          });
-        }
-      });
+    if (this.services.has('mcp')) {
+      const mcpServer = this.services.get('mcp');
+      if (mcpServer && mcpServer.on) {
+        mcpServer.on('tool:executed', (data) => {
+          if (this.isAnalysisTool(data.toolName) && data.result) {
+            this.cacheAnalysisResult({
+              type: data.toolName,
+              result: data.result,
+              context: data.params,
+              toolExecution: true
+            });
+          }
+        });
+      }
     }
   }
 

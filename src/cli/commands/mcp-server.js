@@ -157,21 +157,20 @@ class MCPServerCommand extends BaseCommand {
   async initializeServices() {
     const services = {};
 
-    // Note: Service initialization will be expanded in future features
-    // For now, we're just setting up the foundation
-    
     try {
       // Initialize configuration service
       const ConfigManager = require('../../config/ConfigManager');
       const configManager = new ConfigManager();
       services.config = configManager;
 
-      logger.info('Basic services initialized for MCP server');
-      
-      // Future services to be added in other features:
-      // - DBGp debugging services (Feature 028)  
-      // - Analysis services (Feature 030)
-      // - Session management (Feature 028)
+      // Initialize placeholder services for MCP resources
+      // These will be replaced with actual implementations in future features
+      services.debugger = this.createPlaceholderDebuggerService();
+      services.session = this.createPlaceholderSessionService();
+      services.analysis = this.createPlaceholderAnalysisService();
+      services.mcp = this.createPlaceholderMCPService();
+
+      logger.info('MCP services initialized (placeholder implementations)');
       
     } catch (error) {
       logger.error('Error initializing services:', error);
@@ -179,6 +178,64 @@ class MCPServerCommand extends BaseCommand {
     }
 
     return services;
+  }
+
+  /**
+   * Create placeholder debugger service
+   * @returns {object} Placeholder debugger service
+   */
+  createPlaceholderDebuggerService() {
+    return {
+      name: 'debugger',
+      status: 'placeholder',
+      getStatus: () => ({ connected: false, placeholder: true }),
+      isConnected: () => false,
+      getBreakpoints: () => [],
+      getVariables: () => ({}),
+      getCurrentSession: () => null
+    };
+  }
+
+  /**
+   * Create placeholder session service  
+   * @returns {object} Placeholder session service
+   */
+  createPlaceholderSessionService() {
+    return {
+      name: 'session',
+      status: 'placeholder',
+      getActiveSessions: () => [],
+      getCurrentSession: () => null,
+      createSession: () => null,
+      getSessionHistory: () => []
+    };
+  }
+
+  /**
+   * Create placeholder analysis service
+   * @returns {object} Placeholder analysis service  
+   */
+  createPlaceholderAnalysisService() {
+    return {
+      name: 'analysis',
+      status: 'placeholder', 
+      getResults: () => [],
+      analyzeCode: () => null,
+      getRecommendations: () => []
+    };
+  }
+
+  /**
+   * Create placeholder MCP service
+   * @returns {object} Placeholder MCP service
+   */
+  createPlaceholderMCPService() {
+    return {
+      name: 'mcp',
+      status: 'placeholder',
+      getConnectionInfo: () => ({ connected: false, placeholder: true }),
+      getCapabilities: () => ({ tools: true, resources: true })
+    };
   }
 
   /**
@@ -232,8 +289,10 @@ class MCPServerCommand extends BaseCommand {
 
     // Check capabilities negotiation
     health.checks.capabilities = {
-      status: status.capabilities.isNegotiated ? 'pass' : 'warn',
-      description: 'MCP capabilities negotiated with client'
+      status: status.capabilities.isNegotiated ? 'pass' : 'info',
+      description: status.capabilities.isNegotiated 
+        ? 'MCP capabilities negotiated with client'
+        : 'MCP capabilities available (no client connected)'
     };
 
     // Check services
@@ -273,8 +332,9 @@ class MCPServerCommand extends BaseCommand {
     console.log('  Individual Checks:');
     
     Object.entries(health.checks).forEach(([_name, check]) => {
-      const statusIcon = check.status === 'pass' ? '✓' : 
-        check.status === 'warn' ? '⚠' : '✗';
+      const statusIcon = check.status === 'pass' ? '[OK]' : 
+        check.status === 'warn' ? '[WARN]' : 
+        check.status === 'info' ? '[INFO]' : '[FAIL]';
       console.log(`    ${statusIcon} ${check.description} (${check.status})`);
     });
     
@@ -292,10 +352,10 @@ class MCPServerCommand extends BaseCommand {
       const health = this.performHealthCheck(server);
       
       if (health.overall !== 'healthy') {
-        logger.warn('MCP server health check failed:', health);
+        logger.warn('MCP server health check failed:', JSON.stringify(health, null, 2));
         
         if (health.overall === 'unhealthy') {
-          console.log('⚠ MCP Server health check indicates unhealthy state');
+          console.log('[WARNING] MCP Server health check indicates unhealthy state');
           this.displayHealthCheck(health);
         }
       } else {
@@ -355,14 +415,14 @@ class MCPServerCommand extends BaseCommand {
 
     // Display results
     if (issues.length === 0) {
-      console.log('✓ MCP configuration is valid');
+      console.log('[OK] MCP configuration is valid');
       console.log('');
       
       // Display current configuration
       console.log('Current MCP Configuration:');
       console.log(JSON.stringify(config, null, 2));
     } else {
-      console.error('✗ MCP configuration validation failed:');
+      console.error('[ERROR] MCP configuration validation failed:');
       issues.forEach(issue => console.error(`  - ${issue}`));
       process.exit(1);
     }
@@ -493,10 +553,10 @@ class MCPServerCommand extends BaseCommand {
           throw new Error('Tool missing execute method');
         }
         
-        console.log(`  ✓ ${name} - definition and structure valid`);
+        console.log(`  [OK] ${name} - definition and structure valid`);
         passedTests++;
       } catch (error) {
-        console.log(`  ✗ ${name} - ${error.message}`);
+        console.log(`  [FAIL] ${name} - ${error.message}`);
         failedTests++;
       }
     }
@@ -541,18 +601,18 @@ class MCPServerCommand extends BaseCommand {
         
         try {
           await resource.read({ limit: 1 });
-          console.log(`  ✓ ${uri} - read operation successful`);
+          console.log(`  [OK] ${uri} - read operation successful`);
         } catch (readError) {
           // It's okay if read fails due to no data, but not due to implementation issues
           if (readError.message.includes('not implemented')) {
             throw new Error('Resource read method not properly implemented');
           }
-          console.log(`  ✓ ${uri} - read method implemented (no data available)`);
+          console.log(`  [OK] ${uri} - read method implemented (no data available)`);
         }
         
         passedTests++;
       } catch (error) {
-        console.log(`  ✗ ${uri} - ${error.message}`);
+        console.log(`  [FAIL] ${uri} - ${error.message}`);
         failedTests++;
       }
     }

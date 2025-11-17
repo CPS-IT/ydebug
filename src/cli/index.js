@@ -75,6 +75,7 @@ function registerCommands() {
     .option('--show', 'show current configuration')
     .option('--reset', 'reset configuration to defaults')
     .option('--confirm', 'confirm reset operation')
+    .option('--delete', 'delete config files when resetting (default: preserve files and reset values)')
     .option('-f, --file <path>', 'configuration file path')
     .action(async (options) => {
       const cmd = new ConfigCommand();
