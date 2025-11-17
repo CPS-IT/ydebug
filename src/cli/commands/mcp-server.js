@@ -272,9 +272,9 @@ class MCPServerCommand extends BaseCommand {
     console.log(`  Overall Status: ${health.overall.toUpperCase()}`);
     console.log('  Individual Checks:');
     
-    Object.entries(health.checks).forEach(([name, check]) => {
+    Object.entries(health.checks).forEach(([_name, check]) => {
       const statusIcon = check.status === 'pass' ? '✓' : 
-                        check.status === 'warn' ? '⚠' : '✗';
+        check.status === 'warn' ? '⚠' : '✗';
       console.log(`    ${statusIcon} ${check.description} (${check.status})`);
     });
     

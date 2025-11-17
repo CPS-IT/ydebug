@@ -38,9 +38,19 @@ const DEFAULT_CONFIG = {
   },
   logging: {
     level: 'info',
-    file: null,
+    target: 'console',
+    directory: 'var/log',
+    filename: 'ydebug.log',
+    format: 'text',
+    file: null, // Deprecated, use target instead
     timestamp: true,
     colors: true,
+    rotation: {
+      enabled: false,
+      maxSize: '10MB',
+      maxFiles: 5,
+      interval: 'daily'
+    }
   },
   ai: {
     enabled: true,
@@ -454,6 +464,20 @@ class ConfigManager {
     const validLevels = ['error', 'warn', 'info', 'debug', 'trace'];
     if (logging.level && !validLevels.includes(logging.level)) {
       throw new Error(`logging.level must be one of: ${validLevels.join(', ')}`);
+    }
+    
+    const validTargets = ['console', 'file', 'both'];
+    if (logging.target && !validTargets.includes(logging.target)) {
+      throw new Error(`logging.target must be one of: ${validTargets.join(', ')}`);
+    }
+    
+    const validFormats = ['text', 'json'];
+    if (logging.format && !validFormats.includes(logging.format)) {
+      throw new Error(`logging.format must be one of: ${validFormats.join(', ')}`);
+    }
+    
+    if (logging.rotation?.enabled && typeof logging.rotation.enabled !== 'boolean') {
+      throw new Error('logging.rotation.enabled must be a boolean');
     }
   }
 

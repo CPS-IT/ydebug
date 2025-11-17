@@ -113,6 +113,7 @@ docker-compose.override.yml
 debug-sessions/
 ydebug-logs/
 .ydebug.json
+ydebug.config.json
 
 # claude code files
 .claude/settings.local.json

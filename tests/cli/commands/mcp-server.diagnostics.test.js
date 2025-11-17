@@ -81,7 +81,7 @@ describe('MCPServerCommand Diagnostics', () => {
       await command.validateConfiguration(mockConfigManager);
 
       expect(mockConsoleError).toHaveBeenCalledWith('✗ MCP configuration validation failed:');
-      expect(mockConsoleError).toHaveBeenCalledWith("  - Invalid transport type: invalid-transport. Must be 'stdio' or 'http'");
+      expect(mockConsoleError).toHaveBeenCalledWith('  - Invalid transport type: invalid-transport. Must be \'stdio\' or \'http\'');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
 

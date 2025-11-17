@@ -15,7 +15,7 @@ Implement comprehensive testing for MCP server functionality, including protocol
   - [ ] Create `tests/mcp/MCPServer.test.js` - server protocol compliance
   - [ ] Test JSON-RPC 2.0 message handling and validation
   - [ ] Validate capability negotiation and lifecycle management
-  - [ ] Test transport layer functionality (STDIO, HTTP+SSE)
+  - [ ] Test transport layer functionality (STDIO only, HTTP+SSE will be covered in later iterations)
 - [ ] Implement MCP tool testing
   - [ ] Create comprehensive tests for all MCP debugging tools
   - [ ] Test tool parameter validation and error handling
@@ -27,8 +27,8 @@ Implement comprehensive testing for MCP server functionality, including protocol
   - [ ] Test resource data consistency and synchronization
   - [ ] Create resource performance and memory tests
 - [ ] Create integration testing
-  - [ ] Create mock MCP client for end-to-end testing
-  - [ ] Test complete debugging workflows through MCP interface
+  - [ ] Create a mock MCP client for end-to-end testing
+  - [ ] Test complete debugging workflows through the MCP interface
   - [ ] Validate Claude Code integration scenarios
   - [ ] Add performance testing for MCP operations
 
@@ -38,7 +38,7 @@ Implement comprehensive testing for MCP server functionality, including protocol
 - [ ] All MCP tools have comprehensive test coverage
 - [ ] Resource management is thoroughly tested and validated
 - [ ] Integration tests cover realistic debugging scenarios
-- [ ] Test suite runs efficiently as part of CI/CD pipeline
+- [ ] Test suite runs efficiently as part of a CI/CD pipeline
 
 ## Notes
 
