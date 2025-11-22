@@ -17,10 +17,11 @@ describe('Server Mode Integration', () => {
   let testScriptPath;
 
   beforeEach(() => {
-    testPort = 9005 + Math.floor(Math.random() * 100); // Random port to avoid conflicts
+    // Generate random port to avoid conflicts between test runs
+    testPort = 9005 + Math.floor(Math.random() * 100);
     testScriptPath = join(__dirname, '../../temp-test-script.php');
         
-    // Create simple test PHP script
+    // Create simple test PHP script for debugging
     const testScript = `<?php
 echo "Server mode test script starting...\\n";
 $test_var = "Hello Server Mode";
@@ -32,27 +33,27 @@ echo "Script complete.\\n";
   });
 
   afterEach(async () => {
-    // Clean up server process
+    // Clean up server process if still running
     if (serverProcess && !serverProcess.killed) {
       serverProcess.kill('SIGKILL'); // Use SIGKILL for immediate cleanup
-            
-      // Brief wait for cleanup
+      
+      // Brief wait for process cleanup
       await new Promise(resolve => setTimeout(resolve, 100));
     }
         
-    // Clean up test script
+    // Clean up temporary test script
     try {
       unlinkSync(testScriptPath);
     } catch {
-      // Ignore cleanup errors
+      // Ignore cleanup errors - file may not exist
     }
   });
 
   describe('Server Startup and Connection', () => {
     test('should start server successfully', (done) => {
       let serverStarted = false;
-            
-      // Start YDebug server
+      
+      // Start YDebug server with random port
       serverProcess = spawn('node', ['src/cli/index.js', 'server', '--port', testPort.toString()], {
         cwd: process.cwd(),
         stdio: 'pipe'
@@ -82,9 +83,9 @@ echo "Script complete.\\n";
 
       serverProcess.stderr.on('data', (data) => {
         const errorData = data.toString();
-        // Only log unexpected errors
-        if (!errorData.includes('WARN') && !errorData.includes('zshenv')) {
-          console.error('Unexpected server error:', errorData);
+        // Only fail on unexpected errors (suppress warnings and shell environment issues)
+        if (!errorData.includes('WARN') && !errorData.includes('zshenv') && errorData.trim()) {
+          done(new Error(`Server stderr: ${errorData.trim()}`));
         }
       });
 

@@ -10,14 +10,19 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "test": "jest",
+    "test:unit": "jest --config=jest.config.unit.js",
+    "test:integration": "jest --config=jest.config.integration.js",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test:unit:watch": "jest --config=jest.config.unit.js --watch",
+    "test:integration:watch": "jest --config=jest.config.integration.js --watch",
+    "test:coverage": "jest --config=jest.config.unit.js --coverage",
+    "test:all": "npm run test:unit && npm run test:integration",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "docker:build": "docker build -f Dockerfile.dev -t ydebug:dev .",
     "docker:dev": "docker-compose up --build",
     "docker:stop": "docker-compose down",
-    "validate": "npm run lint && npm run test"
+    "validate": "npm run lint && npm run test:unit"
   },
   "repository": {
     "type": "git",
