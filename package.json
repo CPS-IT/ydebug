@@ -1,6 +1,6 @@
 {
   "name": "ydebug",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "YDebug enables AI agents to step through PHP applications in real-time, providing insight into code execution and application behavior.",
   "main": "src/index.js",
   "bin": {
@@ -43,7 +43,7 @@
     "nodemon": "^3.1.10"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.69.0",
+    "@anthropic-ai/sdk": "^0.70.1",
     "commander": "^14.0.2",
     "fast-xml-parser": "^5.3.1",
     "xml2js": "^0.6.2"
