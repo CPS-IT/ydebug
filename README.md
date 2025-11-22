@@ -3,7 +3,7 @@
 [![CI](https://github.com/CPS-IT/ydebug/actions/workflows/ci.yml/badge.svg)](https://github.com/CPS-IT/ydebug/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/CPS-IT/ydebug/branch/develop/graph/badge.svg)](https://codecov.io/gh/CPS-IT/ydebug)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org)
 [![npm version](https://badge.fury.io/js/ydebug.svg)](https://badge.fury.io/js/ydebug)
 
 YDebug enables AI agents to step through PHP applications in real-time, providing insight into code execution and application behavior through the DBGp protocol and Xdebug integration.
@@ -30,6 +30,15 @@ Traditional debugging requires human developers to manually set breakpoints, ste
 - Creates a collaborative debugging environment where AI can actively participate in problem-solving
 - Enables AI to suggest fixes based on observed runtime behavior
 - Offers a new paradigm for AI-assisted development and debugging
+
+## Requirements
+
+YDebug supports the current LTS and maintenance LTS versions of Node.js:
+
+- **Node.js 22.x** (Current LTS)
+- **Node.js 24.x** (Current LTS)
+
+We follow Node.js LTS release schedule and support only the current LTS and the previous LTS version to ensure security and performance.
 
 ## Project Status
 

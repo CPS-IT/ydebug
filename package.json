@@ -1,6 +1,6 @@
 {
   "name": "ydebug",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "YDebug enables AI agents to step through PHP applications in real-time, providing insight into code execution and application behavior.",
   "main": "src/index.js",
   "bin": {
