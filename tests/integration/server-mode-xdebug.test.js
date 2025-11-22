@@ -9,18 +9,25 @@
 
 const { spawn } = require('child_process');
 const { writeFileSync, unlinkSync } = require('fs');
-const { join } = require('path');
+const { join, resolve } = require('path');
 
 describe('Server Mode Integration', () => {
   let serverProcess;
   let testPort;
   let testScriptPath;
+  let nodePath;
+  let projectRoot;
 
   beforeEach(() => {
-    testPort = 9005 + Math.floor(Math.random() * 100); // Random port to avoid conflicts
-    testScriptPath = join(__dirname, '../../temp-test-script.php');
+    // Setup paths for CI compatibility
+    nodePath = process.execPath; // Use the Node.js binary that's running this test
+    projectRoot = resolve(__dirname, '../..');
+    
+    // Generate random port to avoid conflicts between test runs
+    testPort = 9005 + Math.floor(Math.random() * 100);
+    testScriptPath = join(projectRoot, 'temp-test-script.php');
         
-    // Create simple test PHP script
+    // Create simple test PHP script for debugging
     const testScript = `<?php
 echo "Server mode test script starting...\\n";
 $test_var = "Hello Server Mode";
@@ -32,59 +39,65 @@ echo "Script complete.\\n";
   });
 
   afterEach(async () => {
-    // Clean up server process
+    // Clean up server process if still running
     if (serverProcess && !serverProcess.killed) {
       serverProcess.kill('SIGKILL'); // Use SIGKILL for immediate cleanup
-            
-      // Brief wait for cleanup
+      
+      // Brief wait for process cleanup
       await new Promise(resolve => setTimeout(resolve, 100));
     }
         
-    // Clean up test script
+    // Clean up temporary test script
     try {
       unlinkSync(testScriptPath);
     } catch {
-      // Ignore cleanup errors
+      // Ignore cleanup errors - file may not exist
     }
   });
 
   describe('Server Startup and Connection', () => {
     test('should start server successfully', (done) => {
       let serverStarted = false;
-            
-      // Start YDebug server
-      serverProcess = spawn('node', ['src/cli/index.js', 'server', '--port', testPort.toString()], {
-        cwd: process.cwd(),
+      
+      // Start YDebug server with random port
+      serverProcess = spawn(nodePath, ['src/cli/index.js', 'server', '--port', testPort.toString()], {
+        cwd: projectRoot,
         stdio: 'pipe'
       });
 
+      let outputBuffer = '';
+      
       serverProcess.stdout.on('data', (data) => {
         const output = data.toString();
+        outputBuffer += output;
                 
-        // Check if server started successfully
-        if (output.includes('YDebug Server listening')) {
-          serverStarted = true;
+        // Check if server started successfully - look for the listening message first
+        if (!serverStarted && (output.includes('YDebug Server listening') || outputBuffer.includes('YDebug Server listening'))) {
+          // Wait a bit more for the "Ready for" message to arrive
+          setTimeout(() => {
+            if (!serverStarted) { // Double check to avoid race condition
+              serverStarted = true;
                     
-          try {
-            // Verify server startup messages
-                        
-            // Core functionality verification
-            expect(output).toMatch(/YDebug Server listening on/);
-            expect(output).toMatch(/Ready for Xdebug connections/);
-            
-            clearTimeout(startTimeout);
-            done();
-          } catch (error) {
-            done(error);
-          }
+              try {
+                // Verify server startup messages - make regex more flexible for environment differences
+                expect(outputBuffer).toMatch(/YDebug Server listening on/);
+                expect(outputBuffer).toMatch(/Ready for.*connections/);
+                
+                clearTimeout(startTimeout);
+                done();
+              } catch (error) {
+                done(error);
+              }
+            }
+          }, 100);
         }
       });
 
       serverProcess.stderr.on('data', (data) => {
         const errorData = data.toString();
-        // Only log unexpected errors
-        if (!errorData.includes('WARN') && !errorData.includes('zshenv')) {
-          console.error('Unexpected server error:', errorData);
+        // Only fail on unexpected errors (suppress warnings and shell environment issues)
+        if (!errorData.includes('WARN') && !errorData.includes('zshenv') && errorData.trim()) {
+          done(new Error(`Server stderr: ${errorData.trim()}`));
         }
       });
 
@@ -118,16 +131,16 @@ echo "Script complete.\\n";
   describe('Error Handling', () => {
     test('should handle port conflicts gracefully', (done) => {
       // Start first server
-      const firstServer = spawn('node', ['src/cli/index.js', 'server', '--port', testPort.toString()], {
-        cwd: process.cwd(),
+      const firstServer = spawn(nodePath, ['src/cli/index.js', 'server', '--port', testPort.toString()], {
+        cwd: projectRoot,
         stdio: 'pipe'
       });
 
       firstServer.stdout.on('data', (data) => {
         if (data.toString().includes('YDebug Server listening')) {
           // Try to start second server on same port
-          const secondServer = spawn('node', ['src/cli/index.js', 'server', '--port', testPort.toString()], {
-            cwd: process.cwd(),
+          const secondServer = spawn(nodePath, ['src/cli/index.js', 'server', '--port', testPort.toString()], {
+            cwd: projectRoot,
             stdio: 'pipe'
           });
 

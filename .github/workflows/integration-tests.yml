@@ -1,0 +1,64 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Setup PHP with Xdebug
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: xdebug
+          ini-values: |
+            xdebug.mode=debug
+            xdebug.start_with_request=yes
+            xdebug.client_host=localhost
+            xdebug.client_port=9003
+            xdebug.idekey=test-integration
+          coverage: none
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          # Increase timeouts for integration tests
+          JEST_TIMEOUT: 45000
+          # Disable coverage for integration tests to focus on functionality
+          NODE_ENV: test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: integration-test-results-node-${{ matrix.node-version }}
+          path: |
+            coverage/
+            jest-results.json
+          retention-days: 3
