@@ -1,6 +1,8 @@
 /**
  * Xdebug Connection Integration Tests
- * Comprehensive testing of DBGp protocol and Xdebug environment
+ * 
+ * Tests the DBGp protocol implementation and Xdebug environment integration.
+ * Includes environment validation, protocol communication, and real debugging sessions.
  */
 
 const { spawn } = require('child_process');
@@ -19,86 +21,95 @@ describe('Xdebug Integration Tests', () => {
   let xdebugConfig = null;
   
   beforeAll(async () => {
-    // Check PHP availability
+    // Environment Detection Phase
+    await detectPHPEnvironment();
+    await detectXdebugEnvironment();
+  }, 30000);
+
+  /**
+   * Detect PHP availability in the test environment
+   */
+  async function detectPHPEnvironment() {
     try {
       const phpCheck = await runCommand('php', ['--version'], 5000);
       phpAvailable = phpCheck.exitCode === 0;
-      
-      if (phpAvailable) {
-        console.log('PHP detected:', phpCheck.stdout.split('\n')[0]);
-      }
-    } catch (error) {
-      console.log('PHP not available:', error.message);
+    } catch {
       phpAvailable = false;
     }
+  }
+
+  /**
+   * Detect Xdebug extension and configuration
+   */
+  async function detectXdebugEnvironment() {
+    if (!phpAvailable) {
+      return;
+    }
     
-    // Check Xdebug availability with robust detection
-    if (phpAvailable) {
-      try {
-        // Primary detection: Use php --version (most reliable)
-        const phpVersionCheck = await runCommand('php', ['--version'], 2000);
-        if (phpVersionCheck.stdout.toLowerCase().includes('xdebug')) {
-          xdebugAvailable = true;
+    try {
+      // Primary detection: Use php --version (most reliable)
+      const phpVersionCheck = await runCommand('php', ['--version'], 2000);
+      if (phpVersionCheck.stdout.toLowerCase().includes('xdebug')) {
+        xdebugAvailable = true;
           
-          // Extract version from php --version output
-          const versionMatch = phpVersionCheck.stdout.match(/with Xdebug v([0-9.]+)/i);
-          const version = versionMatch ? versionMatch[1] : 'unknown';
+        // Extract version from php --version output
+        const versionMatch = phpVersionCheck.stdout.match(/with Xdebug v([0-9.]+)/i);
+        const version = versionMatch ? versionMatch[1] : 'unknown';
           
-          console.log('Xdebug detected via php --version, version:', version);
+        // Xdebug detected via php --version
           
-          // Get detailed configuration using shorter timeout
-          try {
-            const configCheck = await runCommand('php', ['-r', 'echo phpversion("xdebug") ?: "unknown";'], 2000);
-            xdebugConfig = { version: configCheck.stdout.trim() };
-            
-            // Try to get basic xdebug settings (with timeout protection)
-            try {
-              const settingsCheck = await runCommand('php', ['-r', 'echo ini_get("xdebug.mode") ?: "off";'], 1500);
-              xdebugConfig.mode = settingsCheck.stdout.trim();
-            } catch {
-              xdebugConfig.mode = 'unknown';
-            }
-          } catch (configError) {
-            // Fallback: parse version from --version output
-            xdebugConfig = { version: version };
-            console.log('Using fallback config parsing due to:', configError.message);
-          }
-        } else {
-          // Fallback detection: Try php -m with shorter timeout
-          try {
-            const modulesCheck = await runCommand('php', ['-m'], 2000);
-            xdebugAvailable = modulesCheck.stdout.toLowerCase().includes('xdebug');
-            
-            if (xdebugAvailable) {
-              console.log('Xdebug detected via php -m fallback');
-              xdebugConfig = { version: 'unknown' };
-            }
-          } catch {
-            console.log('Both php --version and php -m detection methods failed');
-            xdebugAvailable = false;
-          }
-        }
-        
-      } catch (error) {
-        console.log('Xdebug primary detection failed:', error.message);
-        xdebugAvailable = false;
-        
-        // Last resort: Try php -m with very short timeout
+        // Get detailed configuration using shorter timeout
         try {
-          const lastResortCheck = await runCommand('php', ['-m'], 1000);
-          xdebugAvailable = lastResortCheck.stdout.toLowerCase().includes('xdebug');
-          
+          const configCheck = await runCommand('php', ['-r', 'echo phpversion("xdebug") ?: "unknown";'], 2000);
+          xdebugConfig = { version: configCheck.stdout.trim() };
+            
+          // Try to get basic xdebug settings (with timeout protection)
+          try {
+            const settingsCheck = await runCommand('php', ['-r', 'echo ini_get("xdebug.mode") ?: "off";'], 1500);
+            xdebugConfig.mode = settingsCheck.stdout.trim();
+          } catch {
+            xdebugConfig.mode = 'unknown';
+          }
+        } catch {
+          // Fallback: parse version from --version output
+          xdebugConfig = { version: version };
+          // Using fallback config parsing
+        }
+      } else {
+        // Fallback detection: Try php -m with shorter timeout
+        try {
+          const modulesCheck = await runCommand('php', ['-m'], 2000);
+          xdebugAvailable = modulesCheck.stdout.toLowerCase().includes('xdebug');
+            
           if (xdebugAvailable) {
-            console.log('Xdebug detected via last resort php -m check');
+            // Xdebug detected via php -m fallback
             xdebugConfig = { version: 'unknown' };
           }
         } catch {
-          console.log('All Xdebug detection methods failed');
+          // Both php --version and php -m detection methods failed
           xdebugAvailable = false;
         }
       }
+        
+    } catch {
+      // Xdebug primary detection failed
+      xdebugAvailable = false;
+      
+      // Last resort: Try php -m with very short timeout
+      try {
+        const lastResortCheck = await runCommand('php', ['-m'], 1000);
+        xdebugAvailable = lastResortCheck.stdout.toLowerCase().includes('xdebug');
+        
+        if (xdebugAvailable) {
+          // Xdebug detected via last resort php -m check
+          xdebugConfig = { version: 'unknown' };
+        }
+      } catch {
+        // All Xdebug detection methods failed
+        xdebugAvailable = false;
+      }
     }
-  }, 30000);
+  }
   
   beforeEach(async () => {
     testServer = new DBGpTestServer({ port: 9003 });
@@ -121,21 +132,21 @@ describe('Xdebug Integration Tests', () => {
     
     test('should detect Xdebug extension', () => {
       if (!phpAvailable) {
-        console.log('Skipping Xdebug detection test - PHP not available');
+        // Skip test when PHP is not available
         return;
       }
       
       if (xdebugAvailable) {
         expect(xdebugAvailable).toBe(true);
       } else {
-        console.log('Xdebug extension not found - this is expected in environments without Xdebug');
+        // Xdebug extension not found - expected in environments without Xdebug
         expect(xdebugAvailable).toBe(false);
       }
     });
     
     test('should validate Xdebug configuration', () => {
       if (!xdebugAvailable) {
-        console.log('Skipping Xdebug configuration test - Xdebug not available');
+        // Skip test when Xdebug is not available
         return;
       }
       
@@ -143,15 +154,10 @@ describe('Xdebug Integration Tests', () => {
       expect(xdebugConfig.version).toBeTruthy();
       expect(xdebugConfig.version).not.toBe('unknown');
       
-      // Basic validation - we now have a minimal but reliable config
-      console.log('Detected Xdebug configuration:', xdebugConfig);
-      
+      // Basic validation - minimal but reliable config
       // If we have mode information, validate it
       if (xdebugConfig.mode && xdebugConfig.mode !== 'unknown') {
         expect(xdebugConfig.mode).toBeTruthy();
-        console.log('Xdebug mode:', xdebugConfig.mode);
-      } else {
-        console.log('Xdebug mode detection skipped - using minimal configuration');
       }
     });
     
@@ -307,7 +313,7 @@ describe('Xdebug Integration Tests', () => {
   describe('Real Xdebug Integration', () => {
     test('should connect to actual Xdebug session', async () => {
       if (!phpAvailable || !xdebugAvailable) {
-        console.log('Skipping real Xdebug test - PHP or Xdebug not available');
+        // Skip test when PHP or Xdebug is not available
         return;
       }
       
@@ -354,7 +360,7 @@ describe('Xdebug Integration Tests', () => {
     
     test('should handle full debugging session workflow', async () => {
       if (!phpAvailable || !xdebugAvailable) {
-        console.log('Skipping full debugging session test - PHP or Xdebug not available');
+        // Skip test when PHP or Xdebug is not available
         return;
       }
       

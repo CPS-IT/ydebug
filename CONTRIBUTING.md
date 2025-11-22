@@ -75,13 +75,23 @@ Inside the container or after connecting via development container:
 # Development server with hot reload
 npm run dev
 
-# Run tests
+# Run all tests (legacy)
 npm run test
 
-# Run tests in watch mode
-npm run test:watch
+# Fast unit tests for development
+npm run test:unit
 
-# Run tests with coverage
+# Integration tests (extended timeouts)
+npm run test:integration
+
+# Run both unit and integration tests
+npm run test:all
+
+# Watch mode for development
+npm run test:unit:watch        # Watch unit tests
+npm run test:integration:watch # Watch integration tests
+
+# Coverage report (unit tests only)
 npm run test:coverage
 
 # Lint code

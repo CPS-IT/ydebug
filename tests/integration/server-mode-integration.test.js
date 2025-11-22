@@ -63,78 +63,96 @@ echo "Test complete\\n";
   }, 10000);
 
   it('should start server with custom port', (done) => {
-    serverProcess = spawn('node', [
-      path.join(__dirname, '../../src/cli/index.js'),
-      'server',
-      '--port', testPort.toString()
-    ]);
-
-    let output = '';
-    let errorOutput = '';
-
-    serverProcess.stdout.on('data', (data) => {
-      output += data.toString();
-    });
-
-    serverProcess.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-    });
-
-    // Set timeout to prevent hanging
-    const timeout = setTimeout(() => {
-      if (serverProcess && !serverProcess.killed) {
-        serverProcess.kill('SIGTERM');
-      }
-            
-      expect(output).toContain(`Starting YDebug Server on localhost:${testPort}`);
-      expect(output).toContain('Ready for Xdebug connections');
-            
-      // Verify no errors
-      expect(errorOutput).not.toContain('Error:');
-      expect(errorOutput).not.toContain('❌');
-            
-      done();
-    }, 3000);
-
-    // Handle early exit
-    serverProcess.on('exit', (code) => {
-      clearTimeout(timeout);
-      if (code !== 0) {
-        done(new Error(`Server exited with code ${code}: ${errorOutput}`));
-      }
-    });
-  }, 10000);
-
-  it('should handle port conflicts gracefully', (done) => {
-    // Start first server
-    const firstServer = spawn('node', [
-      path.join(__dirname, '../../src/cli/index.js'),
-      'server',
-      '--port', testPort.toString()
-    ]);
-
-    setTimeout(() => {
-      // Start second server on same port
-      const secondServer = spawn('node', [
+    jest.useFakeTimers();
+    
+    try {
+      serverProcess = spawn('node', [
         path.join(__dirname, '../../src/cli/index.js'),
         'server',
         '--port', testPort.toString()
       ]);
 
+      let output = '';
       let errorOutput = '';
-      secondServer.stderr.on('data', (data) => {
+
+      serverProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      serverProcess.stderr.on('data', (data) => {
         errorOutput += data.toString();
       });
 
-      secondServer.on('close', (code) => {
-        expect(code).toBe(1); // Should exit with error
-        expect(errorOutput).toContain('already in use');
-                
-        // Clean up first server
-        firstServer.kill('SIGTERM');
+      // Set timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        if (serverProcess && !serverProcess.killed) {
+          serverProcess.kill('SIGTERM');
+        }
+              
+        expect(output).toContain(`Starting YDebug Server on localhost:${testPort}`);
+        expect(output).toContain('Ready for Xdebug connections');
+              
+        // Verify no errors
+        expect(errorOutput).not.toContain('Error:');
+        expect(errorOutput).not.toContain('❌');
+              
         done();
+      }, 3000);
+      
+      // Advance timers to trigger timeout immediately
+      jest.advanceTimersByTime(3000);
+
+      // Handle early exit
+      serverProcess.on('exit', (code) => {
+        clearTimeout(timeout);
+        if (code !== 0) {
+          done(new Error(`Server exited with code ${code}: ${errorOutput}`));
+        }
       });
-    }, 1000);
+    } finally {
+      jest.useRealTimers();
+    }
+  }, 10000);
+
+  it('should handle port conflicts gracefully', (done) => {
+    jest.useFakeTimers();
+    
+    try {
+      // Start first server
+      const firstServer = spawn('node', [
+        path.join(__dirname, '../../src/cli/index.js'),
+        'server',
+        '--port', testPort.toString()
+      ]);
+
+      setTimeout(() => {
+        // Start second server on same port
+        const secondServer = spawn('node', [
+          path.join(__dirname, '../../src/cli/index.js'),
+          'server',
+          '--port', testPort.toString()
+        ]);
+
+        let errorOutput = '';
+        secondServer.stderr.on('data', (data) => {
+          errorOutput += data.toString();
+        });
+
+        secondServer.on('close', (code) => {
+          expect(code).toBe(1); // Should exit with error
+          expect(errorOutput).toContain('already in use');
+                  
+          // Clean up first server
+          firstServer.kill('SIGTERM');
+          done();
+        });
+      }, 1000);
+      
+      // Advance timers to trigger delayed server start immediately
+      jest.advanceTimersByTime(1000);
+    } finally {
+      jest.useRealTimers();
+    }
   }, 15000);
 });
 
