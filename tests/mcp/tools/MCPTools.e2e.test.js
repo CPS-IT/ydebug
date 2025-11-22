@@ -274,7 +274,7 @@ describe('End-to-End MCP Tools Testing', () => {
         result: mockDebugEnv.evaluateExpression(sessionId, expr)
       }));
 
-      evaluationResults.forEach(({ expression, result }) => {
+      evaluationResults.forEach(({ expression: _expression, result }) => {
         expect(result.type).toBeDefined();
         expect(result.value).toBeDefined();
       });
@@ -372,7 +372,7 @@ describe('End-to-End MCP Tools Testing', () => {
         });
       }
 
-      operations.forEach(({ sessionId, breakpoint, variables, step }) => {
+      operations.forEach(({ sessionId: _sessionId, breakpoint, variables, step }) => {
         expect(breakpoint.id).toBeDefined();
         expect(variables).toBeDefined();
         expect(step.status).toBe('break');
@@ -446,7 +446,7 @@ describe('End-to-End MCP Tools Testing', () => {
 
       // Create stress test session
       const stressSessionId = 'stress_test_session';
-      const stressSession = mockDebugEnv.startSession(stressSessionId, '/app/stress_test.php');
+      const mockStressSession = mockDebugEnv.startSession(stressSessionId, '/app/stress_test.php');
 
       // Perform intensive operations
       const stressOperations = [];

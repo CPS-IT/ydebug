@@ -65,7 +65,7 @@ describe('MCPServerCommand Diagnostics', () => {
 
       await command.validateConfiguration(mockConfigManager);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('✓ MCP configuration is valid');
+      expect(mockConsoleLog).toHaveBeenCalledWith('[OK] MCP configuration is valid');
       expect(mockConfigManager.get).toHaveBeenCalledWith('mcp');
     });
 
@@ -80,7 +80,7 @@ describe('MCPServerCommand Diagnostics', () => {
 
       await command.validateConfiguration(mockConfigManager);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('✗ MCP configuration validation failed:');
+      expect(mockConsoleError).toHaveBeenCalledWith('[ERROR] MCP configuration validation failed:');
       expect(mockConsoleError).toHaveBeenCalledWith('  - Invalid transport type: invalid-transport. Must be \'stdio\' or \'http\'');
       expect(mockProcessExit).toHaveBeenCalledWith(1);
     });
@@ -189,7 +189,7 @@ describe('MCPServerCommand Diagnostics', () => {
       await command.testMCPTools(mockServer);
 
       expect(mockConsoleLog).toHaveBeenCalledWith('Testing tool: test_tool');
-      expect(mockConsoleLog).toHaveBeenCalledWith('  ✓ test_tool - definition and structure valid');
+      expect(mockConsoleLog).toHaveBeenCalledWith('  [OK] test_tool - definition and structure valid');
       expect(mockConsoleLog).toHaveBeenCalledWith('Tool Test Results: 1 passed, 0 failed');
     });
   });
@@ -214,7 +214,7 @@ describe('MCPServerCommand Diagnostics', () => {
       await command.testMCPResources(mockServer);
 
       expect(mockConsoleLog).toHaveBeenCalledWith('Testing resource: test://resource');
-      expect(mockConsoleLog).toHaveBeenCalledWith('  ✓ test://resource - read operation successful');
+      expect(mockConsoleLog).toHaveBeenCalledWith('  [OK] test://resource - read operation successful');
       expect(mockConsoleLog).toHaveBeenCalledWith('Resource Test Results: 1 passed, 0 failed');
     });
   });

@@ -210,7 +210,7 @@ class MockResourceDataProvider {
   getVariableContexts(sessionId = null) {
     if (sessionId) {
       const contexts = [];
-      this.variableContexts.forEach((context, key) => {
+      this.variableContexts.forEach((context, _key) => {
         if (context.sessionId === sessionId) {
           contexts.push(context);
         }
@@ -566,7 +566,7 @@ describe('MCP Resources Integration Tests', () => {
 
       // Trigger resource changes that should generate notifications
       const sessionId = 'subscription_test_session';
-      const session = mockDataProvider.createDebuggingSession(sessionId, '/app/sub_test.php');
+      const mockSession = mockDataProvider.createDebuggingSession(sessionId, '/app/sub_test.php');
       
       mockDataProvider.addExecutionStep(sessionId, { 
         type: 'step_over', 

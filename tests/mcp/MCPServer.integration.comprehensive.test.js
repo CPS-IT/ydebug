@@ -189,7 +189,7 @@ describe('Comprehensive MCP Integration Tests', () => {
   let server;
   let mockClient;
   let originalStdout;
-  let capturedOutput;
+  let mockCapturedOutput;
 
   beforeAll(async () => {
     // Ensure test log directory exists
@@ -213,9 +213,9 @@ describe('Comprehensive MCP Integration Tests', () => {
     
     // Capture stdout for protocol message testing
     originalStdout = process.stdout.write;
-    capturedOutput = '';
+    mockCapturedOutput = '';
     process.stdout.write = function(chunk) {
-      capturedOutput += chunk;
+      mockCapturedOutput += chunk;
       return originalStdout.call(process.stdout, chunk);
     };
 

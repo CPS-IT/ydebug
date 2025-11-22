@@ -143,6 +143,7 @@ describe('CLI Entry Point (src/cli/index.js)', () => {
             if (config.$schema && config.$schema.description === 'YDebug Configuration Schema') {
               fs.unlinkSync('ydebug.config.json');
             }
+          // eslint-disable-next-line no-unused-vars
           } catch (error) {
             // If we can't parse it, leave it alone (might be user's config)
             console.warn('Warning: Could not parse config file for test cleanup, preserving existing file');

@@ -38,7 +38,7 @@ describe('CapabilityManager Enhanced Tests', () => {
     test('should have expected server capabilities structure', () => {
       const serverCaps = manager.getServerCapabilities();
 
-      expect(serverCaps).toHaveProperty('protocolVersion', '2024-11-05');
+      expect(serverCaps).toHaveProperty('protocolVersion', '2025-06-18');
       expect(serverCaps).toHaveProperty('serverInfo');
       expect(serverCaps.serverInfo).toHaveProperty('name', 'ydebug-mcp-server');
       expect(serverCaps.serverInfo).toHaveProperty('version', '1.0.0');
@@ -73,7 +73,7 @@ describe('CapabilityManager Enhanced Tests', () => {
   describe('Capability Negotiation - Success Cases', () => {
     test('should negotiate successfully with minimal valid client capabilities', () => {
       const clientCaps = {
-        protocolVersion: '2024-11-05'
+        protocolVersion: '2025-06-18'
       };
 
       const result = manager.negotiateCapabilities(clientCaps);
@@ -87,7 +87,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should negotiate successfully with complete client capabilities', () => {
       const clientCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {
           sampling: {},
           roots: { listChanged: true }
@@ -107,7 +107,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
       // Verify logging with complex capabilities
       expect(mockLogger.info).toHaveBeenCalledWith('Client capabilities received:', {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         clientInfo: clientCaps.clientInfo,
         capabilities: ['sampling', 'roots']
       });
@@ -115,7 +115,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle client capabilities with empty capabilities object', () => {
       const clientCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {},
         clientInfo: { name: 'empty-client', version: '1.0.0' }
       };
@@ -124,7 +124,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
       expect(result).toBe(true);
       expect(mockLogger.info).toHaveBeenCalledWith('Client capabilities received:', {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         clientInfo: clientCaps.clientInfo,
         capabilities: []
       });
@@ -132,7 +132,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle client capabilities without clientInfo', () => {
       const clientCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: { sampling: {} }
       };
 
@@ -140,7 +140,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
       expect(result).toBe(true);
       expect(mockLogger.info).toHaveBeenCalledWith('Client capabilities received:', {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         clientInfo: undefined,
         capabilities: ['sampling']
       });
@@ -148,12 +148,12 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should allow re-negotiation with new capabilities', () => {
       const firstCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: { sampling: {} }
       };
 
       const secondCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: { roots: {} }
       };
 
@@ -247,7 +247,7 @@ describe('CapabilityManager Enhanced Tests', () => {
       invalidClientInfos.forEach(clientInfo => {
         jest.clearAllMocks();
         const caps = {
-          protocolVersion: '2024-11-05',
+          protocolVersion: '2025-06-18',
           capabilities: {},
           clientInfo
         };
@@ -265,7 +265,7 @@ describe('CapabilityManager Enhanced Tests', () => {
       invalidCapabilities.forEach(capabilities => {
         jest.clearAllMocks();
         const caps = {
-          protocolVersion: '2024-11-05',
+          protocolVersion: '2025-06-18',
           capabilities
         };
 
@@ -280,7 +280,7 @@ describe('CapabilityManager Enhanced Tests', () => {
   describe('Client Capability Validation', () => {
     test('should validate minimal valid capabilities', () => {
       const validCaps = {
-        protocolVersion: '2024-11-05'
+        protocolVersion: '2025-06-18'
       };
 
       expect(manager.validateClientCapabilities(validCaps)).toBe(true);
@@ -288,7 +288,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should validate complete capabilities', () => {
       const validCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {
           sampling: {},
           roots: { listChanged: true }
@@ -304,7 +304,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should accept capabilities with extra fields', () => {
       const capsWithExtras = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {},
         clientInfo: {
           name: 'test-client',
@@ -319,7 +319,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should accept empty clientInfo object', () => {
       const validCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         clientInfo: {}
       };
 
@@ -328,7 +328,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should accept empty capabilities object', () => {
       const validCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {}
       };
 
@@ -338,7 +338,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
   describe('Protocol Version Compatibility', () => {
     test('should accept exact protocol version match', () => {
-      expect(manager.isProtocolVersionCompatible('2024-11-05')).toBe(true);
+      expect(manager.isProtocolVersionCompatible('2025-06-18')).toBe(true);
     });
 
     test('should reject different protocol versions', () => {
@@ -376,9 +376,9 @@ describe('CapabilityManager Enhanced Tests', () => {
     });
 
     test('should be case sensitive for protocol version', () => {
-      expect(manager.isProtocolVersionCompatible('2024-11-05')).toBe(true);
-      expect(manager.isProtocolVersionCompatible('2024-11-05 ')).toBe(false);
-      expect(manager.isProtocolVersionCompatible(' 2024-11-05')).toBe(false);
+      expect(manager.isProtocolVersionCompatible('2025-06-18')).toBe(true);
+      expect(manager.isProtocolVersionCompatible('2025-06-18 ')).toBe(false);
+      expect(manager.isProtocolVersionCompatible(' 2025-06-18')).toBe(false);
     });
   });
 
@@ -391,7 +391,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should return false when client has no capabilities object', () => {
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05'
+        protocolVersion: '2025-06-18'
       };
 
       expect(manager.clientSupports('sampling')).toBe(false);
@@ -400,7 +400,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should return false when client has empty capabilities', () => {
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {}
       };
 
@@ -410,7 +410,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should correctly identify supported capabilities', () => {
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {
           sampling: {},
           roots: { listChanged: true },
@@ -426,7 +426,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle client capabilities with null/undefined values', () => {
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {
           sampling: null,
           roots: undefined,
@@ -477,7 +477,7 @@ describe('CapabilityManager Enhanced Tests', () => {
       };
 
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         clientInfo
       };
 
@@ -486,7 +486,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should return undefined when client info is missing', () => {
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05'
+        protocolVersion: '2025-06-18'
       };
 
       expect(manager.getClientInfo()).toBeUndefined();
@@ -494,7 +494,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle null client info', () => {
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         clientInfo: null
       };
 
@@ -549,7 +549,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
       expect(status).toEqual({
         isNegotiated: false,
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         serverCapabilities: ['tools', 'resources', 'logging'],
         clientCapabilities: null,
         clientInfo: null
@@ -558,7 +558,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should return correct status after successful negotiation', () => {
       const clientCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {
           sampling: {},
           roots: { listChanged: true }
@@ -574,7 +574,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
       expect(status).toEqual({
         isNegotiated: true,
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         serverCapabilities: ['tools', 'resources', 'logging'],
         clientCapabilities: ['sampling', 'roots'],
         clientInfo: clientCaps.clientInfo
@@ -583,7 +583,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle client capabilities without capabilities object in status', () => {
       manager.clientCapabilities = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         clientInfo: { name: 'test', version: '1.0' }
       };
       manager.isNegotiated = true;
@@ -610,7 +610,7 @@ describe('CapabilityManager Enhanced Tests', () => {
     test('should reset negotiation state', () => {
       // Setup negotiated state
       const clientCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: { sampling: {} },
         clientInfo: { name: 'test', version: '1.0' }
       };
@@ -634,7 +634,7 @@ describe('CapabilityManager Enhanced Tests', () => {
       manager.updateServerCapability('custom', { test: true });
 
       // Negotiate and reset
-      manager.negotiateCapabilities({ protocolVersion: '2024-11-05' });
+      manager.negotiateCapabilities({ protocolVersion: '2025-06-18' });
       manager.reset();
 
       // Server capabilities should be unchanged
@@ -644,8 +644,8 @@ describe('CapabilityManager Enhanced Tests', () => {
     });
 
     test('should allow negotiation after reset', () => {
-      const firstCaps = { protocolVersion: '2024-11-05', capabilities: { first: {} } };
-      const secondCaps = { protocolVersion: '2024-11-05', capabilities: { second: {} } };
+      const firstCaps = { protocolVersion: '2025-06-18', capabilities: { first: {} } };
+      const secondCaps = { protocolVersion: '2025-06-18', capabilities: { second: {} } };
 
       manager.negotiateCapabilities(firstCaps);
       manager.reset();
@@ -658,7 +658,7 @@ describe('CapabilityManager Enhanced Tests', () => {
     });
 
     test('should be safe to call reset multiple times', () => {
-      manager.negotiateCapabilities({ protocolVersion: '2024-11-05' });
+      manager.negotiateCapabilities({ protocolVersion: '2025-06-18' });
 
       manager.reset();
       manager.reset();
@@ -681,7 +681,7 @@ describe('CapabilityManager Enhanced Tests', () => {
   describe('Edge Cases and Error Handling', () => {
     test('should handle very large capability objects', () => {
       const largeCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {}
       };
 
@@ -699,7 +699,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle deeply nested capability objects', () => {
       const deepCaps = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {
           deeply: {
             nested: {
@@ -726,7 +726,7 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle client capabilities with circular references safely', () => {
       const capsWithCircular = {
-        protocolVersion: '2024-11-05',
+        protocolVersion: '2025-06-18',
         capabilities: {}
       };
 
@@ -739,14 +739,14 @@ describe('CapabilityManager Enhanced Tests', () => {
 
     test('should handle special string values in protocol version', () => {
       const specialValues = [
-        '2024-11-05\n',
-        '2024-11-05\t',
-        '2024-11-05 ',
-        ' 2024-11-05',
-        '2024-11-05\0',
-        '2024-11-05\r',
-        'ï»¿2024-11-05', // BOM character
-        '2024-11-05â€‹' // Zero-width space
+        '2025-06-18\n',
+        '2025-06-18\t',
+        '2025-06-18 ',
+        ' 2025-06-18',
+        '2025-06-18\0',
+        '2025-06-18\r',
+        'ï»¿2025-06-18', // BOM character
+        '2025-06-18â€‹' // Zero-width space
       ];
 
       specialValues.forEach(version => {

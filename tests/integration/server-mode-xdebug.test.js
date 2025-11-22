@@ -71,7 +71,8 @@ echo "Script complete.\\n";
             // Core functionality verification
             expect(output).toMatch(/YDebug Server listening on/);
             expect(output).toMatch(/Ready for Xdebug connections/);
-                        
+            
+            clearTimeout(startTimeout);
             done();
           } catch (error) {
             done(error);
@@ -94,7 +95,7 @@ echo "Script complete.\\n";
       });
 
       // Timeout after 5 seconds
-      setTimeout(() => {
+      const startTimeout = setTimeout(() => {
         if (!serverStarted) {
           done(new Error('Server did not start within 5 seconds'));
         }
@@ -141,17 +142,18 @@ echo "Script complete.\\n";
                             
               // Clean up first server
               firstServer.kill('SIGTERM');
-                            
+              clearTimeout(portConflictTimeout);
               done();
             } catch (error) {
               firstServer.kill('SIGTERM');
+              clearTimeout(portConflictTimeout);
               done(error);
             }
           });
         }
       });
 
-      setTimeout(() => {
+      const portConflictTimeout = setTimeout(() => {
         firstServer.kill('SIGTERM');
         done(new Error('Port conflict test timeout'));
       }, 5000);
