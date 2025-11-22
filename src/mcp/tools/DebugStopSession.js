@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugStopSession extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_stop_session',
-      description: 'Stop the active debugging session',
+      description: TOOL_DESCRIPTIONS.DEBUG_STOP_SESSION,
       inputSchema: {
         type: 'object',
         properties: {

@@ -45,7 +45,7 @@ describe('DebugAnalyzeContext', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe('debug_analyze_context');
-      expect(definition.description).toContain('AI-powered analysis');
+      expect(definition.description).toContain('AI-powered comprehensive debugging context analysis');
       expect(definition.inputSchema.required).toContain('context');
       expect(definition.inputSchema.properties.analysisType.enum).toContain('variableAnalysis');
       expect(definition.inputSchema.properties.analysisType.enum).toContain('executionAnalysis');

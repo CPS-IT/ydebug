@@ -31,44 +31,55 @@ describe('DebugEvaluateExpression Unit Tests', () => {
   });
 
   describe('getDefinition', () => {
-    test('should return complete tool definition', () => {
+    test('should return complete tool definition with enhanced description', () => {
       const definition = tool.getDefinition();
 
-      expect(definition).toEqual({
-        name: 'debug_evaluate_expression',
-        description: 'Evaluate a PHP expression in the current debugging context',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            expression: {
-              type: 'string',
-              description: 'PHP expression to evaluate (e.g., "$var + 1", "count($array)")',
-              minLength: 1
-            },
-            contextId: {
-              type: 'integer',
-              description: 'Context ID for evaluation (0=local, 1=global, 2=class)',
-              default: 0,
-              minimum: 0,
-              maximum: 10
-            },
-            stackDepth: {
-              type: 'integer',
-              description: 'Stack frame depth (0 = current frame)',
-              default: 0,
-              minimum: 0,
-              maximum: 10
-            },
-            maxLength: {
-              type: 'integer',
-              description: 'Maximum length of result value',
-              default: 1000,
-              minimum: 10,
-              maximum: 10000
-            }
+      expect(definition.name).toBe('debug_evaluate_expression');
+      
+      // Verify description contains key sections without checking exact formatting
+      expect(definition.description).toContain('Evaluate a PHP expression in the current debugging context');
+      expect(definition.description).toContain('WORKFLOW:');
+      expect(definition.description).toContain('PREREQUISITES:');
+      expect(definition.description).toContain('EXPRESSION TYPES:');
+      expect(definition.description).toContain('EXAMPLE USAGE:');
+      expect(definition.description).toContain('SAFETY CONSIDERATIONS:');
+      expect(definition.description).toContain('CONTEXT LEVELS:');
+      expect(definition.description).toContain('DEBUGGING STRATEGIES:');
+      expect(definition.description).toContain('WORKFLOW INTEGRATION:');
+      expect(definition.description).toContain('RESULT INTERPRETATION:');
+      expect(definition.description).toContain('TROUBLESHOOTING:');
+      
+      expect(definition.inputSchema).toEqual({
+        type: 'object',
+        properties: {
+          expression: {
+            type: 'string',
+            description: 'PHP expression to evaluate (e.g., "$var + 1", "count($array)")',
+            minLength: 1
           },
-          required: ['expression']
-        }
+          contextId: {
+            type: 'integer',
+            description: 'Context ID for evaluation (0=local, 1=global, 2=class)',
+            default: 0,
+            minimum: 0,
+            maximum: 10
+          },
+          stackDepth: {
+            type: 'integer',
+            description: 'Stack frame depth (0 = current frame)',
+            default: 0,
+            minimum: 0,
+            maximum: 10
+          },
+          maxLength: {
+            type: 'integer',
+            description: 'Maximum length of result value',
+            default: 1000,
+            minimum: 10,
+            maximum: 10000
+          }
+        },
+        required: ['expression']
       });
     });
 

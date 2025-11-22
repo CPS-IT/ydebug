@@ -6,6 +6,7 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 const AnalysisService = require('../../ai/AnalysisService');
 
 class DebugExplainBehavior extends BaseMCPTool {
@@ -17,7 +18,7 @@ class DebugExplainBehavior extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_explain_behavior',
-      description: 'AI-powered explanation of code behavior, execution flow, and why code acts as it does',
+      description: TOOL_DESCRIPTIONS.DEBUG_EXPLAIN_BEHAVIOR,
       inputSchema: {
         type: 'object',
         properties: {

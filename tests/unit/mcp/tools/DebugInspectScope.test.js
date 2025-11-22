@@ -36,7 +36,7 @@ describe('DebugInspectScope', () => {
       const definition = tool.getDefinition();
 
       expect(definition.name).toBe('debug_inspect_scope');
-      expect(definition.description).toContain('Inspect a specific variable scope');
+      expect(definition.description).toContain('Inspect variables in a specific scope context');
       expect(definition.inputSchema).toHaveProperty('type', 'object');
       expect(definition.inputSchema.properties).toHaveProperty('contextId');
       expect(definition.inputSchema.properties).toHaveProperty('stackDepth');

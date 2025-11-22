@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugGetStatus extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_get_status',
-      description: 'Get current execution status and position',
+      description: TOOL_DESCRIPTIONS.DEBUG_GET_STATUS,
       inputSchema: {
         type: 'object',
         properties: {

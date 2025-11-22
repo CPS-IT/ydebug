@@ -6,6 +6,7 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 const AnalysisService = require('../../ai/AnalysisService');
 
 class DebugAnalyzeContext extends BaseMCPTool {
@@ -17,7 +18,7 @@ class DebugAnalyzeContext extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_analyze_context',
-      description: 'AI-powered analysis of debugging context and runtime state',
+      description: TOOL_DESCRIPTIONS.DEBUG_ANALYZE_CONTEXT,
       inputSchema: {
         type: 'object',
         properties: {

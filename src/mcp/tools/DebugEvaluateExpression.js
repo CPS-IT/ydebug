@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugEvaluateExpression extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_evaluate_expression',
-      description: 'Evaluate a PHP expression in the current debugging context',
+      description: TOOL_DESCRIPTIONS.DEBUG_EVALUATE_EXPRESSION,
       inputSchema: {
         type: 'object',
         properties: {

@@ -293,6 +293,7 @@ analyze --verbose                # Show detailed output
 | [MVP Requirements](documentation/plan/mvp.md) | Complete feature set and user stories |
 | [Implementation Plan](documentation/plan/Implementation.md) | Development phases and milestones |
 | [Architectural Overview](documentation/architecture/ArchitecturalOverview.md) | Complete system architecture |
+| [MCP Tool Description Validation](documentation/plan/MCPToolDescriptionValidation.md) | Validation framework for enhanced MCP tool descriptions |
 
 ### Architecture Decision Records (ADRs)
 

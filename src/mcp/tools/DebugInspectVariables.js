@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugInspectVariables extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_inspect_variables',
-      description: 'Inspect variables at the current execution point',
+      description: TOOL_DESCRIPTIONS.DEBUG_INSPECT_VARIABLES,
       inputSchema: {
         type: 'object',
         properties: {

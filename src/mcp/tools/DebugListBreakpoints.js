@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugListBreakpoints extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_list_breakpoints',
-      description: 'List all breakpoints in the current debugging session',
+      description: TOOL_DESCRIPTIONS.DEBUG_LIST_BREAKPOINTS,
       inputSchema: {
         type: 'object',
         properties: {

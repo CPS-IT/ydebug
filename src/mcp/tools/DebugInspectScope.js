@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugInspectScope extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_inspect_scope',
-      description: 'Inspect a specific variable scope context with available contexts',
+      description: TOOL_DESCRIPTIONS.DEBUG_INSPECT_SCOPE,
       inputSchema: {
         type: 'object',
         properties: {

@@ -6,12 +6,13 @@
 const BaseMCPTool = require('./BaseMCPTool');
 const DBGpClient = require('../../debugger/DBGpClient');
 const DBGpCommands = require('../../debugger/DBGpCommands');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugStartSession extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_start_session',
-      description: 'Start a debugging session by connecting to Xdebug',
+      description: TOOL_DESCRIPTIONS.DEBUG_START_SESSION,
       inputSchema: {
         type: 'object',
         properties: {

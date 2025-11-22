@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugGetStackTrace extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_get_stack_trace',
-      description: 'Get current call stack and execution trace',
+      description: TOOL_DESCRIPTIONS.DEBUG_GET_STACK_TRACE,
       inputSchema: {
         type: 'object',
         properties: {
