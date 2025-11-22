@@ -1,3 +1,7 @@
+2025-11-23         [RELEASE] Release of ydebug 0.3.0 (Dirk Wenzel)
+2025-11-23 f9220c9 Complete Feature 038: Transform MCP tool descriptions from technical API docs to AI agent workflow guidance (Dirk Wenzel)
+2025-11-22 4057a53 [DOC] Add Feature 038: MCP Tool Description Enhancement (Dirk Wenzel)
+
 2025-11-22         [RELEASE] Release of ydebug 0.2.1 (Dirk Wenzel)
 2025-11-22 6b3a40e dependencies updated (Dirk Wenzel)
 2025-11-22 de84d47 Optimize test performance with Jest Fake Timers and fix Unicode violations (Dirk Wenzel)
