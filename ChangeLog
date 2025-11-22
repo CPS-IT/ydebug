@@ -1,3 +1,13 @@
+2025-11-22         [RELEASE] Release of ydebug 0.2.1 (Dirk Wenzel)
+2025-11-22 6b3a40e dependencies updated (Dirk Wenzel)
+2025-11-22 de84d47 Optimize test performance with Jest Fake Timers and fix Unicode violations (Dirk Wenzel)
+2025-11-22 56189fa Fix GitHub Actions integration test failure for server startup (Dirk Wenzel)
+2025-11-22 297bcca Fix GitHub Actions CI environment issues in integration tests (Dirk Wenzel)
+2025-11-22 8373787 Fix GitHub Actions integration test failures by adding PHP with Xdebug setup (Dirk Wenzel)
+2025-11-22 c9470a1 Reorganize test structure with optimized unit and integration test separation (Dirk Wenzel)
+2025-11-22 8dec452 [WIP] Update Node.js support to current LTS versions (Dirk Wenzel)
+2025-11-22 f10db80 [WIP] Add GitHub issue templates, workflows, and status badges (Dirk Wenzel)
+
 2025-11-22         [RELEASE] Release of ydebug 0.2.0 (Dirk Wenzel)
 2025-11-22 f75a0fd Fix all failing tests (26 resolved) (Dirk Wenzel)
 2025-11-22 2304bf8 [WIP] Update MCP integration documentation and fix DBGp protocol issues (Dirk Wenzel)
