@@ -244,13 +244,13 @@ class InspectCommand extends BaseCommand {
 
     if (error.code === 'ECONNREFUSED') {
       console.error('\nTroubleshooting:');
-      console.error('• Make sure Xdebug is running and listening for connections');
-      console.error('• Verify the host and port settings');
-      console.error('• Check if a PHP script with Xdebug is currently paused at a breakpoint');
+      console.error('- Make sure Xdebug is running and listening for connections');
+      console.error('- Verify the host and port settings');
+      console.error('- Check if a PHP script with Xdebug is currently paused at a breakpoint');
     } else if (error.message.includes('timeout')) {
       console.error('\nTroubleshooting:');
-      console.error('• Increase the timeout value with --timeout option');
-      console.error('• Ensure the debugging session is active and paused');
+      console.error('- Increase the timeout value with --timeout option');
+      console.error('- Ensure the debugging session is active and paused');
     }
 
     console.error('\nFor configuration help, run: ydebug config --show');

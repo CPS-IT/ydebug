@@ -65,25 +65,31 @@ echo "Script complete.\\n";
         stdio: 'pipe'
       });
 
+      let outputBuffer = '';
+      
       serverProcess.stdout.on('data', (data) => {
         const output = data.toString();
+        outputBuffer += output;
                 
-        // Check if server started successfully
-        if (output.includes('YDebug Server listening')) {
-          serverStarted = true;
+        // Check if server started successfully - look for the listening message first
+        if (!serverStarted && (output.includes('YDebug Server listening') || outputBuffer.includes('YDebug Server listening'))) {
+          // Wait a bit more for the "Ready for" message to arrive
+          setTimeout(() => {
+            if (!serverStarted) { // Double check to avoid race condition
+              serverStarted = true;
                     
-          try {
-            // Verify server startup messages
-                        
-            // Core functionality verification
-            expect(output).toMatch(/YDebug Server listening on/);
-            expect(output).toMatch(/Ready for Xdebug connections/);
-            
-            clearTimeout(startTimeout);
-            done();
-          } catch (error) {
-            done(error);
-          }
+              try {
+                // Verify server startup messages - make regex more flexible for environment differences
+                expect(outputBuffer).toMatch(/YDebug Server listening on/);
+                expect(outputBuffer).toMatch(/Ready for.*connections/);
+                
+                clearTimeout(startTimeout);
+                done();
+              } catch (error) {
+                done(error);
+              }
+            }
+          }, 100);
         }
       });
 

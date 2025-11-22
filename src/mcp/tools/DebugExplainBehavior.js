@@ -468,7 +468,7 @@ class DebugExplainBehavior extends BaseMCPTool {
    * Generate reasoning for different explanation types
    */
   generateHighLevelReasoning(context, analysisResult) {
-    return (analysisResult.insights || []).map(insight => `• ${insight}`);
+    return (analysisResult.insights || []).map(insight => `- ${insight}`);
   }
 
   generateTechnicalReasoning(context, code, analysisResult) {
