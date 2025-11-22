@@ -6,6 +6,7 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 const AnalysisService = require('../../ai/AnalysisService');
 
 class DebugSuggestBreakpoints extends BaseMCPTool {
@@ -17,7 +18,7 @@ class DebugSuggestBreakpoints extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_suggest_breakpoints',
-      description: 'AI-powered suggestions for strategic breakpoint placement',
+      description: TOOL_DESCRIPTIONS.DEBUG_SUGGEST_BREAKPOINTS,
       inputSchema: {
         type: 'object',
         properties: {

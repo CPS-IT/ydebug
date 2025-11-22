@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugGetExecutionContext extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_get_execution_context',
-      description: 'Get comprehensive execution context including status, stack, and environment',
+      description: TOOL_DESCRIPTIONS.DEBUG_GET_EXECUTION_CONTEXT,
       inputSchema: {
         type: 'object',
         properties: {

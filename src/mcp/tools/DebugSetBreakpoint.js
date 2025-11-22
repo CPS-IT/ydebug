@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugSetBreakpoint extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_set_breakpoint',
-      description: 'Set a breakpoint at a specific file and line',
+      description: TOOL_DESCRIPTIONS.DEBUG_SET_BREAKPOINT,
       inputSchema: {
         type: 'object',
         properties: {

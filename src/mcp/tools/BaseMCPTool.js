@@ -225,17 +225,18 @@ class BaseMCPTool {
   }
 
   /**
-   * Format error response for MCP protocol
+   * Format error response for MCP protocol with enhanced context
    * @param {Error|string} error - Error object or message
    * @param {string} [customMessage] - Custom error message to display instead of error.message
+   * @param {object} [context] - Additional context for enhanced error guidance
    * @returns {object} Formatted MCP error response
    */
-  formatErrorResponse(error, customMessage = null) {
+  formatErrorResponse(error, customMessage = null, context = {}) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
     const displayMessage = customMessage || errorMessage;
 
-    return {
+    const baseResponse = {
       content: [
         {
           type: 'text',
@@ -249,6 +250,72 @@ class BaseMCPTool {
         stack: errorStack
       }
     };
+
+    // Add enhanced error guidance if available
+    const enhancedGuidance = this.getErrorGuidance(error, context);
+    if (enhancedGuidance) {
+      baseResponse.content.push({
+        type: 'text',
+        text: enhancedGuidance
+      });
+    }
+
+    return baseResponse;
+  }
+
+  /**
+   * Get enhanced error guidance based on error type and context
+   * Can be overridden by subclasses for tool-specific guidance
+   * @param {Error|string} error - Error object or message
+   * @param {object} context - Error context
+   * @returns {string|null} Enhanced error guidance or null
+   */
+  getErrorGuidance(error, _context = {}) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorCode = error instanceof Error ? error.code : null;
+
+    // Common error patterns with guidance
+    if (errorCode === 'ECONNREFUSED' || errorMessage.includes('ECONNREFUSED')) {
+      return `
+Troubleshooting Connection Refused:
+1. Ensure Xdebug is running and listening on the specified port
+2. Check if another debugger (PhpStorm, VSCode) is already connected
+3. Verify PHP script is running with XDEBUG_TRIGGER environment variable
+4. Try: XDEBUG_TRIGGER=1 php your-script.php
+
+Next Steps:
+- Use debug_get_status to check if session was partially established
+- Try debug_start_session again with different port (9004, 9005)
+- Restart your PHP script and try again`;
+    }
+
+    if (errorCode === 'ETIMEDOUT' || errorMessage.includes('timeout')) {
+      return `
+Troubleshooting Connection Timeout:
+1. Increase timeout parameter in debug_start_session (default: 10000ms)
+2. Check network connectivity between debugger and PHP process
+3. Verify Xdebug configuration allows connections from your host
+
+Next Steps:
+- Try debug_start_session with longer timeout: { "timeout": 30000 }
+- Check Xdebug logs for connection attempts
+- Verify xdebug.client_host setting in PHP configuration`;
+    }
+
+    if (errorMessage.includes('No debugging session is active')) {
+      return `
+Session Management Guidance:
+1. Call debug_start_session first to establish connection
+2. Verify session wasn't terminated by a previous error
+3. Check that PHP script is still running
+
+Next Steps:
+- Use debug_start_session to create new session
+- Ensure PHP script is running with Xdebug enabled
+- Check session status with debug_get_status after connecting`;
+    }
+
+    return null;
   }
 
   /**

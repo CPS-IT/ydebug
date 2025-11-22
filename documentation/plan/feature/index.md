@@ -46,7 +46,7 @@ This document provides a comprehensive overview of all YDebug features, their cu
 | 035   | JsonRpcMessageValidator Refactor            | Planned     | MCP       | [035-JsonRpcMessageValidatorRefactor.md](mcp/035-JsonRpcMessageValidatorRefactor.md)                              |
 | 036   | MCP Variable Inspection Refactoring         | Planned     | MCP       | [036-MCPVariableInspectionRefactoring.md](mcp-iteration-2/036-MCPVariableInspectionRefactoring.md)                |
 | 037   | Enhanced Logging System                     | Done        | MCP       | [037-EnhancedLoggingSystem.md](mcp-iteration-1/done/037-EnhancedLoggingSystem.md)                                 |
-| 038   | MCP Tool Description Enhancement            | Planned     | MCP       | [038-MCPToolDescriptionEnhancement.md](mcp-iteration-2/038-MCPToolDescriptionEnhancement.md)                      |
+| 038   | MCP Tool Description Enhancement            | Done        | MCP       | [038-MCPToolDescriptionEnhancement.md](mcp-iteration-2/done/038-MCPToolDescriptionEnhancement.md)                 |
 
 ## Status Legend
 
@@ -54,6 +54,8 @@ This document provides a comprehensive overview of all YDebug features, their cu
 - **Skipped**: Feature was intentionally skipped during prototype phase
 - **Planned**: Feature is documented but not yet implemented
 - **In Progress**: Feature is being implemented
+- **Partial**: Feature is partially completed with significant progress
+- **Substantial**: Feature is substantially complete with minor remaining work
 
 ## Phase Classification
 
@@ -89,7 +91,7 @@ The MCP phase implements Claude Code integration through Model Context Protocol:
 - **Comprehensive Testing**: Protocol compliance and integration testing
 - **Code Quality**: Refactoring and architectural improvements
 
-**MCP Status**: **IN PROGRESS** - 12 features documented, 8 completed, 4 ready for implementation
+**MCP Status**: **IN PROGRESS** - 12 features documented, 8 completed, 1 substantial, 3 ready for implementation
 
 ### Future Phase
 Extended capabilities beyond core MCP integration:
@@ -127,8 +129,8 @@ The following features resulted in significant architectural decisions documente
 
 **Active Phase**: MCP and MVP phases ready for implementation
 **Next Feature Options**: 
+- Complete Feature 038 (MCP Tool Description Enhancement) - 16 remaining tools need enhanced descriptions  
 - Feature 016 (AI Response Processing) for MVP track
-- Feature 038 (MCP Tool Description Enhancement) for immediate MCP improvement
 - Feature 034 (MCP HTTP+SSE Transport) or Feature 035 (JsonRpcMessageValidator Refactor) for MCP infrastructure
 **Architecture**: Stable foundation established through prototype phase
 **Technology Stack**: Node.js, DBGp Protocol, Claude API, MCP Protocol, Jest testing framework

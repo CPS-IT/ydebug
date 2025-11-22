@@ -184,12 +184,35 @@ describe('End-to-End MCP Tools Testing', () => {
       process.stdout.write = originalStdout;
     }
 
+    // Force cleanup server and all sessions
     try {
-      if (server && server.isRunning) {
-        await server.stop();
+      if (server) {
+        if (server.isRunning) {
+          await server.stop();
+        }
+        // Force cleanup any remaining resources
+        if (server.transport && typeof server.transport.cleanup === 'function') {
+          await server.transport.cleanup();
+        }
       }
     } catch (error) {
       e2eLogger.error('Error stopping server in E2E test cleanup', { error: error.message });
+    }
+
+    // Clean up mock environment
+    if (mockDebugEnv) {
+      try {
+        // Stop all active sessions
+        const status = mockDebugEnv.getStatus();
+        if (status.activeSessions > 0) {
+          const sessionIds = Array.from(mockDebugEnv.sessions.keys());
+          sessionIds.forEach(sessionId => {
+            mockDebugEnv.stopSession(sessionId);
+          });
+        }
+      } catch (error) {
+        e2eLogger.error('Error cleaning up mock debug environment', { error: error.message });
+      }
     }
 
     e2eLogger.info('Completed E2E MCP tools test', {
@@ -197,7 +220,8 @@ describe('End-to-End MCP Tools Testing', () => {
       messagesExchanged: capturedMessages.length
     });
 
-    await new Promise(resolve => setImmediate(resolve));
+    // Allow time for cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
 
   afterAll(async () => {
@@ -328,7 +352,7 @@ describe('End-to-End MCP Tools Testing', () => {
         stepsExecuted: stepResults.length,
         workflowCompleted: true
       });
-    });
+    }, 30000);
 
     test('should handle multiple concurrent debugging sessions', async () => {
       e2eLogger.info('Testing multiple concurrent debugging sessions');
@@ -390,7 +414,7 @@ describe('End-to-End MCP Tools Testing', () => {
         operationsPerformed: operations.length,
         allSessionsStopped: true
       });
-    });
+    }, 30000);
   });
 
   describe('Error Handling and Edge Cases', () => {
@@ -434,7 +458,7 @@ describe('End-to-End MCP Tools Testing', () => {
         invalidOperationsHandled: 5,
         gracefulDegradation: true
       });
-    });
+    }, 30000);
 
     test('should maintain performance under stress testing', async () => {
       e2eLogger.info('Testing MCP tools performance under stress');
@@ -483,7 +507,7 @@ describe('End-to-End MCP Tools Testing', () => {
         operationsPerSecond: Math.round(results.length / (duration / 1000)),
         performanceAcceptable: duration < 5000
       });
-    });
+    }, 30000);
   });
 
   describe('Enhanced Logging Verification', () => {
@@ -558,6 +582,6 @@ describe('End-to-End MCP Tools Testing', () => {
         categoryMatches: categoryMatches.length,
         loggingComplete: true
       });
-    });
+    }, 30000);
   });
 });

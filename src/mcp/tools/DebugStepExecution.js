@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugStepExecution extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_step_execution',
-      description: 'Step through code execution (step over, step into, step out)',
+      description: TOOL_DESCRIPTIONS.DEBUG_STEP_EXECUTION,
       inputSchema: {
         type: 'object',
         properties: {

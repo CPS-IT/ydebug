@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugRemoveBreakpoint extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_remove_breakpoint',
-      description: 'Remove a breakpoint by ID or location',
+      description: TOOL_DESCRIPTIONS.DEBUG_REMOVE_BREAKPOINT,
       inputSchema: {
         type: 'object',
         properties: {

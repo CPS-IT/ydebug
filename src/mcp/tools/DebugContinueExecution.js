@@ -4,12 +4,13 @@
  */
 
 const BaseMCPTool = require('./BaseMCPTool');
+const TOOL_DESCRIPTIONS = require('./descriptions');
 
 class DebugContinueExecution extends BaseMCPTool {
   getDefinition() {
     return {
       name: 'debug_continue_execution',
-      description: 'Continue execution until next breakpoint or script end',
+      description: TOOL_DESCRIPTIONS.DEBUG_CONTINUE_EXECUTION,
       inputSchema: {
         type: 'object',
         properties: {
