@@ -204,7 +204,7 @@ describe('ServerCommand', () => {
       const listeningHandler = mockServer.on.mock.calls.find(call => call[0] === 'listening')[1];
       listeningHandler({ address: '127.0.0.1', port: 9003 });
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('🚀 YDebug Server listening on 127.0.0.1:9003');
+      expect(mockConsoleLog).toHaveBeenCalledWith('YDebug Server listening on 127.0.0.1:9003');
       expect(mockConsoleLog).toHaveBeenCalledWith('Ready for Xdebug connections...');
       expect(mockConsoleLog).toHaveBeenCalledWith('To test, run your PHP script with:');
       expect(mockConsoleLog).toHaveBeenCalledWith('   XDEBUG_TRIGGER=1 php your-script.php');
@@ -225,7 +225,7 @@ describe('ServerCommand', () => {
 
       initHandler('test-session-123', sessionData);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('📡 Session test-session-123 connected');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Session test-session-123 connected');
       expect(mockConsoleLog).toHaveBeenCalledWith('   Language: PHP');
       expect(mockConsoleLog).toHaveBeenCalledWith('   Protocol: 1.0');
       expect(mockConsoleLog).toHaveBeenCalledWith('   File: file:///test.php');
@@ -347,7 +347,7 @@ describe('ServerCommand', () => {
 
       variablesHandler('test-session', '0', variables);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('📋 Variables received for session test-session, context 0:');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Variables received for session test-session, context 0:');
       expect(mockFormatter.formatVariables).toHaveBeenCalledWith(variables);
       expect(mockConsoleLog).toHaveBeenCalledWith('formatted output');
     });
@@ -379,7 +379,7 @@ describe('ServerCommand', () => {
 
       closedHandler('test-session', 'client_disconnected');
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('📡 Session test-session disconnected: client_disconnected');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Session test-session disconnected: client_disconnected');
     });
 
     it('should set up sessionError event handler', async () => {
@@ -390,7 +390,7 @@ describe('ServerCommand', () => {
 
       errorHandler('test-session', testError);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Session test-session error:', 'Session error');
+      expect(mockConsoleError).toHaveBeenCalledWith('Session test-session error:', 'Session error');
       expect(logger.error).toHaveBeenCalledWith('Session test-session error:', testError);
     });
   });
@@ -402,7 +402,7 @@ describe('ServerCommand', () => {
 
       await serverCommand.execute();
 
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Failed to start server:', 'Failed to bind to port');
+      expect(mockConsoleError).toHaveBeenCalledWith('Failed to start server:', 'Failed to bind to port');
       expect(logger.error).toHaveBeenCalledWith('Server startup error:', startupError);
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -418,8 +418,8 @@ describe('ServerCommand', () => {
 
       serverErrorHandler(portError);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Server error:', 'Port in use');
-      expect(mockConsoleLog).toHaveBeenCalledWith('💡 To resolve this issue:');
+      expect(mockConsoleError).toHaveBeenCalledWith('Server error:', 'Port in use');
+      expect(mockConsoleLog).toHaveBeenCalledWith('To resolve this issue:');
       expect(mockConsoleLog).toHaveBeenCalledWith('   1. Stop PhpStorm debugger or other debugging tools');
       expect(mockConsoleLog).toHaveBeenCalledWith('   2. Use a different port: --port 9004');
       expect(mockConsoleLog).toHaveBeenCalledWith('   3. Find what\'s using the port: lsof -i :9003');
@@ -436,7 +436,7 @@ describe('ServerCommand', () => {
 
       serverErrorHandler(genericError);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Server error:', 'Generic server error');
+      expect(mockConsoleError).toHaveBeenCalledWith('Server error:', 'Generic server error');
       expect(logger.error).toHaveBeenCalledWith('Server error:', genericError);
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -456,9 +456,9 @@ describe('ServerCommand', () => {
             
       await sigintHandler();
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('\n🛑 Received SIGINT, shutting down YDebug Server...');
+      expect(mockConsoleLog).toHaveBeenCalledWith('\nReceived SIGINT, shutting down YDebug Server...');
       expect(mockServer.shutdown).toHaveBeenCalled();
-      expect(mockConsoleLog).toHaveBeenCalledWith('✅ YDebug Server stopped gracefully');
+      expect(mockConsoleLog).toHaveBeenCalledWith('YDebug Server stopped gracefully');
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
@@ -475,7 +475,7 @@ describe('ServerCommand', () => {
             
       await sigtermHandler();
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('\n🛑 Received SIGTERM, shutting down YDebug Server...');
+      expect(mockConsoleLog).toHaveBeenCalledWith('\nReceived SIGTERM, shutting down YDebug Server...');
     });
 
     it('should handle shutdown errors', async () => {
@@ -488,7 +488,7 @@ describe('ServerCommand', () => {
             
       await sigintHandler();
 
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Error during shutdown:', 'Shutdown failed');
+      expect(mockConsoleError).toHaveBeenCalledWith('Error during shutdown:', 'Shutdown failed');
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
@@ -513,15 +513,15 @@ describe('ServerCommand', () => {
 
       await serverCommand.setAutomaticBreakpoint(mockServer, 'test-session', 'test.php', 10);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('🎯 Setting automatic breakpoint at test.php:10');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Setting automatic breakpoint at test.php:10');
       expect(mockSession.setBreakpoint).toHaveBeenCalledWith('test.php', 10);
-      expect(mockConsoleLog).toHaveBeenCalledWith('📍 Breakpoint set successfully');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Breakpoint set successfully');
 
       // Fast-forward time to trigger continuation
       jest.advanceTimersByTime(500);
       await Promise.resolve();
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('▶️  Continuing to breakpoint...');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Continuing to breakpoint...');
       expect(mockSession.run).toHaveBeenCalled();
     });
 
@@ -540,7 +540,7 @@ describe('ServerCommand', () => {
 
       await serverCommand.setAutomaticBreakpoint(mockServer, 'test-session', 'test.php', 10);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Failed to set automatic breakpoint:', 'Breakpoint failed');
+      expect(mockConsoleError).toHaveBeenCalledWith('Failed to set automatic breakpoint:', 'Breakpoint failed');
       expect(logger.error).toHaveBeenCalledWith('Breakpoint error:', breakpointError);
     });
 
@@ -574,10 +574,10 @@ describe('ServerCommand', () => {
 
       await serverCommand.inspectVariables(mockServer, 'test-session', mockFormatter);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('🔍 Inspecting variables for session test-session...');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Inspecting variables for session test-session...');
       expect(mockSession.getContextVariables).toHaveBeenCalledWith(0);
       expect(mockFormatter.formatVariables).toHaveBeenCalledWith(variables);
-      expect(mockConsoleLog).toHaveBeenCalledWith('📋 Local Variables:');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Local Variables:');
       expect(mockConsoleLog).toHaveBeenCalledWith('formatted output');
     });
 
@@ -587,7 +587,7 @@ describe('ServerCommand', () => {
 
       await serverCommand.inspectVariables(mockServer, 'test-session', mockFormatter);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('📋 No local variables found');
+      expect(mockConsoleLog).toHaveBeenCalledWith('No local variables found');
     });
 
     it('should handle null variables', async () => {
@@ -596,7 +596,7 @@ describe('ServerCommand', () => {
 
       await serverCommand.inspectVariables(mockServer, 'test-session', mockFormatter);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('📋 No local variables found');
+      expect(mockConsoleLog).toHaveBeenCalledWith('No local variables found');
     });
 
     it('should handle missing session', async () => {
@@ -614,7 +614,7 @@ describe('ServerCommand', () => {
 
       await serverCommand.inspectVariables(mockServer, 'test-session', mockFormatter);
 
-      expect(mockConsoleError).toHaveBeenCalledWith('❌ Failed to inspect variables:', 'Inspection failed');
+      expect(mockConsoleError).toHaveBeenCalledWith('Failed to inspect variables:', 'Inspection failed');
       expect(logger.error).toHaveBeenCalledWith('Variable inspection error:', inspectError);
     });
   });
@@ -632,7 +632,7 @@ describe('ServerCommand', () => {
 
       serverCommand.displayStatus(mockServer);
 
-      expect(mockConsoleLog).toHaveBeenCalledWith('📊 Server Status:');
+      expect(mockConsoleLog).toHaveBeenCalledWith('Server Status:');
       expect(mockConsoleLog).toHaveBeenCalledWith('   Running: true');
       expect(mockConsoleLog).toHaveBeenCalledWith('   Address: localhost:9003');
       expect(mockConsoleLog).toHaveBeenCalledWith('   Active Sessions: 2');

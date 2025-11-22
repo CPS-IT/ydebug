@@ -393,6 +393,7 @@ describe('ClaudeClient', () => {
       expect(mockMessages.create).toHaveBeenCalledTimes(6);
     });
 
+
     it('should handle invalid response format', async () => {
       mockMessages.create.mockResolvedValue({ invalid: 'format' });
 
