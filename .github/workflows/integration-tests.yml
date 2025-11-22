@@ -26,6 +26,19 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: Setup PHP with Xdebug
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: xdebug
+          ini-values: |
+            xdebug.mode=debug
+            xdebug.start_with_request=yes
+            xdebug.client_host=localhost
+            xdebug.client_port=9003
+            xdebug.idekey=test-integration
+          coverage: none
+
       - name: Install dependencies
         run: npm ci
 
