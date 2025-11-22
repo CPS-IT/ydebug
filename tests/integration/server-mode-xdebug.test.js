@@ -9,17 +9,23 @@
 
 const { spawn } = require('child_process');
 const { writeFileSync, unlinkSync } = require('fs');
-const { join } = require('path');
+const { join, resolve } = require('path');
 
 describe('Server Mode Integration', () => {
   let serverProcess;
   let testPort;
   let testScriptPath;
+  let nodePath;
+  let projectRoot;
 
   beforeEach(() => {
+    // Setup paths for CI compatibility
+    nodePath = process.execPath; // Use the Node.js binary that's running this test
+    projectRoot = resolve(__dirname, '../..');
+    
     // Generate random port to avoid conflicts between test runs
     testPort = 9005 + Math.floor(Math.random() * 100);
-    testScriptPath = join(__dirname, '../../temp-test-script.php');
+    testScriptPath = join(projectRoot, 'temp-test-script.php');
         
     // Create simple test PHP script for debugging
     const testScript = `<?php
@@ -54,8 +60,8 @@ echo "Script complete.\\n";
       let serverStarted = false;
       
       // Start YDebug server with random port
-      serverProcess = spawn('node', ['src/cli/index.js', 'server', '--port', testPort.toString()], {
-        cwd: process.cwd(),
+      serverProcess = spawn(nodePath, ['src/cli/index.js', 'server', '--port', testPort.toString()], {
+        cwd: projectRoot,
         stdio: 'pipe'
       });
 
@@ -119,16 +125,16 @@ echo "Script complete.\\n";
   describe('Error Handling', () => {
     test('should handle port conflicts gracefully', (done) => {
       // Start first server
-      const firstServer = spawn('node', ['src/cli/index.js', 'server', '--port', testPort.toString()], {
-        cwd: process.cwd(),
+      const firstServer = spawn(nodePath, ['src/cli/index.js', 'server', '--port', testPort.toString()], {
+        cwd: projectRoot,
         stdio: 'pipe'
       });
 
       firstServer.stdout.on('data', (data) => {
         if (data.toString().includes('YDebug Server listening')) {
           // Try to start second server on same port
-          const secondServer = spawn('node', ['src/cli/index.js', 'server', '--port', testPort.toString()], {
-            cwd: process.cwd(),
+          const secondServer = spawn(nodePath, ['src/cli/index.js', 'server', '--port', testPort.toString()], {
+            cwd: projectRoot,
             stdio: 'pipe'
           });
 

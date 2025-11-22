@@ -127,7 +127,8 @@ describe('CLI Entry Point (src/cli/index.js)', () => {
     test('should execute config command with --init', async () => {
       try {
         const { stdout, stderr } = await execAsync(
-          `node ${cliPath} config --init`
+          `node ${cliPath} config --init`, 
+          { cwd: path.resolve(__dirname, '../..') }
         );
         expect(stderr).toBe('');
         expect(stdout).toContain('Configuration file created at:');
@@ -153,7 +154,8 @@ describe('CLI Entry Point (src/cli/index.js)', () => {
 
     test('should execute config command with --show', async () => {
       const { stdout, stderr } = await execAsync(
-        `node ${cliPath} config --show`
+        `node ${cliPath} config --show`,
+        { cwd: path.resolve(__dirname, '../..') }
       );
       expect(stderr).toBe('');
       // Should output formatted configuration
