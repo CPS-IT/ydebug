@@ -29,6 +29,8 @@ Set individual configuration values:
 ```bash
 ydebug config-set xdebug.port 9004
 ydebug config-set logging.level debug
+ydebug config-set logging.target both
+ydebug config-set logging.format json
 ydebug config-set ai.enabled true
 ```
 
@@ -91,8 +93,19 @@ YDebug follows the XDG Base Directory Specification and searches for configurati
   },
   "logging": {
     "level": "info",
+    "target": "console",
+    "directory": "var/log",
+    "filename": "ydebug.log",
+    "format": "text",
     "file": null,
-    "timestamp": true
+    "timestamp": true,
+    "colors": true,
+    "rotation": {
+      "enabled": false,
+      "maxSize": "10MB",
+      "maxFiles": 5,
+      "interval": "daily"
+    }
   },
   "ai": {
     "enabled": true,
@@ -134,11 +147,21 @@ Controls connection and behavior with Xdebug:
 
 #### Logging Configuration (`logging`)
 
-Controls application logging behavior:
+Controls application logging behavior with support for file output, rotation, and multiple formats:
 
 - **`level`** (string): Log level - "error", "warn", "info", "debug", "trace" (default: "info")
-- **`file`** (string|null): Log file path, or null for console only (default: null)
+- **`target`** (string): Log output target - "console", "file", "both" (default: "console")
+- **`directory`** (string): Directory for log files (default: "var/log")
+- **`filename`** (string): Base log filename (default: "ydebug.log")
+- **`format`** (string): Log format - "text", "json" (default: "text")
+- **`file`** (string|null): Deprecated - use `target` instead (default: null)
 - **`timestamp`** (boolean): Include timestamps in log messages (default: true)
+- **`colors`** (boolean): Use colored console output (default: true)
+- **`rotation`**: Log rotation settings:
+  - **`enabled`** (boolean): Enable log rotation (default: false)
+  - **`maxSize`** (string): Maximum file size before rotation - "1KB", "10MB", "1GB" (default: "10MB")
+  - **`maxFiles`** (integer): Maximum number of rotated files to keep (default: 5)
+  - **`interval`** (string): Rotation interval - "daily", "weekly", "monthly" (default: "daily")
 
 #### AI Configuration (`ai`)
 
@@ -213,6 +236,10 @@ YDebug validates all configuration values and provides helpful error messages:
 
 #### Logging Validation
 - Level must be one of: "error", "warn", "info", "debug", "trace"
+- Target must be one of: "console", "file", "both"
+- Format must be one of: "text", "json"
+- Rotation.enabled must be a boolean
+- Rotation.maxSize must be a valid size string (e.g., "10MB", "1GB")
 
 #### AI Validation
 - AnalysisDepth must be one of: "shallow", "medium", "deep"

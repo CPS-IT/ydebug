@@ -82,13 +82,38 @@ class DBGpSession extends EventEmitter {
   handleData(data) {
     this.buffer += data.toString();
         
-    // Process complete messages (null-terminated)
+    // Process complete messages (length-prefixed format)
     while (this.buffer.includes('\0')) {
       const nullIndex = this.buffer.indexOf('\0');
-      const message = this.buffer.substring(0, nullIndex);
+      const rawMessage = this.buffer.substring(0, nullIndex);
       this.buffer = this.buffer.substring(nullIndex + 1);
             
-      this.processMessage(message);
+      // Check if this is a length prefix (numeric only)
+      if (/^\d+$/.test(rawMessage)) {
+        // This is a length prefix, wait for the actual message
+        const expectedLength = parseInt(rawMessage, 10);
+        
+        // Check if we have the complete message after the length prefix
+        if (this.buffer.length >= expectedLength) {
+          // Extract the actual XML message
+          const xmlMessage = this.buffer.substring(0, expectedLength);
+          this.buffer = this.buffer.substring(expectedLength);
+          
+          // Remove any trailing null terminator from XML message
+          const cleanXmlMessage = xmlMessage.replace(/\0+$/, '');
+          this.processMessage(cleanXmlMessage);
+        } else {
+          // Don't have complete message yet, put the length back in buffer
+          this.buffer = rawMessage + '\0' + this.buffer;
+          break;
+        }
+      } else {
+        // This is a direct message (not length-prefixed)
+        // Skip empty messages
+        if (rawMessage.trim().length > 0) {
+          this.processMessage(rawMessage);
+        }
+      }
     }
   }
     
@@ -97,12 +122,14 @@ class DBGpSession extends EventEmitter {
      * @param {string} message 
      */
   processMessage(message) {
-    this.logger.debug(`Session ${this.sessionId} received: ${message.substring(0, 200)}${message.length > 200 ? '...' : ''}`);
+    // Enhanced logging: show full raw message for debugging
+    this.logger.debug(`Session ${this.sessionId} RAW MESSAGE (${message.length} chars):`, message);
         
     try {
       const parsed = this.parseXmlMessage(message);
-            
-      // Debug logging to understand the structure
+      
+      // Enhanced logging: show full parsed structure
+      this.logger.debug(`Session ${this.sessionId} PARSED STRUCTURE:`, JSON.stringify(parsed, null, 2));
       this.logger.debug(`Session ${this.sessionId} parsed keys:`, Object.keys(parsed));
             
       if (parsed.init) {
@@ -111,10 +138,12 @@ class DBGpSession extends EventEmitter {
         this.handleResponseMessage(parsed.response);
       } else {
         this.logger.warn(`Session ${this.sessionId} received unknown message type. Keys:`, Object.keys(parsed));
-        this.logger.debug('Full parsed structure:', JSON.stringify(parsed, null, 2));
+        this.logger.warn(`Session ${this.sessionId} RAW MESSAGE for unknown type:`, message);
+        this.logger.warn(`Session ${this.sessionId} PARSED STRUCTURE for unknown type:`, JSON.stringify(parsed, null, 2));
       }
     } catch (error) {
       this.logger.error(`Session ${this.sessionId} message parsing error:`, error);
+      this.logger.error(`Session ${this.sessionId} RAW MESSAGE that failed parsing:`, message);
       this.emit('error', new DBGpProtocolError('Failed to parse message', {
         sessionId: this.sessionId,
         message: message.substring(0, 500),
@@ -302,7 +331,7 @@ class DBGpSession extends EventEmitter {
       lineno: lineno
     });
         
-    return await this.sendCommand(command.replace(/-i 0/, ''));
+    return await this.sendCommand(command.replace(/-i 0\s*/, ''));
   }
     
   /**
@@ -349,7 +378,7 @@ class DBGpSession extends EventEmitter {
       depth: depth
     });
         
-    const response = await this.sendCommand(command.replace(/-i 0/, ''));
+    const response = await this.sendCommand(command.replace(/-i 0\s*/, ''));
     return this.contextGetCommand.parseResponse(response);
   }
     

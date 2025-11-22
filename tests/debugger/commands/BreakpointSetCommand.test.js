@@ -32,7 +32,7 @@ describe('BreakpointSetCommand', () => {
         lineno: 10
       });
 
-      expect(result).toBe('breakpoint_set -i 123 -t line -f /path/to/file.php -n 10 -r 0');
+      expect(result).toBe('breakpoint_set -i 123 -t line -f file:///path/to/file.php -n 10 -r 0');
     });
 
     it('should build command with defaults', () => {
@@ -42,7 +42,7 @@ describe('BreakpointSetCommand', () => {
         lineno: 5
       });
 
-      expect(result).toBe('breakpoint_set -i 456 -t line -f /test.php -n 5 -r 0');
+      expect(result).toBe('breakpoint_set -i 456 -t line -f file:///test.php -n 5 -r 0');
     });
 
     it('should build temporary breakpoint command', () => {
@@ -53,7 +53,7 @@ describe('BreakpointSetCommand', () => {
         temporary: true
       });
 
-      expect(result).toBe('breakpoint_set -i 789 -t line -f /temp.php -n 15 -r 1');
+      expect(result).toBe('breakpoint_set -i 789 -t line -f file:///temp.php -n 15 -r 1');
     });
 
     it('should build disabled breakpoint command', () => {
@@ -64,7 +64,7 @@ describe('BreakpointSetCommand', () => {
         state: 'disabled'
       });
 
-      expect(result).toBe('breakpoint_set -i 101 -t line -f /disabled.php -n 20 -s disabled -r 0');
+      expect(result).toBe('breakpoint_set -i 101 -t line -f file:///disabled.php -n 20 -s disabled -r 0');
     });
 
     it('should build conditional breakpoint command', () => {
@@ -87,7 +87,7 @@ describe('BreakpointSetCommand', () => {
         hitCondition: '>='
       });
 
-      expect(result).toBe('breakpoint_set -i 303 -t line -f /hit.php -n 30 -r 0 -h 5 -o >=');
+      expect(result).toBe('breakpoint_set -i 303 -t line -f file:///hit.php -n 30 -r 0 -h 5 -o >=');
     });
 
     it('should build function call breakpoint', () => {

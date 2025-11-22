@@ -22,7 +22,7 @@
 
 const { Command } = require('commander');
 const packageJson = require('../../package.json');
-const { AICommand, AnalyzeCommand, ConfigCommand, ConnectCommand, InspectCommand, ServerCommand } = require('./commands');
+const { AICommand, AnalyzeCommand, ConfigCommand, ConnectCommand, InspectCommand, ServerCommand, MCPServerCommand } = require('./commands');
 
 const program = new Command();
 
@@ -75,6 +75,7 @@ function registerCommands() {
     .option('--show', 'show current configuration')
     .option('--reset', 'reset configuration to defaults')
     .option('--confirm', 'confirm reset operation')
+    .option('--delete', 'delete config files when resetting (default: preserve files and reset values)')
     .option('-f, --file <path>', 'configuration file path')
     .action(async (options) => {
       const cmd = new ConfigCommand();
@@ -199,6 +200,32 @@ function registerCommands() {
         json: options.json,
         noColors: options.noColors,
         autoInspect: !options.noAutoInspect
+      });
+    });
+
+  // MCP Server command
+  program
+    .command('mcp-server')
+    .description('Run YDebug MCP server for Claude Code integration')
+    .option('-t, --transport <type>', 'transport type (stdio, http)', 'stdio')
+    .option('-p, --port <port>', 'port for HTTP transport (not yet implemented)')
+    .option('--debug', 'enable debug logging')
+    .option('--status', 'show server status and exit')
+    .option('--health-check', 'perform health check and exit')
+    .option('--test-tools', 'test all MCP tools and exit')
+    .option('--test-resources', 'test all MCP resources and exit')
+    .option('--validate', 'validate MCP configuration and exit')
+    .action(async options => {
+      const cmd = new MCPServerCommand();
+      await cmd.execute({
+        transport: options.transport,
+        port: options.port ? parseInt(options.port, 10) : undefined,
+        debug: options.debug,
+        status: options.status,
+        healthCheck: options.healthCheck,
+        testTools: options.testTools,
+        testResources: options.testResources,
+        validate: options.validate
       });
     });
 }

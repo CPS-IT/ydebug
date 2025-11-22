@@ -52,8 +52,12 @@ class ConfigCommand extends BaseCommand {
           this.warn(`Configuration key '${options.key}' not found`);
         }
       } else if (options.reset) {
-        configManager.reset(options.confirm);
-        this.success('Configuration reset to defaults');
+        configManager.reset(options.confirm, options.delete);
+        if (options.delete) {
+          this.success('Configuration files removed (reset to defaults)');
+        } else {
+          this.success('Configuration reset to defaults (files preserved)');
+        }
       } else {
         this.info('YDebug Configuration Management');
         this.info('');
@@ -62,7 +66,7 @@ class ConfigCommand extends BaseCommand {
         this.info('  --show              Display current configuration');
         this.info('  --set <key> <value> Set configuration value');
         this.info('  --get <key>         Get configuration value');
-        this.info('  --reset [--confirm] Reset configuration to defaults');
+        this.info('  --reset [--confirm] [--delete] Reset configuration to defaults (preserves files by default)');
         this.info('  --file <path>       Specify config file (for init/set)');
       }
     } catch (error) {

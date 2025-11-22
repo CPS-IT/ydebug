@@ -51,7 +51,7 @@ describe('Breakpoint Integration Tests', () => {
 
       const sentCommand = client.sendCommand.mock.calls[0][0];
       expect(sentCommand).toContain('-t line');
-      expect(sentCommand).toContain('-f /test/prototype.php');
+      expect(sentCommand).toContain('-f file:///test/prototype.php');
       expect(sentCommand).toContain('-n 10');
       expect(sentCommand).toContain('-r 0'); // not temporary
     });
@@ -185,7 +185,7 @@ describe('Breakpoint Integration Tests', () => {
 
       // Verify the breakpoint was set at the correct hardcoded location
       const sentCommand = client.sendCommand.mock.calls[0][0];
-      expect(sentCommand).toContain(`-f ${PROTOTYPE_FILE}`);
+      expect(sentCommand).toContain(`-f file://${PROTOTYPE_FILE}`);
       expect(sentCommand).toContain(`-n ${PROTOTYPE_LINE}`);
     });
 

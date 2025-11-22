@@ -268,9 +268,9 @@ describe('Configuration Integration Tests', () => {
       processExitSpy.mockClear();
       consoleSpy.mockClear();
       
-      await configCommand.execute({ reset: true, confirm: true });
+      await configCommand.execute({ reset: true, confirm: true, delete: true });
       
-      expect(consoleSpy).toHaveBeenCalledWith('[SUCCESS]', 'Configuration reset to defaults');
+      expect(consoleSpy).toHaveBeenCalledWith('[SUCCESS]', 'Configuration files removed (reset to defaults)');
       expect(fs.existsSync('.ydebug.json')).toBe(false);
       expect(fs.existsSync('ydebug.config.json')).toBe(false);
     });

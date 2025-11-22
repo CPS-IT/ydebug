@@ -467,8 +467,8 @@ Current Configuration:
 
       await configCommand.execute(options);
 
-      expect(mockReset).toHaveBeenCalledWith(true);
-      expect(consoleSpy).toHaveBeenCalledWith('[SUCCESS]', 'Configuration reset to defaults');
+      expect(mockReset).toHaveBeenCalledWith(true, undefined);
+      expect(consoleSpy).toHaveBeenCalledWith('[SUCCESS]', 'Configuration reset to defaults (files preserved)');
     });
 
     test('should handle reset without confirmation', async () => {
@@ -483,7 +483,7 @@ Current Configuration:
 
       await configCommand.execute(options);
 
-      expect(mockReset).toHaveBeenCalledWith(undefined);
+      expect(mockReset).toHaveBeenCalledWith(undefined, undefined);
       expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'Reset requires confirmation. Use --confirm flag.');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
@@ -496,7 +496,7 @@ Current Configuration:
 
       await configCommand.execute(options);
 
-      expect(mockReset).toHaveBeenCalledWith(false);
+      expect(mockReset).toHaveBeenCalledWith(false, undefined);
     });
 
     test('should handle errors during reset operations', async () => {
@@ -530,7 +530,7 @@ Current Configuration:
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', '  --show              Display current configuration');
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', '  --set <key> <value> Set configuration value');
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', '  --get <key>         Get configuration value');
-      expect(consoleSpy).toHaveBeenCalledWith('[INFO]', '  --reset [--confirm] Reset configuration to defaults');
+      expect(consoleSpy).toHaveBeenCalledWith('[INFO]', '  --reset [--confirm] [--delete] Reset configuration to defaults (preserves files by default)');
       expect(consoleSpy).toHaveBeenCalledWith('[INFO]', '  --file <path>       Specify config file (for init/set)');
     });
 

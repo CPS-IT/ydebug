@@ -59,7 +59,16 @@ class BreakpointSetCommand extends BaseCommand {
 
     // Add filename for line, call, return breakpoints
     if (args.filename && (type === 'line' || type === 'call' || type === 'return')) {
-      command += ` -f ${args.filename}`;
+      // Convert filename to proper file:// URI if not already formatted
+      let fileUri = args.filename;
+      if (!fileUri.startsWith('file://')) {
+        // Ensure it starts with / for absolute paths
+        if (!fileUri.startsWith('/')) {
+          fileUri = '/' + fileUri;
+        }
+        fileUri = 'file://' + fileUri;
+      }
+      command += ` -f ${fileUri}`;
     }
 
     // Add line number for line breakpoints

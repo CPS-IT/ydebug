@@ -38,8 +38,66 @@ Traditional debugging requires human developers to manually set breakpoints, ste
 - [x] Server mode for listening to Xdebug connections
 - [x] Breakpoint management and session handling
 - [x] Basic logging system with configurable levels
+- [x] **MCP Server Integration** - Full Model Context Protocol server for Claude Code
 - [x] AI-powered analysis integration with Claude API (DEMO)
 - [x] Comprehensive test suite (1800+ tests across 51 files)
+
+## Claude Code Integration via MCP
+
+YDebug includes a complete **Model Context Protocol (MCP) server** that enables seamless integration with Claude Code. This allows Claude Code to access YDebug's debugging capabilities as if they were built-in tools.
+
+### What is MCP Integration?
+
+The Model Context Protocol (MCP) is a standardized way for AI tools like Claude Code to connect to external services and use them as tools. YDebug's MCP server exposes debugging functionality through this protocol, enabling Claude Code to:
+
+- Connect to PHP applications through Xdebug
+- Inspect variables and execution state
+- Set and manage breakpoints
+- Analyze debugging data with AI capabilities
+- Provide real-time debugging assistance
+
+### Key Benefits
+
+**For Claude Code Users:**
+- Access professional PHP debugging tools without manual setup
+- AI-assisted debugging with real execution context
+- Seamless integration with existing Claude Code workflows
+- No need to learn YDebug CLI commands
+
+**For Developers:**
+- Enhanced debugging capabilities with AI assistance
+- Real-time code analysis during debugging sessions
+- Collaborative debugging environment with AI participation
+- Bridge between traditional debugging and AI-powered development
+
+### Getting Started with MCP
+
+1. **Start the MCP Server:**
+   ```bash
+   ydebug mcp-server
+   ```
+
+2. **Connect from Claude Code:**
+   The MCP server will be available for Claude Code to connect to via STDIO transport
+
+3. **Use Debugging Tools:**
+   Claude Code will have access to debugging tools and can help you debug PHP applications
+
+### Current MCP Capabilities
+
+- **JSON-RPC 2.0 Protocol:** Complete implementation with proper message handling
+- **STDIO Transport:** Local connection support for Claude Code
+- **Service Registry:** Foundation for debugging tool registration
+- **Capability Negotiation:** Automatic feature negotiation with MCP clients
+- **Error Handling:** Comprehensive error reporting and recovery
+
+### Future MCP Tools (Roadmap)
+
+The MCP server foundation is complete and ready for debugging tool integration:
+- **Variable Inspection Tools:** Direct variable access from Claude Code
+- **Breakpoint Management:** Set and manage breakpoints through MCP
+- **Session Control:** Start, stop, and manage debugging sessions
+- **Code Analysis:** AI-powered analysis of debugging data
 
 ## Requirements
 
@@ -171,6 +229,16 @@ server --no-colors               # Disable colored output
 server --no-auto-inspect         # Disable automatic variable inspection
 ```
 
+### MCP Server Integration
+```bash
+mcp-server                       # Start MCP server for Claude Code integration
+mcp-server --transport <type>    # Transport type (stdio, http) - default: stdio
+mcp-server --port <port>         # Port for HTTP transport (not yet implemented)
+mcp-server --debug               # Enable debug logging
+```
+
+The MCP server enables Claude Code to connect directly to YDebug and use debugging tools through the Model Context Protocol. This provides a seamless integration where Claude Code can access debugging capabilities as if they were built-in tools.
+
 ### AI Analysis (DEMO Features)
 ```bash
 analyze                          # AI analysis with sample context (DEMO)
@@ -193,6 +261,7 @@ analyze --verbose                # Show detailed output
 
 | Guide | Description |
 |-------|-------------|
+| [MCP Integration](documentation/user-guide/mcp-integration.md) | **Model Context Protocol server for Claude Code integration** |
 | [Configuration Management](documentation/user-guide/configuration.md) | Complete configuration setup and management |
 | [Connect Command](documentation/user-guide/connect-command.md) | Xdebug connection testing and troubleshooting |
 | [Analyze Command](documentation/user-guide/analyze-command.md) | AI-powered debugging analysis (DEMO) |
@@ -228,22 +297,23 @@ All major technical decisions are documented:
 
 ## Architecture Summary
 
-YDebug follows a local-first, CLI-driven architecture with comprehensive DBGp protocol support:
+YDebug follows a local-first, CLI-driven architecture with comprehensive DBGp protocol support and MCP integration:
 
 ```
-Developer -> YDebug CLI -> DBGp Client/Server -> Xdebug -> PHP Application
-                |
-                v
-           Configuration -> Claude API (AI Analysis)
-                |
-                v
-           Logging System
+Claude Code -> MCP Server -> YDebug Core -> DBGp Client/Server -> Xdebug -> PHP Application
+                   |                |
+                   v                v
+Developer -> YDebug CLI -----> Configuration -> Claude API (AI Analysis)
+                   |                |
+                   v                v
+               Logging System   Service Registry
 ```
 
 **Key Features:**
 
 - **Local deployment** for source code security and performance
 - **CLI-first interface** with comprehensive command set
+- **MCP Server integration** for seamless Claude Code connectivity
 - **Bidirectional DBGp communication** (client and server modes)
 - **Claude API integration** for AI-powered analysis
 - **Comprehensive configuration management** with environment variable support
@@ -263,6 +333,7 @@ ydebug/
 │   │       ├── config.js       # Configuration management
 │   │       ├── connect.js      # Xdebug connection testing
 │   │       ├── inspect.js      # Variable inspection
+│   │       ├── mcp-server.js   # MCP server command
 │   │       └── server.js       # Server mode operations
 │   ├── debugger/
 │   │   ├── index.js            # Main debugger module
@@ -278,6 +349,11 @@ ydebug/
 │   ├── config/
 │   │   ├── index.js            # Configuration module
 │   │   └── ConfigManager.js    # Configuration management
+│   ├── mcp/                    # Model Context Protocol integration
+│   │   ├── MCPServer.js        # Main MCP server implementation
+│   │   ├── ServiceRegistry.js  # Service dependency injection
+│   │   ├── protocol/           # JSON-RPC 2.0 and MCP protocol handling
+│   │   └── transport/          # STDIO and HTTP transport layers
 │   ├── ai/
 │   │   ├── AnalysisService.js  # AI analysis service
 │   │   └── ClaudeClient.js     # Claude API client
@@ -289,6 +365,7 @@ ydebug/
 │   ├── config/                 # Configuration tests
 │   ├── debugger/               # DBGp protocol and debugging tests
 │   ├── integration/            # Integration tests
+│   ├── mcp/                    # MCP server and protocol tests
 │   └── utils/                  # Utility tests
 ├── documentation/
 │   ├── architecture/           # Architecture decisions and overview
@@ -344,7 +421,23 @@ npm run docker:dev   # Run in Docker development environment
 
 ## Use Cases
 
-### 1. Interactive Debugging Session
+### 1. Claude Code Debugging Integration (MCP)
+
+```bash
+# Start MCP server for Claude Code integration
+ydebug mcp-server
+
+# Claude Code can now connect and use debugging tools
+# No additional configuration needed - works automatically
+```
+
+This enables Claude Code to:
+- Access PHP debugging capabilities as built-in tools
+- Inspect variables during debugging sessions
+- Analyze code execution with AI assistance
+- Provide debugging suggestions based on real execution context
+
+### 2. Interactive Debugging Session
 
 ```bash
 # Start server mode and set a breakpoint
@@ -354,14 +447,14 @@ ydebug server --breakpoint-file /path/to/script.php --breakpoint-line 42
 # YDebug will automatically inspect variables when breakpoint hits
 ```
 
-### 2. Variable Inspection
+### 3. Variable Inspection
 
 ```bash
 # Connect to existing debugging session and inspect variables
 ydebug inspect --context 0 --filter "user" --json
 ```
 
-### 3. AI-Powered Analysis (DEMO)
+### 4. AI-Powered Analysis (DEMO)
 
 ```bash
 # Analyze sample context with AI
@@ -369,7 +462,7 @@ export ANTHROPIC_API_KEY="your-key"
 ydebug analyze --type errorAnalysis --verbose
 ```
 
-### 4. Connection Testing and Troubleshooting
+### 5. Connection Testing and Troubleshooting
 
 ```bash
 # Test Xdebug connection with detailed output
@@ -386,7 +479,7 @@ This project is in active development. Key areas for contribution:
 4. **Documentation** - User guides, tutorials, and examples
 5. **Testing** - Additional integration tests and edge cases
 
-See the [Implementation Plan](documentation/plan/Implementation.md) for development roadmap and [Architecture Documentation](documentation/architecture/) for technical details.
+See the [Implementation Plan](documentation/plan/Implementation.md) for development roadmap and [Architecture Documentation](documentation/architecture/ArchitecturalOverview.md) for technical details.
 
 ## License
 

@@ -38,9 +38,19 @@ const DEFAULT_CONFIG = {
   },
   logging: {
     level: 'info',
-    file: null,
+    target: 'console',
+    directory: 'var/log',
+    filename: 'ydebug.log',
+    format: 'text',
+    file: null, // Deprecated, use target instead
     timestamp: true,
     colors: true,
+    rotation: {
+      enabled: false,
+      maxSize: '10MB',
+      maxFiles: 5,
+      interval: 'daily'
+    }
   },
   ai: {
     enabled: true,
@@ -69,6 +79,32 @@ const DEFAULT_CONFIG = {
     maxStringLength: 1000,
     showPrivateProperties: false,
     colorOutput: true,
+  },
+  mcp: {
+    server: {
+      transport: 'stdio',
+      port: 3000,
+      host: 'localhost',
+      debug: false,
+      maxConnections: 10,
+      timeout: 30000,
+      capabilities: {
+        tools: true,
+        resources: true,
+        prompts: false,
+        logging: true
+      }
+    },
+    client: {
+      timeout: 10000,
+      retries: 3
+    },
+    features: {
+      resourceSubscriptions: true,
+      toolValidation: true,
+      resourceCaching: true,
+      cacheTTL: 5000
+    }
   },
 };
 
@@ -104,6 +140,12 @@ const ENV_MAPPINGS = {
   'YDEBUG_LOG_LEVEL': 'logging.level',
   'YDEBUG_LOG_FILE': 'logging.file',
   'YDEBUG_AI_ENABLED': 'ai.enabled',
+  'YDEBUG_MCP_TRANSPORT': 'mcp.server.transport',
+  'YDEBUG_MCP_PORT': 'mcp.server.port',
+  'YDEBUG_MCP_HOST': 'mcp.server.host',
+  'YDEBUG_MCP_DEBUG': 'mcp.server.debug',
+  'YDEBUG_MCP_TIMEOUT': 'mcp.server.timeout',
+  'YDEBUG_MCP_CACHE_TTL': 'mcp.features.cacheTTL',
 };
 
 /**
@@ -243,10 +285,11 @@ class ConfigManager {
   }
 
   /**
-   * Reset configuration (remove user config file)
+   * Reset configuration (reset values to defaults, preserving file by default)
    * @param {boolean} confirm - Confirmation flag
+   * @param {boolean} deleteFile - If true, delete the file instead of resetting content
    */
-  reset(confirm = false) {
+  reset(confirm = false, deleteFile = false) {
     if (!confirm) {
       throw new Error('Reset requires confirmation. Use --confirm flag.');
     }
@@ -256,16 +299,29 @@ class ConfigManager {
 
     for (const configPath of configPaths) {
       if (fs.existsSync(configPath)) {
-        fs.unlinkSync(configPath);
-        console.log(`Removed: ${configPath}`);
-        resetCount++;
+        if (deleteFile) {
+          // Delete the file (original behavior, now requires explicit flag)
+          fs.unlinkSync(configPath);
+          console.log(`Removed: ${configPath}`);
+          resetCount++;
+        } else {
+          // Reset content to defaults but preserve the file (new default behavior)
+          try {
+            fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2));
+            console.log(`Reset content of: ${configPath}`);
+            resetCount++;
+          } catch (error) {
+            console.warn(`Warning: Could not reset ${configPath}: ${error.message}`);
+          }
+        }
       }
     }
 
     if (resetCount === 0) {
       console.log('No local configuration files found to reset.');
     } else {
-      console.log(`Reset ${resetCount} configuration file(s) to defaults.`);
+      const action = deleteFile ? 'removed' : 'reset';
+      console.log(`${resetCount} configuration file(s) ${action}.`);
     }
 
     // Clear cache
@@ -422,6 +478,20 @@ class ConfigManager {
     const validLevels = ['error', 'warn', 'info', 'debug', 'trace'];
     if (logging.level && !validLevels.includes(logging.level)) {
       throw new Error(`logging.level must be one of: ${validLevels.join(', ')}`);
+    }
+    
+    const validTargets = ['console', 'file', 'both'];
+    if (logging.target && !validTargets.includes(logging.target)) {
+      throw new Error(`logging.target must be one of: ${validTargets.join(', ')}`);
+    }
+    
+    const validFormats = ['text', 'json'];
+    if (logging.format && !validFormats.includes(logging.format)) {
+      throw new Error(`logging.format must be one of: ${validFormats.join(', ')}`);
+    }
+    
+    if (logging.rotation?.enabled && typeof logging.rotation.enabled !== 'boolean') {
+      throw new Error('logging.rotation.enabled must be a boolean');
     }
   }
 

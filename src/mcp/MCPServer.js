@@ -1,0 +1,663 @@
+/**
+ * Model Context Protocol (MCP) Server
+ * Main server implementation for exposing YDebug capabilities to Claude Code
+ */
+
+const EventEmitter = require('events');
+const { logger } = require('../utils/Logger');
+const ServiceRegistry = require('./ServiceRegistry');
+const JsonRpcHandler = require('./protocol/JsonRpcHandler');
+const CapabilityManager = require('./protocol/CapabilityManager');
+const StdioTransport = require('./transport/StdioTransport');
+
+// MCP Resource System
+const MCPResourceRegistry = require('./resources/index');
+
+// MCP Debugging Tools
+const DebugStartSession = require('./tools/DebugStartSession');
+const DebugStopSession = require('./tools/DebugStopSession');
+const DebugSetBreakpoint = require('./tools/DebugSetBreakpoint');
+const DebugRemoveBreakpoint = require('./tools/DebugRemoveBreakpoint');
+const DebugListBreakpoints = require('./tools/DebugListBreakpoints');
+const DebugStepExecution = require('./tools/DebugStepExecution');
+const DebugContinueExecution = require('./tools/DebugContinueExecution');
+const DebugGetStatus = require('./tools/DebugGetStatus');
+
+// MCP Resources
+const DebuggingSessionResource = require('./resources/DebuggingSessionResource');
+const ActiveBreakpointsResource = require('./resources/ActiveBreakpointsResource');
+const ExecutionStateResource = require('./resources/ExecutionStateResource');
+const VariableContextResource = require('./resources/VariableContextResource');
+const ExecutionHistoryResource = require('./resources/ExecutionHistoryResource');
+const AnalysisResultsResource = require('./resources/AnalysisResultsResource');
+
+class MCPServer extends EventEmitter {
+  constructor(config = {}) {
+    super();
+    
+    this.config = {
+      transport: 'stdio', // 'stdio' or 'http' (http not implemented yet)
+      ...config
+    };
+
+    // Validate transport
+    if (this.config.transport !== 'stdio') {
+      throw new Error(`Unsupported transport: ${this.config.transport}`);
+    }
+
+    this.logger = logger;
+    this.isRunning = false;
+    this.currentRequestId = 0;
+    
+    // Core components
+    this.serviceRegistry = new ServiceRegistry();
+    this.jsonRpc = new JsonRpcHandler();
+    this.capabilityManager = new CapabilityManager();
+    this.transport = null;
+
+    // MCP Tools
+    this.tools = new Map();
+    this.setupDebuggingTools();
+
+    // MCP Resources
+    this.resourceRegistry = new MCPResourceRegistry();
+    this.resourceSubscriptions = new Map(); // Track client subscriptions
+    this.setupResources();
+
+    // MCP handlers
+    this.methodHandlers = new Map();
+    this.setupCoreHandlers();
+
+    // Bind methods to preserve context
+    this.handleTransportMessage = this.handleTransportMessage.bind(this);
+    this.handleTransportError = this.handleTransportError.bind(this);
+    this.handleTransportDisconnect = this.handleTransportDisconnect.bind(this);
+  }
+
+  /**
+   * Initialize MCP server with services
+   * @param {object} services - Services to register
+   * @returns {Promise<void>}
+   */
+  async initialize(services = {}) {
+    this.logger.info('Initializing MCP server');
+
+    // Register provided services
+    for (const [name, service] of Object.entries(services)) {
+      this.serviceRegistry.register(name, service);
+    }
+
+    // Initialize resources with services
+    await this.initializeResources();
+
+    // Setup resource event handling
+    this.setupResourceEventHandling();
+
+    // Initialize transport
+    this.initializeTransport();
+
+    this.logger.info('MCP server initialized successfully');
+    this.emit('initialized');
+  }
+
+  /**
+   * Start the MCP server
+   * @returns {Promise<void>}
+   */
+  async start() {
+    if (this.isRunning) {
+      throw new Error('MCP server is already running');
+    }
+
+    this.logger.info('Starting MCP server');
+
+    if (!this.transport) {
+      throw new Error('Transport not initialized. Call initialize() first.');
+    }
+
+    try {
+      await this.transport.start();
+      this.isRunning = true;
+      
+      this.logger.info('MCP server started successfully');
+      this.emit('started');
+    } catch (error) {
+      this.logger.error('Failed to start MCP server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Stop the MCP server
+   * @returns {Promise<void>}
+   */
+  async stop() {
+    if (!this.isRunning) {
+      return;
+    }
+
+    this.logger.info('Stopping MCP server');
+
+    try {
+      if (this.transport) {
+        await this.transport.stop();
+      }
+      
+      this.isRunning = false;
+      this.capabilityManager.reset();
+      
+      this.logger.info('MCP server stopped successfully');
+      this.emit('stopped');
+    } catch (error) {
+      this.logger.error('Error stopping MCP server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize transport based on configuration
+   */
+  initializeTransport() {
+    switch (this.config.transport) {
+    case 'stdio':
+      this.transport = new StdioTransport();
+      break;
+    // case 'http':
+    //   this.transport = new HttpTransport(this.config);
+    //   break;
+    default:
+      throw new Error(`Unsupported transport: ${this.config.transport}`);
+    }
+
+    // Set up transport event handlers
+    this.transport.on('message', this.handleTransportMessage);
+    this.transport.on('error', this.handleTransportError);
+    this.transport.on('disconnect', this.handleTransportDisconnect);
+    this.transport.on('connect', () => {
+      this.logger.info('MCP transport connected');
+      this.emit('clientConnected');
+    });
+  }
+
+  /**
+   * Setup debugging tools for MCP
+   */
+  setupDebuggingTools() {
+    const tools = [
+      DebugStartSession,
+      DebugStopSession,
+      DebugSetBreakpoint,
+      DebugRemoveBreakpoint,
+      DebugListBreakpoints,
+      DebugStepExecution,
+      DebugContinueExecution,
+      DebugGetStatus
+    ];
+
+    // Initialize and register each tool
+    tools.forEach(ToolClass => {
+      const tool = new ToolClass(this.serviceRegistry);
+      const definition = tool.getDefinition();
+      this.tools.set(definition.name, tool);
+      this.logger.debug(`Registered MCP tool: ${definition.name}`);
+    });
+
+    this.logger.info(`Registered ${this.tools.size} debugging tools`);
+  }
+
+  /**
+   * Setup core MCP method handlers
+   */
+  setupCoreHandlers() {
+    // Initialize request - client capabilities negotiation
+    this.methodHandlers.set('initialize', this.handleInitialize.bind(this));
+    
+    // Tools capability handlers
+    this.methodHandlers.set('tools/list', this.handleToolsList.bind(this));
+    this.methodHandlers.set('tools/call', this.handleToolsCall.bind(this));
+    
+    // Resources capability handlers (will be implemented in Feature 031)
+    this.methodHandlers.set('resources/list', this.handleResourcesList.bind(this));
+    this.methodHandlers.set('resources/read', this.handleResourcesRead.bind(this));
+    
+    // Server control
+    this.methodHandlers.set('ping', this.handlePing.bind(this));
+  }
+
+  /**
+   * Handle incoming transport messages
+   * @param {string} rawMessage - Raw JSON-RPC message
+   */
+  async handleTransportMessage(rawMessage) {
+    try {
+      // Parse JSON-RPC message
+      const parseResult = this.jsonRpc.parseMessage(rawMessage);
+      if (!parseResult.success) {
+        await this.sendErrorResponse(
+          this.jsonRpc.constructor.ErrorCodes.PARSE_ERROR,
+          parseResult.error,
+          null,
+          null
+        );
+        return;
+      }
+
+      const message = parseResult.message;
+
+      // Handle different message types
+      if (this.jsonRpc.isRequest(message)) {
+        await this.handleRequest(message);
+      } else if (this.jsonRpc.isNotification(message)) {
+        await this.handleNotification(message);
+      } else if (this.jsonRpc.isResponse(message)) {
+        // Handle responses to our requests (not implemented yet)
+        this.logger.debug('Received response:', message);
+      }
+
+    } catch (error) {
+      this.logger.error('Error handling transport message:', error);
+      await this.sendErrorResponse(
+        this.jsonRpc.constructor.ErrorCodes.INTERNAL_ERROR,
+        'Internal server error',
+        { details: error.message },
+        null
+      );
+    }
+  }
+
+  /**
+   * Handle JSON-RPC request
+   * @param {object} request - JSON-RPC request message
+   */
+  async handleRequest(request) {
+    const { method, params, id } = request;
+
+    this.logger.debug(`Handling request: ${method}`, { id, params });
+
+    // Find method handler
+    const handler = this.methodHandlers.get(method);
+    if (!handler) {
+      await this.sendErrorResponse(
+        this.jsonRpc.constructor.ErrorCodes.METHOD_NOT_FOUND,
+        `Method not found: ${method}`,
+        null,
+        id
+      );
+      return;
+    }
+
+    try {
+      // Call method handler
+      const result = await handler(params || {});
+      await this.sendSuccessResponse(result, id);
+    } catch (error) {
+      this.logger.error(`Error in method handler ${method}:`, error);
+      await this.sendErrorResponse(
+        this.jsonRpc.constructor.ErrorCodes.INTERNAL_ERROR,
+        error.message,
+        { method },
+        id
+      );
+    }
+  }
+
+  /**
+   * Handle JSON-RPC notification
+   * @param {object} notification - JSON-RPC notification message
+   */
+  async handleNotification(notification) {
+    const { method, params } = notification;
+    
+    this.logger.debug(`Handling notification: ${method}`, { params });
+    
+    // Handle notifications (no response expected)
+    const handler = this.methodHandlers.get(method);
+    if (handler) {
+      try {
+        await handler(params || {});
+      } catch (error) {
+        this.logger.error(`Error in notification handler ${method}:`, error);
+      }
+    } else {
+      this.logger.warn(`No handler for notification: ${method}`);
+    }
+  }
+
+  /**
+   * Handle initialize request
+   * @param {object} params - Initialize parameters
+   * @returns {object} Initialize response
+   */
+  async handleInitialize(params) {
+    this.logger.info('Handling initialize request');
+
+    // Negotiate capabilities
+    if (!this.capabilityManager.negotiateCapabilities(params)) {
+      throw new Error('Capability negotiation failed');
+    }
+
+    // Return server capabilities
+    const response = this.capabilityManager.getServerCapabilities();
+    this.logger.info('Initialization successful');
+    this.emit('initialized', params);
+    
+    return response;
+  }
+
+  /**
+   * Handle tools/list request
+   * @param {object} params - Parameters
+   * @returns {object} Tools list
+   */
+  async handleToolsList(_params) {
+    const tools = [];
+    
+    // Convert registered tools to MCP tool list format
+    for (const tool of this.tools.values()) {
+      const definition = tool.getDefinition();
+      tools.push({
+        name: definition.name,
+        description: definition.description,
+        inputSchema: definition.inputSchema
+      });
+    }
+
+    this.logger.debug(`Listing ${tools.length} available tools`);
+    return { tools };
+  }
+
+  /**
+   * Handle tools/call request
+   * @param {object} params - Tool call parameters
+   * @returns {object} Tool result
+   */
+  async handleToolsCall(params) {
+    const { name: toolName, arguments: toolArgs = {} } = params;
+
+    try {
+      if (!toolName) {
+        throw new Error('Tool name is required');
+      }
+
+      const tool = this.tools.get(toolName);
+      if (!tool) {
+        // Create a basic error response if tool not found
+        return {
+          isSuccess: false,
+          content: [{
+            type: 'text',
+            text: `Tool '${toolName}' not found`
+          }]
+        };
+      }
+
+      this.logger.info(`Executing MCP tool: ${toolName}`, toolArgs);
+
+      // Validate parameters against tool schema
+      const validation = tool.validateParameters(toolArgs);
+      if (!validation.valid) {
+        return tool.formatErrorResponse(
+          new Error('Invalid parameters'),
+          `Invalid parameters: ${validation.errors.join(', ')}`
+        );
+      }
+
+      // Execute the tool
+      const result = await tool.execute(toolArgs);
+      
+      this.logger.info(`MCP tool '${toolName}' executed successfully`);
+      return result;
+
+    } catch (error) {
+      this.logger.error('MCP tool execution failed:', error);
+      
+      // Return formatted error response
+      return {
+        isSuccess: false,
+        content: [{
+          type: 'text',
+          text: `Tool execution failed: ${error.message}`
+        }]
+      };
+    }
+  }
+
+
+  /**
+   * Handle ping request
+   * @param {object} params - Ping parameters
+   * @returns {object} Pong response
+   */
+  async handlePing(_params) {
+    return { pong: true, timestamp: Date.now() };
+  }
+
+  /**
+   * Send success response
+   * @param {*} result - Result data
+   * @param {string|number} id - Request ID
+   */
+  async sendSuccessResponse(result, id) {
+    const response = this.jsonRpc.createSuccessResponse(result, id);
+    await this.sendMessage(response);
+  }
+
+  /**
+   * Send error response
+   * @param {number} code - Error code
+   * @param {string} message - Error message
+   * @param {*} data - Additional error data
+   * @param {string|number} id - Request ID
+   */
+  async sendErrorResponse(code, message, data, id) {
+    const response = this.jsonRpc.createErrorResponse(code, message, data, id);
+    await this.sendMessage(response);
+  }
+
+  /**
+   * Send message via transport
+   * @param {object} message - JSON-RPC message object
+   */
+  async sendMessage(message) {
+    if (!this.transport || !this.transport.isConnected) {
+      throw new Error('Transport not connected');
+    }
+
+    const serialized = this.jsonRpc.serializeMessage(message);
+    await this.transport.send(serialized);
+  }
+
+  /**
+   * Handle transport errors
+   * @param {Error} error - Transport error
+   */
+  handleTransportError(error) {
+    this.logger.error('MCP transport error:', error);
+    this.emit('error', error);
+  }
+
+  /**
+   * Handle transport disconnect
+   */
+  handleTransportDisconnect() {
+    this.logger.info('MCP client disconnected');
+    this.isRunning = false;
+    this.capabilityManager.reset();
+    this.emit('clientDisconnected');
+  }
+
+  /**
+   * Setup MCP resources
+   */
+  setupResources() {
+    const resources = [
+      DebuggingSessionResource,
+      ActiveBreakpointsResource,
+      ExecutionStateResource,
+      VariableContextResource,
+      ExecutionHistoryResource,
+      AnalysisResultsResource
+    ];
+
+    // Initialize and register each resource
+    resources.forEach(ResourceClass => {
+      const resource = new ResourceClass(this.serviceRegistry);
+      const metadata = resource.getMetadata();
+      this.resourceRegistry.register(resource.uri, resource);
+      this.logger.debug(`Registered MCP resource: ${metadata.name}`);
+    });
+
+    this.logger.info(`Registered ${this.resourceRegistry.resources.size} MCP resources`);
+  }
+
+  /**
+   * Initialize resources with services
+   * @returns {Promise<void>}
+   */
+  async initializeResources() {
+    for (const [uri, resource] of this.resourceRegistry.resources) {
+      try {
+        if (resource.initialize && typeof resource.initialize === 'function') {
+          await resource.initialize();
+          this.logger.debug(`Initialized resource: ${uri}`);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to initialize resource ${uri}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Setup resource event handling for updates and subscriptions
+   */
+  setupResourceEventHandling() {
+    this.resourceRegistry.on('resource:updated', (data) => {
+      this.handleResourceUpdate(data);
+    });
+
+    this.resourceRegistry.on('resource:error', (error) => {
+      this.logger.error('Resource error:', error);
+      this.emit('resourceError', error);
+    });
+  }
+
+  /**
+   * Handle resource update notifications
+   * @param {object} data - Update data
+   */
+  async handleResourceUpdate(data) {
+    const { uri, updateData } = data;
+    
+    // Notify subscribed clients about resource updates
+    const subscriptions = this.resourceSubscriptions.get(uri);
+    if (subscriptions && subscriptions.size > 0) {
+      try {
+        // Create notification message
+        const notification = this.jsonRpc.createNotification('resource/updated', {
+          uri: uri,
+          data: updateData
+        });
+        
+        // Send to subscribed clients (for now we assume single client)
+        await this.sendMessage(notification);
+        
+        this.logger.debug(`Sent resource update notification for: ${uri}`);
+      } catch (error) {
+        this.logger.error('Failed to send resource update notification:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle resources/list request
+   * @param {object} params - Parameters
+   * @returns {object} Resources list
+   */
+  async handleResourcesList(_params) {
+    const resources = [];
+    
+    // Convert registered resources to MCP resource list format
+    for (const resource of this.resourceRegistry.resources.values()) {
+      const metadata = resource.getMetadata();
+      resources.push({
+        uri: resource.uri,
+        name: metadata.name,
+        description: metadata.description,
+        mimeType: metadata.mimeType || 'application/json',
+        annotations: {
+          supportsSubscriptions: resource.supportsSubscriptions()
+        }
+      });
+    }
+
+    this.logger.debug(`Listing ${resources.length} available resources`);
+    return { resources };
+  }
+
+  /**
+   * Handle resources/read request
+   * @param {object} params - Resource read parameters
+   * @returns {object} Resource content
+   */
+  async handleResourcesRead(params) {
+    const { uri } = params;
+
+    try {
+      if (!uri) {
+        throw new Error('Resource URI is required');
+      }
+
+      const resource = this.resourceRegistry.resources.get(uri);
+      if (!resource) {
+        throw new Error(`Resource not found: ${uri}`);
+      }
+
+      this.logger.info(`Reading MCP resource: ${uri}`, params);
+
+      // Read the resource with provided options
+      const readOptions = {
+        filter: params.filter || null,
+        limit: params.limit || null,
+        offset: params.offset || null
+      };
+
+      const content = await this.resourceRegistry.readResource(uri, readOptions);
+      
+      this.logger.info(`MCP resource '${uri}' read successfully`);
+      
+      return {
+        contents: [{
+          uri: uri,
+          mimeType: 'application/json',
+          text: JSON.stringify(content, null, 2)
+        }]
+      };
+
+    } catch (error) {
+      this.logger.error('MCP resource read failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get server status
+   * @returns {object} Server status
+   */
+  getStatus() {
+    const resourceStats = this.resourceRegistry.getStats();
+    return {
+      isRunning: this.isRunning,
+      transport: this.transport ? this.transport.getStatus() : null,
+      capabilities: this.capabilityManager.getStatus(),
+      services: this.serviceRegistry.getStatus(),
+      resources: {
+        resourceCount: resourceStats.totalResources,
+        resources: this.resourceRegistry.listResources(),
+        subscriptions: resourceStats.totalSubscriptions,
+        cachedResources: resourceStats.cachedResources
+      }
+    };
+  }
+}
+
+module.exports = MCPServer;

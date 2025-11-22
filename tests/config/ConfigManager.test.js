@@ -622,14 +622,14 @@ describe('ConfigManager', () => {
         fs.writeFileSync(config1Path, '{"xdebug":{"port":9022}}');
         fs.writeFileSync(config2Path, '{"xdebug":{"port":9023}}');
         
-        configManager.reset(true);
+        configManager.reset(true, true); // true for confirm, true for deleteFile
         
         expect(fs.existsSync(config1Path)).toBe(false);
         expect(fs.existsSync(config2Path)).toBe(false);
         
         expect(consoleSpy).toHaveBeenCalledWith(`Removed: ${config1Path}`);
         expect(consoleSpy).toHaveBeenCalledWith(`Removed: ${config2Path}`);
-        expect(consoleSpy).toHaveBeenCalledWith('Reset 2 configuration file(s) to defaults.');
+        expect(consoleSpy).toHaveBeenCalledWith('2 configuration file(s) removed.');
         
         consoleSpy.mockRestore();
       });

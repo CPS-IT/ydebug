@@ -31,13 +31,57 @@ This project creates a debugging solution that allows AI agents to:
 - Programmatic debugging interface for AI agents
 - Developer oversight and control capabilities
 
+## Current Development Phase: MCP Integration
+
+The project is currently in the **Model Context Protocol (MCP) Integration Phase**, implementing core MCP tools that expose YDebug's debugging capabilities to Claude Code through a standardized protocol.
+
+**Current Focus Areas:**
+- MCP debugging tools for session management, breakpoint control, and execution flow
+- JSON-RPC 2.0 protocol implementation for Claude Code communication
+- Service registry architecture for clean dependency injection
+- Facade pattern implementation wrapping existing DBGp functionality
+- Comprehensive test coverage for MCP tool reliability
+
+**Key Components Implemented:**
+- MCP Server foundation with transport and protocol handling
+- 8 core debugging tools: session management, breakpoint operations, execution control
+- Parameter validation using JSON Schema
+- Error handling with standardized MCP response formats
+
+## Implementation Completion Standards
+
+**CRITICAL:** Implementation of features and bug fixing is **NOT** finished before any failing tests and linting issues are fixed.
+
+**Definition of Done:**
+- all tasks in the current feature specification are completed
+- all success criteria are met
+- All unit tests must pass
+- All integration tests must pass
+- All linting checks must pass without errors
+- Code coverage requirements must be met
+- Documentation must be updated and accurate
+
+**Quality Gate Requirements:**
+- No failing test suites
+- No ESLint or other linting errors
+- No TypeScript/JSDoc violations
+- Proper error handling and edge case coverage
+- Performance benchmarks within acceptable limits
+
+This ensures code quality, maintainability, and reliability before any feature is considered complete.
+
 ## Current Structure
 
 - `documentation/plan/` - Project planning and specification documents
   - `goal.md` - Overall vision and core concepts
   - `prototype.md` - Initial proof of concept scope
   - `mvp.md` - Full MVP requirements and user stories
+  - `feature/mcp/` - MCP integration feature specifications
 - `.idea/` - PhpStorm/IntelliJ IDEA project configuration
+- `src/mcp/` - Model Context Protocol implementation
+  - `tools/` - MCP debugging tools for Claude Code integration
+  - `protocol/` - JSON-RPC and capability management
+  - `transport/` - Communication layer implementation
 
 ## Development Setup
 

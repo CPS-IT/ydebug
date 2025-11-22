@@ -132,10 +132,22 @@ describe('CLI Entry Point (src/cli/index.js)', () => {
         expect(stderr).toBe('');
         expect(stdout).toContain('Configuration file created at:');
       } finally {
-        // Cleanup test config file
+        // Cleanup test config file only if it was created by this test
+        // We detect this by checking if the file contains our test marker
         const fs = require('fs');
         if (fs.existsSync('ydebug.config.json')) {
-          fs.unlinkSync('ydebug.config.json');
+          try {
+            const content = fs.readFileSync('ydebug.config.json', 'utf8');
+            const config = JSON.parse(content);
+            // Only delete if it has the schema marker added by createSample()
+            if (config.$schema && config.$schema.description === 'YDebug Configuration Schema') {
+              fs.unlinkSync('ydebug.config.json');
+            }
+          // eslint-disable-next-line no-unused-vars
+          } catch (error) {
+            // If we can't parse it, leave it alone (might be user's config)
+            console.warn('Warning: Could not parse config file for test cleanup, preserving existing file');
+          }
         }
       }
     });
