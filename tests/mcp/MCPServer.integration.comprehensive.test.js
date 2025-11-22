@@ -108,51 +108,51 @@ class MockClaudeClient {
 
       let response;
       switch (toolName) {
-        case 'debug_start_session':
-          response = {
-            jsonrpc: '2.0',
-            id: message.id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: `Debug session started for ${toolArgs.script_path || 'test script'}`
-                }
-              ]
-            }
-          };
-          break;
+      case 'debug_start_session':
+        response = {
+          jsonrpc: '2.0',
+          id: message.id,
+          result: {
+            content: [
+              {
+                type: 'text',
+                text: `Debug session started for ${toolArgs.script_path || 'test script'}`
+              }
+            ]
+          }
+        };
+        break;
 
-        case 'debug_inspect_variables':
-          response = {
-            jsonrpc: '2.0',
-            id: message.id,
-            result: {
-              content: [
-                {
-                  type: 'text',
-                  text: JSON.stringify({
-                    variables: {
-                      '$testVar': { type: 'string', value: 'test value' },
-                      '$counter': { type: 'integer', value: 42 }
-                    },
-                    context_level: toolArgs.context_level || 0
-                  }, null, 2)
-                }
-              ]
-            }
-          };
-          break;
+      case 'debug_inspect_variables':
+        response = {
+          jsonrpc: '2.0',
+          id: message.id,
+          result: {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  variables: {
+                    '$testVar': { type: 'string', value: 'test value' },
+                    '$counter': { type: 'integer', value: 42 }
+                  },
+                  context_level: toolArgs.context_level || 0
+                }, null, 2)
+              }
+            ]
+          }
+        };
+        break;
 
-        default:
-          response = {
-            jsonrpc: '2.0',
-            id: message.id,
-            error: {
-              code: -32601,
-              message: `Method not found: ${toolName}`
-            }
-          };
+      default:
+        response = {
+          jsonrpc: '2.0',
+          id: message.id,
+          error: {
+            code: -32601,
+            message: `Method not found: ${toolName}`
+          }
+        };
       }
       
       this.responses.push(response);
@@ -249,6 +249,19 @@ describe('Comprehensive MCP Integration Tests', () => {
 
     // Process any pending log writes
     await new Promise(resolve => setImmediate(resolve));
+  });
+
+  afterAll(async () => {
+    // Clean up test artifacts
+    try {
+      const testDir = 'test';
+      if (fs.existsSync(testDir)) {
+        await fs.promises.rm(testDir, { recursive: true, force: true });
+        testLogger.debug('Cleaned up test directory');
+      }
+    } catch (error) {
+      testLogger.warn('Failed to clean up test directory', { error: error.message });
+    }
   });
 
   describe('Realistic Claude MCP Connection Workflows', () => {

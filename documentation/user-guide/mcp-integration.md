@@ -14,7 +14,7 @@ This comprehensive guide covers YDebug's MCP server implementation, which provid
 - [MCP Server Commands](#mcp-server-commands)
 - [Diagnostic Features](#diagnostic-features)
 - [Configuration Management](#configuration-management)
-- [Claude Code Integration Workflow](#claude-code-integration-workflow)
+- [Complete Debugging Session Workflow](#complete-debugging-session-workflow)
 - [Troubleshooting](#troubleshooting)
 - [Advanced Usage](#advanced-usage)
 - [Architecture Overview](#architecture-overview)
@@ -48,6 +48,39 @@ The Model Context Protocol (MCP) is an open standard developed by Anthropic that
 - Debugging becomes a collaborative process between developer and AI
 - No manual data copying or context switching required
 
+## Quick Start for Developers
+
+### Simple Setup Instructions
+
+**What you need to know:** YDebug provides two ways to debug with Claude Code:
+
+1. **MCP Debugging Tools** - Claude Code controls its own debugging session
+2. **YDebug Server + Analysis** - Use YDebug server, then share results with Claude Code
+
+**These are separate systems and cannot be used together.**
+
+### Option 1: MCP Tools (Recommended for AI Analysis)
+
+```bash
+# 1. Start MCP server
+ydebug mcp-server
+
+# 2. Ask Claude Code to debug
+# "Start a debugging session and set breakpoint in my-script.php at line 25"
+```
+
+### Option 2: YDebug Server (Recommended for Manual Control)
+
+```bash  
+# 1. Start YDebug server
+ydebug server --port 9003 --json
+
+# 2. Run PHP with Xdebug
+XDEBUG_TRIGGER=1 php my-script.php
+
+# 3. Copy debugging output and share with Claude Code for analysis
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -67,51 +100,25 @@ The Model Context Protocol (MCP) is an open standard developed by Anthropic that
    ```
    YDebug MCP Server for Claude Code Integration
    Transport: stdio
-   
+
+   Claude Code client connected
    MCP Server started successfully
-   
+
    Server is ready to accept MCP connections from Claude Code
-   
+
+   Using STDIO transport - communicate via stdin/stdout
+   Send JSON-RPC 2.0 messages to interact with the server
+
    MCP Server Status:
      Running: true
-     Transport: stdio
-     Connected: false
+     Transport: StdioTransport
+     Connected: true
      Capabilities Negotiated: false
-     Services: 1 registered
+     Services: 5 registered
      Resources: 6 registered
      Subscriptions: 0 active
      Cached Resources: 0
-   
-   Registered Tools:
-     - debug_start_session
-     - debug_stop_session
-     - debug_set_breakpoint
-     - debug_remove_breakpoint
-     - debug_list_breakpoints
-     - debug_step_execution
-     - debug_continue_execution
-     - debug_get_status
-     - debug_get_execution_context
-     - debug_get_stack_trace
-     - debug_inspect_variables
-     - debug_inspect_scope
-     - debug_inspect_object
-     - debug_evaluate_expression
-     - debug_analyze_context
-     - debug_analyze_execution
-     - debug_analyze_variables
-     - debug_explain_behavior
-     - debug_identify_issues
-     - debug_suggest_breakpoints
-   
-   Registered Resources:
-     - ydebug://debugging-session
-     - ydebug://active-breakpoints
-     - ydebug://execution-state
-     - ydebug://variable-context
-     - ydebug://execution-history
-     - ydebug://analysis-results
-   
+
    Press Ctrl+C to stop server
    ```
 
@@ -548,6 +555,202 @@ Claude Code automatically discovers and connects to MCP servers running on your 
 - **AI-Powered Analysis** - Context analysis, execution flow analysis, variable pattern detection, issue identification, and improvement suggestions
 - **Professional Features** - Conditional breakpoints, expression evaluation, multi-scope variable inspection, and comprehensive stack trace analysis
 
+## Complete Debugging Session Workflow
+
+The following workflow demonstrates how to use YDebug MCP server with Claude Code to debug PHP applications:
+
+### Prerequisites Check
+
+First, verify your environment is ready:
+
+```bash
+# Check PHP and Xdebug installation
+php -v
+php -m | grep -i xdebug
+
+# Check Xdebug configuration
+php -i | grep -E "xdebug\.(mode|start_with_request|client_port|client_host)"
+```
+
+Expected output should show:
+```
+xdebug.client_host => localhost => localhost
+xdebug.client_port => 9003 => 9003
+xdebug.mode => debug => debug
+xdebug.start_with_request => yes => yes
+```
+
+### Step 1: Start YDebug Server
+
+Start the YDebug server to listen for Xdebug connections:
+
+```bash
+# Start server with automatic breakpoint at specific location
+ydebug server --port 9003 --breakpoint-file /path/to/your-script.php --breakpoint-line 25 --json
+
+# Or start server without automatic breakpoint
+ydebug server --port 9003 --json
+```
+
+Successful server start shows:
+```
+[2025-11-17T14:05:00.803Z] [general] INFO: Starting YDebug Server Mode...
+Starting YDebug Server on localhost:9003
+Max connections: 10
+Session timeout: 300000ms
+
+[2025-11-17T14:05:00.812Z] [general] INFO: DBGp server listening on ::1:9003
+YDebug Server listening on ::1:9003
+
+Ready for Xdebug connections...
+
+To test, run your PHP script with:
+   XDEBUG_TRIGGER=1 php your-script.php
+
+Press Ctrl+C to stop server
+```
+
+### Step 2: Trigger PHP Script with Xdebug
+
+In a separate terminal, run your PHP script with Xdebug enabled:
+
+```bash
+# Method 1: Use XDEBUG_TRIGGER environment variable (recommended)
+XDEBUG_TRIGGER=1 php your-script.php
+
+# Method 2: Use Xdebug configuration directly
+php -d xdebug.start_with_request=yes your-script.php
+```
+
+When the connection is established, YDebug server will show:
+```
+[2025-11-17T14:05:13.716Z] [general] INFO: New connection from ::1:56162, session: session_1763388313716_oyddf75oz
+[2025-11-17T14:05:13.718Z] [general] INFO: Session session_1763388313716_oyddf75oz received init: PHP 1
+[2025-11-17T14:05:13.718Z] [general] INFO: Session session_1763388313716_oyddf75oz initialized: PHP 1
+Session session_1763388313716_oyddf75oz connected
+   Language: PHP
+   Protocol: 1
+   File: file:///path/to/your-script.php
+
+Setting automatic breakpoint at /path/to/your-script.php:25
+[2025-11-17T14:05:13.719Z] [general] INFO: Session session_1763388313716_oyddf75oz breakpoint set: undefined
+```
+
+### Step 3: Understanding Architecture Separation
+
+**Important Architectural Note:** YDebug has two separate debugging systems:
+
+1. **YDebug Server** - Listens for Xdebug connections and handles live debugging sessions
+2. **MCP Debugging Tools** - Provide independent debugging capabilities to Claude Code
+
+These systems operate separately and **cannot connect to each other**. The MCP debugging tools require their own debugging session and cannot attach to existing YDebug server sessions.
+
+### Step 4: Choose Your Debugging Approach
+
+You have two options for debugging with Claude Code:
+
+#### Option A: Using MCP Debugging Tools (Independent Session)
+
+Claude Code can start its own debugging session using MCP tools:
+
+```
+"Start a debugging session and connect to the PHP application"
+```
+
+This creates a separate debugging session that Claude Code controls directly.
+
+#### Option B: YDebug Server Analysis (Server-Managed Session)
+
+Use the YDebug server for live debugging, then describe the results to Claude Code for analysis:
+
+1. **PHP script paused at breakpoint** - The script will remain paused waiting for debugging commands
+2. **Inspect variables manually** - Use YDebug server output or CLI tools to gather debugging information  
+3. **Share results with Claude Code** - Provide the debugging output to Claude Code for analysis
+
+### Step 5: Debugging Session Interaction
+
+**For MCP Tools (Option A):**
+
+Claude Code uses its own debugging session with MCP tools:
+
+```
+# Start independent debugging session
+"Start a debugging session and connect to my PHP application"
+
+# Check session status
+"Show me the current debugging session status"
+
+# Set breakpoints and inspect
+"Set a breakpoint in the processPayment function"
+"What variables are available in the current scope?"
+
+# Control execution  
+"Step into the next function call"
+"Continue execution until the next breakpoint"
+
+# Analyze and evaluate
+"Analyze the current execution context"
+"Evaluate the expression '$order->getTotal()'"
+```
+
+**For YDebug Server Analysis (Option B):**
+
+Use YDebug server for debugging, then share results with Claude Code:
+
+```
+# 1. YDebug server shows variables at breakpoint
+# (Copy the variable output from server logs)
+
+# 2. Share with Claude Code for analysis
+"Here are the variables at the current breakpoint: [paste YDebug output]. 
+ Can you analyze this state and identify any issues?"
+
+# 3. Get AI insights
+"Based on these variable values, what should I check next?"
+"Are there any patterns or problems you notice?"
+```
+
+### Step 6: Session Cleanup
+
+When debugging is complete:
+
+1. **Stop the debugging session** (optional - Claude Code can do this):
+   - Use Claude Code: "Stop the current debugging session"
+   - Or manually: Ctrl+C in the PHP script terminal
+
+2. **Stop the YDebug server**:
+   - Press Ctrl+C in the YDebug server terminal
+
+### Workflow Summary
+
+```
+Terminal 1: Start YDebug Server
+┌─────────────────────────────────────┐
+│ ydebug server --port 9003 --json   │
+│ [Server listening on port 9003]    │
+└─────────────────────────────────────┘
+
+Terminal 2: Run PHP Script
+┌─────────────────────────────────────┐
+│ XDEBUG_TRIGGER=1 php script.php    │
+│ [Script paused at breakpoint]      │
+└─────────────────────────────────────┘
+
+Claude Code: Debug with MCP Tools
+┌─────────────────────────────────────┐
+│ "Show me the current variables"     │
+│ "Step through the next function"    │
+│ "Analyze the execution flow"        │
+└─────────────────────────────────────┘
+```
+
+### Important Notes
+
+1. **Server First**: Always start the YDebug server before running the PHP script
+2. **Script Pauses**: The PHP script will pause at breakpoints - this is expected behavior
+3. **Session Active**: Debugging tools only work when there's an active session (script paused)
+4. **Automatic Cleanup**: Sessions are automatically cleaned up when the PHP script finishes or times out
+
 ## Current Capabilities
 
 ### JSON-RPC 2.0 Protocol
@@ -665,6 +868,47 @@ This shows:
 - Service registration status
 - Error details and stack traces
 
+### Debugging Session Issues
+
+**Problem:** "No debugging session is active" when using MCP tools
+
+**Cause:** MCP debugging tools operate independently and cannot connect to YDebug server sessions
+
+**Solutions:**
+1. **For MCP tools:** Use Claude Code to start its own session: "Start a debugging session"
+2. **For YDebug server:** Use manual analysis approach (copy results to Claude Code)
+3. Choose one approach - they cannot be used simultaneously
+
+**Problem:** PHP script exits immediately without pausing
+
+**Cause:** No breakpoint set or Xdebug not connecting properly
+
+**Solutions:**
+1. Use automatic breakpoint: `--breakpoint-file /path/to/script.php --breakpoint-line 25`
+2. Check Xdebug configuration: `php -i | grep xdebug`
+3. Verify server is listening before running script
+4. Check for "connection established" message in server logs
+
+**Problem:** PHP script "hangs" or times out
+
+**Cause:** Script is correctly paused at breakpoint waiting for debugging commands
+
+**Solutions:**
+- This is expected behavior when debugging is active
+- Use Claude Code MCP tools to interact with the paused script
+- Continue execution: "Continue execution until the next breakpoint"
+- Or stop debugging: "Stop the current debugging session"
+
+**Problem:** "Xdebug: Could not connect to debugging client"
+
+**Cause:** YDebug server not listening when PHP script tries to connect
+
+**Solutions:**
+1. Start YDebug server first, then run PHP script
+2. Ensure correct port (9003) is used in both server and Xdebug config
+3. Check if port is already in use: `lsof -i :9003`
+4. Verify Xdebug client_host setting matches server host
+
 ### Common Error Messages
 
 | Message                         | Cause                           | Solution                       |
@@ -673,6 +917,8 @@ This shows:
 | `Method not found`              | Client sent unknown request     | Update Claude Code             |
 | `STDIO transport error`         | Communication issue             | Check system permissions       |
 | `Service registration failed`   | Configuration problem           | Check YDebug configuration     |
+| `No debugging session is active` | No PHP script connected       | Follow debugging workflow steps |
+| `Connection timeout`            | YDebug server not reachable     | Check server status and port   |
 
 ## Architecture Details
 

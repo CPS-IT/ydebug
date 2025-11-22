@@ -333,6 +333,19 @@ describe('MCP Resources Integration Tests', () => {
     await new Promise(resolve => setImmediate(resolve));
   });
 
+  afterAll(async () => {
+    // Clean up test artifacts
+    try {
+      const testDir = 'test';
+      if (fs.existsSync(testDir)) {
+        await fs.promises.rm(testDir, { recursive: true, force: true });
+        resourceLogger.debug('Cleaned up test directory');
+      }
+    } catch (error) {
+      resourceLogger.warn('Failed to clean up test directory', { error: error.message });
+    }
+  });
+
   describe('Resource Data Management', () => {
     test('should manage debugging session resources with proper lifecycle', async () => {
       resourceLogger.info('Testing debugging session resource lifecycle');

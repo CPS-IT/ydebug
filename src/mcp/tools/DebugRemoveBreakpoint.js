@@ -15,11 +15,11 @@ class DebugRemoveBreakpoint extends BaseMCPTool {
         properties: {
           breakpointId: {
             type: 'string',
-            description: 'Breakpoint ID to remove'
+            description: 'Breakpoint ID to remove (either this OR filename+lineno is required)'
           },
           filename: {
             type: 'string',
-            description: 'Filename for breakpoint removal (alternative to breakpointId)'
+            description: 'Filename for breakpoint removal (alternative to breakpointId, requires lineno)'
           },
           lineno: {
             type: 'integer',
@@ -27,14 +27,7 @@ class DebugRemoveBreakpoint extends BaseMCPTool {
             minimum: 1
           }
         },
-        anyOf: [
-          {
-            required: ['breakpointId']
-          },
-          {
-            required: ['filename', 'lineno']
-          }
-        ]
+        additionalProperties: false
       }
     };
   }

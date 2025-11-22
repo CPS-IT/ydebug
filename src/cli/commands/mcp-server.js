@@ -51,7 +51,7 @@ class MCPServerCommand extends BaseCommand {
     logger.info('Starting YDebug MCP Server...');
     console.log('YDebug MCP Server for Claude Code Integration');
     console.log(`Transport: ${config.transport}`);
-    
+
     if (config.transport === 'http') {
       console.log('HTTP transport not yet implemented. Using STDIO.');
       config.transport = 'stdio';
@@ -71,20 +71,20 @@ class MCPServerCommand extends BaseCommand {
       console.log('');
       console.log('Server is ready to accept MCP connections from Claude Code');
       console.log('');
-      
+
       if (config.transport === 'stdio') {
         console.log('Using STDIO transport - communicate via stdin/stdout');
         console.log('Send JSON-RPC 2.0 messages to interact with the server');
       }
-      
+
       console.log('');
-      
+
       // Display initial status
       this.displayStatus(server);
-      
+
       // Start health monitoring
       this.startHealthMonitoring(server);
-      
+
       console.log('Press Ctrl+C to stop server');
       console.log('');
     });
@@ -102,7 +102,7 @@ class MCPServerCommand extends BaseCommand {
     server.on('error', (error) => {
       console.error('MCP Server error:', error.message);
       logger.error('MCP server error:', error);
-      
+
       // Exit on critical errors
       if (error.code === 'TRANSPORT_ERROR') {
         process.exit(1);
@@ -127,11 +127,11 @@ class MCPServerCommand extends BaseCommand {
     // Remove existing listeners to prevent memory leaks during testing
     process.removeAllListeners('SIGINT');
     process.removeAllListeners('SIGTERM');
-    
+
     // Add signal handlers
     const sigintHandler = () => shutdown('SIGINT');
     const sigtermHandler = () => shutdown('SIGTERM');
-    
+
     process.on('SIGINT', sigintHandler);
     process.on('SIGTERM', sigtermHandler);
 
@@ -139,10 +139,10 @@ class MCPServerCommand extends BaseCommand {
       // Initialize server with available services
       const services = await this.initializeServices();
       await server.initialize(services);
-      
+
       // Start the server
       await server.start();
-      
+
     } catch (error) {
       console.error('Failed to start MCP server:', error.message);
       logger.error('MCP server startup error:', error);
@@ -160,8 +160,7 @@ class MCPServerCommand extends BaseCommand {
     try {
       // Initialize configuration service
       const ConfigManager = require('../../config/ConfigManager');
-      const configManager = new ConfigManager();
-      services.config = configManager;
+      services.config = new ConfigManager();
 
       // Initialize placeholder services for MCP resources
       // These will be replaced with actual implementations in future features
@@ -171,7 +170,7 @@ class MCPServerCommand extends BaseCommand {
       services.mcp = this.createPlaceholderMCPService();
 
       logger.info('MCP services initialized (placeholder implementations)');
-      
+
     } catch (error) {
       logger.error('Error initializing services:', error);
       throw error;
@@ -197,7 +196,7 @@ class MCPServerCommand extends BaseCommand {
   }
 
   /**
-   * Create placeholder session service  
+   * Create placeholder session service
    * @returns {object} Placeholder session service
    */
   createPlaceholderSessionService() {
@@ -213,12 +212,12 @@ class MCPServerCommand extends BaseCommand {
 
   /**
    * Create placeholder analysis service
-   * @returns {object} Placeholder analysis service  
+   * @returns {object} Placeholder analysis service
    */
   createPlaceholderAnalysisService() {
     return {
       name: 'analysis',
-      status: 'placeholder', 
+      status: 'placeholder',
       getResults: () => [],
       analyzeCode: () => null,
       getRecommendations: () => []
@@ -244,21 +243,21 @@ class MCPServerCommand extends BaseCommand {
    */
   displayStatus(server) {
     const status = server.getStatus();
-    
+
     console.log('MCP Server Status:');
     console.log(`  Running: ${status.isRunning}`);
     console.log(`  Transport: ${status.transport ? status.transport.type : 'none'}`);
     console.log(`  Connected: ${status.transport ? status.transport.isConnected : false}`);
     console.log(`  Capabilities Negotiated: ${status.capabilities.isNegotiated}`);
     console.log(`  Services: ${status.services.serviceCount} registered`);
-    
+
     // Display resource information if available
     if (status.resources) {
       console.log(`  Resources: ${status.resources.resourceCount} registered`);
       console.log(`  Subscriptions: ${status.resources.subscriptions} active`);
       console.log(`  Cached Resources: ${status.resources.cachedResources}`);
     }
-    
+
     console.log('');
   }
 
@@ -290,7 +289,7 @@ class MCPServerCommand extends BaseCommand {
     // Check capabilities negotiation
     health.checks.capabilities = {
       status: status.capabilities.isNegotiated ? 'pass' : 'info',
-      description: status.capabilities.isNegotiated 
+      description: status.capabilities.isNegotiated
         ? 'MCP capabilities negotiated with client'
         : 'MCP capabilities available (no client connected)'
     };
@@ -330,14 +329,14 @@ class MCPServerCommand extends BaseCommand {
     console.log('MCP Server Health Check:');
     console.log(`  Overall Status: ${health.overall.toUpperCase()}`);
     console.log('  Individual Checks:');
-    
+
     Object.entries(health.checks).forEach(([_name, check]) => {
-      const statusIcon = check.status === 'pass' ? '[OK]' : 
-        check.status === 'warn' ? '[WARN]' : 
-        check.status === 'info' ? '[INFO]' : '[FAIL]';
+      const statusIcon = check.status === 'pass' ? '[OK]' :
+        check.status === 'warn' ? '[WARN]' :
+          check.status === 'info' ? '[INFO]' : '[FAIL]';
       console.log(`    ${statusIcon} ${check.description} (${check.status})`);
     });
-    
+
     console.log(`  Last Check: ${new Date(health.timestamp).toISOString()}`);
     console.log('');
   }
@@ -350,10 +349,10 @@ class MCPServerCommand extends BaseCommand {
   startHealthMonitoring(server, intervalMs = 30000) {
     const healthInterval = setInterval(() => {
       const health = this.performHealthCheck(server);
-      
+
       if (health.overall !== 'healthy') {
         logger.warn('MCP server health check failed:', JSON.stringify(health, null, 2));
-        
+
         if (health.overall === 'unhealthy') {
           console.log('[WARNING] MCP Server health check indicates unhealthy state');
           this.displayHealthCheck(health);
@@ -390,15 +389,15 @@ class MCPServerCommand extends BaseCommand {
       issues.push('Missing mcp.server configuration section');
     } else {
       const server = config.server;
-      
+
       if (server.transport && !['stdio', 'http'].includes(server.transport)) {
         issues.push(`Invalid transport type: ${server.transport}. Must be 'stdio' or 'http'`);
       }
-      
+
       if (server.port && (isNaN(server.port) || server.port < 1 || server.port > 65535)) {
         issues.push(`Invalid port: ${server.port}. Must be between 1-65535`);
       }
-      
+
       if (server.timeout && (isNaN(server.timeout) || server.timeout < 1000)) {
         issues.push(`Invalid timeout: ${server.timeout}. Must be at least 1000ms`);
       }
@@ -407,7 +406,7 @@ class MCPServerCommand extends BaseCommand {
     // Validate feature configuration
     if (config.features) {
       const features = config.features;
-      
+
       if (features.cacheTTL && (isNaN(features.cacheTTL) || features.cacheTTL < 0)) {
         issues.push(`Invalid cacheTTL: ${features.cacheTTL}. Must be a positive number`);
       }
@@ -417,7 +416,7 @@ class MCPServerCommand extends BaseCommand {
     if (issues.length === 0) {
       console.log('[OK] MCP configuration is valid');
       console.log('');
-      
+
       // Display current configuration
       console.log('Current MCP Configuration:');
       console.log(JSON.stringify(config, null, 2));
@@ -436,28 +435,28 @@ class MCPServerCommand extends BaseCommand {
    */
   async runDiagnostics(options, config) {
     const server = new MCPServer(config);
-    
+
     try {
       // Initialize server for diagnostics
       const services = await this.initializeServices();
       await server.initialize(services);
-      
+
       if (options.status) {
         await this.showStatus(server);
       }
-      
+
       if (options.healthCheck) {
         await this.runHealthCheck(server);
       }
-      
+
       if (options.testTools) {
         await this.testMCPTools(server);
       }
-      
+
       if (options.testResources) {
         await this.testMCPResources(server);
       }
-      
+
     } catch (error) {
       console.error('Diagnostic operation failed:', error.message);
       logger.error('Diagnostic error:', error);
@@ -474,9 +473,9 @@ class MCPServerCommand extends BaseCommand {
     console.log('MCP Server Diagnostics - Status');
     console.log('================================');
     console.log('');
-    
+
     this.displayStatus(server);
-    
+
     // Show registered tools
     const tools = Array.from(server.tools.keys());
     console.log('Registered Tools:');
@@ -486,7 +485,7 @@ class MCPServerCommand extends BaseCommand {
       console.log('  (none)');
     }
     console.log('');
-    
+
     // Show registered resources
     const resources = server.resourceRegistry.listResources();
     console.log('Registered Resources:');
@@ -507,10 +506,10 @@ class MCPServerCommand extends BaseCommand {
     console.log('MCP Server Diagnostics - Health Check');
     console.log('=====================================');
     console.log('');
-    
+
     const health = this.performHealthCheck(server);
     this.displayHealthCheck(health);
-    
+
     if (health.overall !== 'healthy') {
       process.exit(1);
     }
@@ -525,21 +524,21 @@ class MCPServerCommand extends BaseCommand {
     console.log('MCP Server Diagnostics - Tool Testing');
     console.log('=====================================');
     console.log('');
-    
+
     const tools = Array.from(server.tools.entries());
     let passedTests = 0;
     let failedTests = 0;
-    
+
     for (const [name, tool] of tools) {
       console.log(`Testing tool: ${name}`);
-      
+
       try {
         // Test tool definition
         const definition = tool.getDefinition();
         if (!definition.name || !definition.description) {
           throw new Error('Tool missing required definition fields');
         }
-        
+
         // Test tool schema validation if present
         if (definition.inputSchema) {
           const schema = definition.inputSchema;
@@ -547,12 +546,12 @@ class MCPServerCommand extends BaseCommand {
             throw new Error('Tool input schema invalid');
           }
         }
-        
+
         // Test execute method exists
         if (typeof tool.execute !== 'function') {
           throw new Error('Tool missing execute method');
         }
-        
+
         console.log(`  [OK] ${name} - definition and structure valid`);
         passedTests++;
       } catch (error) {
@@ -560,10 +559,10 @@ class MCPServerCommand extends BaseCommand {
         failedTests++;
       }
     }
-    
+
     console.log('');
     console.log(`Tool Test Results: ${passedTests} passed, ${failedTests} failed`);
-    
+
     if (failedTests > 0) {
       process.exit(1);
     }
@@ -578,27 +577,27 @@ class MCPServerCommand extends BaseCommand {
     console.log('MCP Server Diagnostics - Resource Testing');
     console.log('=========================================');
     console.log('');
-    
+
     const resources = server.resourceRegistry.listResources();
     let passedTests = 0;
     let failedTests = 0;
-    
+
     for (const uri of resources) {
       const resource = server.resourceRegistry.getResource(uri);
       console.log(`Testing resource: ${uri}`);
-      
+
       try {
         // Test resource metadata
         const metadata = resource.getMetadata();
         if (!metadata.name || !metadata.description) {
           throw new Error('Resource missing required metadata');
         }
-        
+
         // Test resource read capability
         if (typeof resource.read !== 'function') {
           throw new Error('Resource missing read method');
         }
-        
+
         try {
           await resource.read({ limit: 1 });
           console.log(`  [OK] ${uri} - read operation successful`);
@@ -609,17 +608,17 @@ class MCPServerCommand extends BaseCommand {
           }
           console.log(`  [OK] ${uri} - read method implemented (no data available)`);
         }
-        
+
         passedTests++;
       } catch (error) {
         console.log(`  [FAIL] ${uri} - ${error.message}`);
         failedTests++;
       }
     }
-    
+
     console.log('');
     console.log(`Resource Test Results: ${passedTests} passed, ${failedTests} failed`);
-    
+
     if (failedTests > 0) {
       process.exit(1);
     }

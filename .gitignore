@@ -114,6 +114,7 @@ debug-sessions/
 ydebug-logs/
 .ydebug.json
 ydebug.config.json
+test/
 
 # claude code files
 .claude/settings.local.json

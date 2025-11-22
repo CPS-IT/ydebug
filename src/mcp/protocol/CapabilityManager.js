@@ -10,7 +10,7 @@ class CapabilityManager {
     this.logger = logger;
     this.serverCapabilities = {
       // Core MCP protocol version
-      protocolVersion: '2024-11-05',
+      protocolVersion: '2025-06-18',
       
       // Server information
       serverInfo: {
@@ -132,9 +132,14 @@ class CapabilityManager {
    * @returns {boolean} True if compatible
    */
   isProtocolVersionCompatible(clientVersion) {
-    // For now, we only support the exact protocol version
-    // In future versions, we could implement backward compatibility
-    return clientVersion === this.serverCapabilities.protocolVersion;
+    // Support current version and common previous versions
+    const supportedVersions = [
+      '2025-06-18',  // Current version
+      '2024-11-05',  // Previous version
+      '2024-10-07'   // Earlier version for broader compatibility
+    ];
+    
+    return supportedVersions.includes(clientVersion);
   }
 
   /**

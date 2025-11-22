@@ -93,14 +93,14 @@ class MockPHPDebugEnvironment {
 
     // Mock evaluation results
     switch (expression) {
-      case '$debugVar':
-        return { type: 'string', value: 'test value' };
-      case '$localVar + 10':
-        return { type: 'integer', value: 52 };
-      case 'count($_GET)':
-        return { type: 'integer', value: 0 };
-      default:
-        return { type: 'string', value: `Evaluated: ${expression}` };
+    case '$debugVar':
+      return { type: 'string', value: 'test value' };
+    case '$localVar + 10':
+      return { type: 'integer', value: 52 };
+    case 'count($_GET)':
+      return { type: 'integer', value: 0 };
+    default:
+      return { type: 'string', value: `Evaluated: ${expression}` };
     }
   }
 
@@ -198,6 +198,19 @@ describe('End-to-End MCP Tools Testing', () => {
     });
 
     await new Promise(resolve => setImmediate(resolve));
+  });
+
+  afterAll(async () => {
+    // Clean up test artifacts
+    try {
+      const testDir = 'test';
+      if (fs.existsSync(testDir)) {
+        await fs.promises.rm(testDir, { recursive: true, force: true });
+        e2eLogger.debug('Cleaned up test directory');
+      }
+    } catch (error) {
+      e2eLogger.warn('Failed to clean up test directory', { error: error.message });
+    }
   });
 
   describe('Complete Debugging Workflow', () => {
